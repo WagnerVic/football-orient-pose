@@ -3,13 +3,22 @@ Football player pose estimation and body orientation analysis from broadcast vid
 
 ## Setup
 
-Os datasets estão compactados em `.zip` para versionamento no Git. Após clonar o repositório, execute:
+Os datasets estão compactados em `.zip` para versionamento no Git. Após clonar o repositório:
 
+**Linux / macOS**
 ```bash
 make setup        # Descompacta os .zip para data/
 make clean-data   # Remove data/ para re-extrair do zero
 make help         # Lista os comandos disponíveis
 ```
+
+**Windows (PowerShell)**
+```powershell
+.\setup_data.ps1          # Descompacta os .zip para data/
+.\setup_data.ps1 -Clean   # Remove data/ para re-extrair do zero
+```
+
+> Se o PowerShell bloquear a execução, rode antes: `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`
 
 ### Estrutura após setup
 
