@@ -220,5 +220,8 @@ __marimo__/
 # Dados descompactados
 data/
 
+# Outputs gerados (reproduzíveis)
+results/
+
 # Arquivos de referência
 .refs/

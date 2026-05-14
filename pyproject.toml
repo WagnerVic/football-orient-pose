@@ -1,0 +1,49 @@
+[project]
+name = "football-orient-pose"
+version = "0.1.0"
+description = "Pipeline de estimação de pose e orientação corporal de jogadores de futebol"
+requires-python = ">=3.11"
+authors = [
+    { name = "Wagner Victor Alves de Menezes", email = "wagnervictor@discente.ufg.br" },
+    { name = "Victor Gabriel Ribeiro Jacome" },
+    { name = "Raphael Alves de Lima Soares" },
+    { name = "André Guilherme Alves do Carmo" },
+]
+readme = "README.md"
+license = { text = "MIT" }
+
+dependencies = [
+    "torch>=2.0",
+    "torchvision",
+    "ultralytics",
+    "opencv-python>=4.8",
+    "numpy",
+    "matplotlib",
+    "scipy",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "ruff",
+    "ipykernel",
+    "jupyterlab",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/football_orient_pose"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+src = ["src"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
