@@ -219,3 +219,6 @@ __marimo__/
 
 # Dados descompactados
 data/
+
+# Arquivos de referência
+.refs/

@@ -11,7 +11,11 @@ setup: $(MARKERS)
 $(DATA_DIR)/.extracted_%: %.zip
 	@mkdir -p $(DATA_DIR)
 	@echo "\033[0;32m[INFO]\033[0m Extraindo $< para $(DATA_DIR)/..."
-	@unzip -q -o $< -d $(DATA_DIR)
+	@tmpdir=$$(mktemp -d) && \
+	 unzip -q -o $< -d $$tmpdir && \
+	 toplevel=$$(ls $$tmpdir | head -1) && \
+	 cp -rn $$tmpdir/$$toplevel/. $(DATA_DIR)/ && \
+	 rm -rf $$tmpdir
 	@date -Iseconds > $@
 
 ## Remove a pasta data/ para re-extrair do zero
