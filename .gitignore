@@ -217,8 +217,9 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 
-# Dados descompactados
-data/
+# Dataset 3DSP: ignorar dados pesados, manter exemplos
+data/*
+!data/examples/
 
 # Outputs gerados (reproduzíveis)
 results/

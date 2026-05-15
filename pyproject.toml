@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "Pipeline de estimação de pose e orientação corporal de jogadores de futebol"
 requires-python = ">=3.11"
 authors = [
-    { name = "Wagner Victor Alves de Menezes", email = "wagnervictor@discente.ufg.br" },
+    { name = "Wagner Victor Alves de Menezes" },
     { name = "Victor Gabriel Ribeiro Jacome" },
     { name = "Raphael Alves de Lima Soares" },
     { name = "André Guilherme Alves do Carmo" },
