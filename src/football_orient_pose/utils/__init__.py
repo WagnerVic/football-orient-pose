@@ -7,6 +7,7 @@ from football_orient_pose.utils.data_io import (
     load_keypoints_2d,
     split_clips,
 )
+from football_orient_pose.utils.dataset import DSPDataset
 from football_orient_pose.utils.keypoint_mapping import (
     COCO17_NAMES,
     H3WB17_NAMES,
@@ -28,6 +29,7 @@ __all__ = [
     "H3WB17_NAMES",
     "ORIENTATION_KP_IDS",
     "COCO17_BONES",
+    "DSPDataset",
     "H3WB_BONES",
     "H3WB_JOINTS_LEFT",
     "H3WB_JOINTS_RIGHT",
