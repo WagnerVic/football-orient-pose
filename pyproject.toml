@@ -29,6 +29,10 @@ dev = [
     "ipykernel",
     "jupyterlab",
 ]
+inference = [
+    "rtmlib",
+    "onnxruntime",
+]
 
 [build-system]
 requires = ["hatchling"]

@@ -26,15 +26,20 @@ def _build_estimator(model_name: str, device: str):
 
 
 def _run_inference(estimator, clip_ids: list[str], data_dir: Path):
+    from tqdm import tqdm
+
     predictions, targets = [], []
-    for clip_id in clip_ids:
-        clip_dir = data_dir / "train" / clip_id
-        for frame_idx in range(1, 21):
-            image = load_clip_image(clip_dir, frame_idx)
-            predictions.append(estimator.predict_h3wb(image))
-            targets.append(
-                load_keypoints_2d(clip_dir / "posture" / f"{frame_idx:03d}.json")
-            )
+    total_frames = len(clip_ids) * 20
+    with tqdm(total=total_frames, desc=f"Inferência ({estimator.name})", unit="frame") as pbar:
+        for clip_id in clip_ids:
+            clip_dir = data_dir / "train" / clip_id
+            for frame_idx in range(1, 21):
+                image = load_clip_image(clip_dir, frame_idx)
+                predictions.append(estimator.predict_h3wb(image))
+                targets.append(
+                    load_keypoints_2d(clip_dir / "posture" / f"{frame_idx:03d}.json")
+                )
+                pbar.update(1)
     return np.asarray(predictions, np.float32), np.asarray(targets, np.float32)
 
 
