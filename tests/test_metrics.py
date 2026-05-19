@@ -4,16 +4,19 @@ import numpy as np
 import pytest
 
 from football_orient_pose.evaluation import (
-    compute_pdj,
+    PCKResult,
     compute_pck,
+    compute_pdj,
     pdj_auc,
     pdj_curve,
-    PCKResult,
 )
-from football_orient_pose.evaluation.metrics import compute_oks, OKSResult, compute_mpjpe_2d, MPJPE2DResult
 from football_orient_pose.evaluation.metrics import (
-    joint_detection_report,
     JointDetectionReport,
+    MPJPE2DResult,
+    OKSResult,
+    compute_mpjpe_2d,
+    compute_oks,
+    joint_detection_report,
 )
 
 

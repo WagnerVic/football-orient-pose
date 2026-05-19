@@ -69,10 +69,13 @@ class TrainingMonitor:
     def _plot_metrics_curve(self, out: Path) -> None:
         import matplotlib.pyplot as plt
 
-        epochs = [r.epoch for r in self.history]
         fig, ax = plt.subplots(figsize=(8, 5))
         for attr, label in [("val_pdj", "PDJ"), ("val_pck", "PCK"), ("val_oks", "OKS")]:
-            pairs = [(r.epoch, getattr(r, attr)) for r in self.history if getattr(r, attr) is not None]
+            pairs = [
+                (r.epoch, getattr(r, attr))
+                for r in self.history
+                if getattr(r, attr) is not None
+            ]
             if pairs:
                 xs, ys = zip(*pairs)
                 ax.plot(xs, ys, label=label)
