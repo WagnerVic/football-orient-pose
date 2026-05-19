@@ -20,6 +20,9 @@ dependencies = [
     "numpy",
     "matplotlib",
     "scipy",
+    "onnxruntime-gpu",
+    "python-dotenv>=1.2.2",
+    "gdown>=6.0.0",
 ]
 
 [project.optional-dependencies]
@@ -31,7 +34,6 @@ dev = [
 ]
 inference = [
     "rtmlib",
-    "onnxruntime",
 ]
 
 [build-system]
