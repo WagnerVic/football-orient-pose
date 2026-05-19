@@ -227,6 +227,43 @@ def compute_oks(
     )
 
 
+@dataclass(frozen=True)
+class MPJPE2DResult:
+    """Erro médio em pixels para keypoints 2D."""
+
+    global_mpjpe: float
+    per_joint: np.ndarray
+    per_group: dict[str, float]
+
+
+def compute_mpjpe_2d(
+    predicted: np.ndarray,
+    target: np.ndarray,
+) -> MPJPE2DResult:
+    """Calcula MPJPE (Mean Per Joint Position Error) em pixels para H3WB-17.
+
+    Sem normalização — erro absoluto em pixels no espaço do crop 100×100.
+    """
+    pred = _ensure_keypoint_batch(predicted, "predicted")
+    gt = _ensure_keypoint_batch(target, "target")
+    if pred.shape != gt.shape:
+        raise ValueError(
+            f"predicted e target devem ter o mesmo shape: {pred.shape} != {gt.shape}"
+        )
+
+    error = np.linalg.norm(pred - gt, axis=2)  # (N, 17)
+    per_joint = error.mean(axis=0)
+    per_group = {
+        group_name: float(per_joint[joint_ids].mean())
+        for group_name, joint_ids in PDJ_GROUPS.items()
+    }
+    return MPJPE2DResult(
+        global_mpjpe=float(error.mean()),
+        per_joint=per_joint.astype(np.float32),
+        per_group=per_group,
+    )
+
+
 def pdj_curve(
     predicted: np.ndarray,
     target: np.ndarray,

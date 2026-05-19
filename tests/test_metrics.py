@@ -10,7 +10,7 @@ from football_orient_pose.evaluation import (
     pdj_curve,
     PCKResult,
 )
-from football_orient_pose.evaluation.metrics import compute_oks, OKSResult
+from football_orient_pose.evaluation.metrics import compute_oks, OKSResult, compute_mpjpe_2d, MPJPE2DResult
 
 
 def _make_h3wb_keypoints() -> np.ndarray:
@@ -166,3 +166,25 @@ def test_compute_oks_ap_per_threshold_has_ten_keys() -> None:
     assert 0.5 in result.ap_per_threshold
     assert 0.75 in result.ap_per_threshold
     assert 0.95 in result.ap_per_threshold
+
+
+def test_compute_mpjpe_2d_returns_zero_for_identical_keypoints() -> None:
+    gt = np.random.default_rng(7).random((5, 17, 2)).astype(np.float32) * 100
+
+    result = compute_mpjpe_2d(gt, gt)
+
+    assert isinstance(result, MPJPE2DResult)
+    assert result.global_mpjpe == pytest.approx(0.0)
+    np.testing.assert_array_almost_equal(result.per_joint, np.zeros(17))
+
+
+def test_compute_mpjpe_2d_measures_euclidean_pixels() -> None:
+    gt = np.zeros((4, 17, 2), dtype=np.float32)
+    pred = gt.copy()
+    pred[:, :, 0] += 3.0  # deslocamento x = 3
+    pred[:, :, 1] += 4.0  # deslocamento y = 4 → norma = 5.0
+
+    result = compute_mpjpe_2d(pred, gt)
+
+    assert result.global_mpjpe == pytest.approx(5.0)
+    np.testing.assert_array_almost_equal(result.per_joint, np.full(17, 5.0))
