@@ -10,6 +10,7 @@ from football_orient_pose.evaluation import (
     pdj_curve,
     PCKResult,
 )
+from football_orient_pose.evaluation.metrics import compute_oks, OKSResult
 
 
 def _make_h3wb_keypoints() -> np.ndarray:
@@ -128,3 +129,40 @@ def test_compute_pck_raises_for_mismatched_shapes() -> None:
 
     with pytest.raises(ValueError, match="mesmo shape"):
         compute_pck(pred, gt)
+
+
+def test_compute_oks_returns_one_for_identical_keypoints() -> None:
+    gt = np.random.default_rng(42).random((5, 17, 2)).astype(np.float32) * 100
+
+    result = compute_oks(gt, gt)
+
+    assert isinstance(result, OKSResult)
+    assert result.global_oks == pytest.approx(1.0)
+    assert result.ap == pytest.approx(1.0)
+    assert result.ap50 == pytest.approx(1.0)
+    assert result.ap75 == pytest.approx(1.0)
+    assert result.valid_frames == 5
+
+
+def test_compute_oks_decreases_with_larger_error() -> None:
+    gt = np.zeros((10, 17, 2), dtype=np.float32)
+    pred_small = gt.copy()
+    pred_small[:, :, 0] += 1.0
+    pred_large = gt.copy()
+    pred_large[:, :, 0] += 20.0
+
+    result_small = compute_oks(pred_small, gt)
+    result_large = compute_oks(pred_large, gt)
+
+    assert result_small.global_oks > result_large.global_oks
+
+
+def test_compute_oks_ap_per_threshold_has_ten_keys() -> None:
+    gt = np.zeros((3, 17, 2), dtype=np.float32)
+
+    result = compute_oks(gt, gt)
+
+    assert len(result.ap_per_threshold) == 10
+    assert 0.5 in result.ap_per_threshold
+    assert 0.75 in result.ap_per_threshold
+    assert 0.95 in result.ap_per_threshold

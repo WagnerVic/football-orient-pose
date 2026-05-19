@@ -21,6 +21,28 @@ PCK_RIGHT_SHOULDER_ID = 11
 PCK_LEFT_HIP_ID = 1
 PCK_RIGHT_HIP_ID = 4
 
+H3WB_SIGMAS: np.ndarray = np.array([
+    0.107,  # 0:  Center of Hips
+    0.107,  # 1:  Left Hip
+    0.087,  # 2:  Left Knee
+    0.089,  # 3:  Left Ankle
+    0.107,  # 4:  Right Hip
+    0.087,  # 5:  Right Knee
+    0.089,  # 6:  Right Ankle
+    0.093,  # 7:  Center of Body
+    0.079,  # 8:  Center of Shoulder
+    0.052,  # 9:  Neck
+    0.026,  # 10: Head
+    0.079,  # 11: Right Shoulder
+    0.072,  # 12: Right Elbow
+    0.062,  # 13: Right Wrist
+    0.079,  # 14: Left Shoulder
+    0.072,  # 15: Left Elbow
+    0.062,  # 16: Left Wrist
+], dtype=np.float32)
+
+DSP_CROP_AREA: float = 10_000.0  # 100×100 px²
+
 
 @dataclass(frozen=True)
 class PDJResult:
@@ -146,6 +168,62 @@ def compute_pck(
         per_joint=per_joint.astype(np.float32),
         per_group=per_group,
         valid_frames=int(valid.sum()),
+    )
+
+
+@dataclass(frozen=True)
+class OKSResult:
+    """Resultado OKS com AP calculado em limiares COCO."""
+
+    global_oks: float
+    per_joint_oks: np.ndarray
+    ap: float
+    ap50: float
+    ap75: float
+    ap_per_threshold: dict[float, float]
+    valid_frames: int
+
+
+def compute_oks(
+    predicted: np.ndarray,
+    target: np.ndarray,
+    area: float = DSP_CROP_AREA,
+    sigmas: np.ndarray | None = None,
+) -> OKSResult:
+    """Calcula OKS e AP para keypoints H3WB-17.
+
+    OKS por frame: mean(exp(-d_j² / (2 * s² * sigma_j²)))
+    AP@t: fração de frames com OKS >= t (avaliação single-instance).
+    mAP: média de AP@t para t em [0.50, 0.55, ..., 0.95].
+    """
+    pred = _ensure_keypoint_batch(predicted, "predicted")
+    gt = _ensure_keypoint_batch(target, "target")
+    if pred.shape != gt.shape:
+        raise ValueError(
+            f"predicted e target devem ter o mesmo shape: {pred.shape} != {gt.shape}"
+        )
+
+    if sigmas is None:
+        sigmas = H3WB_SIGMAS
+
+    s = float(np.sqrt(area))
+    d = np.linalg.norm(pred - gt, axis=2)                     # (N, 17)
+    oks_per_joint = np.exp(-d**2 / (2.0 * s**2 * sigmas**2))  # (N, 17)
+    oks_per_frame = oks_per_joint.mean(axis=1)                 # (N,)
+
+    thresholds = [round(0.5 + i * 0.05, 2) for i in range(10)]
+    ap_per_threshold = {
+        t: float((oks_per_frame >= t).mean()) for t in thresholds
+    }
+
+    return OKSResult(
+        global_oks=float(oks_per_frame.mean()),
+        per_joint_oks=oks_per_joint.mean(axis=0).astype(np.float32),
+        ap=float(np.mean(list(ap_per_threshold.values()))),
+        ap50=ap_per_threshold[0.5],
+        ap75=ap_per_threshold[0.75],
+        ap_per_threshold=ap_per_threshold,
+        valid_frames=len(pred),
     )
 
 
