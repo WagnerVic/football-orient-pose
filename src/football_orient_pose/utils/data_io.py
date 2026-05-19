@@ -13,10 +13,10 @@ from __future__ import annotations
 
 import configparser
 import json
+import random
 from pathlib import Path
 from typing import Any
 
-import cv2
 import numpy as np
 
 
@@ -106,6 +106,8 @@ def load_clip_image(clip_dir: str | Path, frame_idx: int) -> np.ndarray:
     np.ndarray
         Imagem BGR de shape ``(100, 100, 3)``.
     """
+    import cv2
+
     img_path = Path(clip_dir) / "img" / f"{frame_idx:03d}.jpg"
     img = cv2.imread(str(img_path))
     if img is None:
@@ -228,3 +230,38 @@ def iter_clips(
         key=lambda p: p.name,
     )
     return clips
+
+
+def split_clips(
+    data_dir: str | Path,
+    train_ratio: float = 0.8,
+    seed: int = 42,
+) -> tuple[list[Path], list[Path]]:
+    """Divide os clips de treino em conjuntos de treino e validacao.
+
+    O split e feito por clip, nunca por frame, para evitar data leakage temporal
+    entre frames consecutivos do mesmo chute.
+
+    Parameters
+    ----------
+    data_dir : str | Path
+        Diretório raiz do dataset 3DSP (e.g. ``data/3dsp``).
+    train_ratio : float
+        Fração dos clips destinada ao treino. Deve estar entre 0 e 1.
+    seed : int
+        Seed usada no embaralhamento determinístico.
+
+    Returns
+    -------
+    tuple[list[Path], list[Path]]
+        Tupla ``(train_clips, val_clips)`` com paths para diretórios de clips.
+    """
+    if not 0 < train_ratio < 1:
+        raise ValueError("train_ratio deve estar entre 0 e 1")
+
+    clips = list(iter_clips(data_dir, "train"))
+    rng = random.Random(seed)
+    rng.shuffle(clips)
+
+    n_train = int(len(clips) * train_ratio)
+    return clips[:n_train], clips[n_train:]

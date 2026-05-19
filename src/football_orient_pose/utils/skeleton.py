@@ -91,10 +91,12 @@ COCO17_BONES: list[tuple[int, int]] = [
 
 # Lateralidade COCO
 COCO17_JOINTS_LEFT: list[int] = [1, 3, 5, 7, 9, 11, 13, 15]
-"""left_eye, left_ear, left_shoulder, left_elbow, left_wrist, left_hip, left_knee, left_ankle"""
+"""left_eye, left_ear, left_shoulder, left_elbow, left_wrist, left_hip,
+left_knee, left_ankle"""
 
 COCO17_JOINTS_RIGHT: list[int] = [2, 4, 6, 8, 10, 12, 14, 16]
-"""right_eye, right_ear, right_shoulder, right_elbow, right_wrist, right_hip, right_knee, right_ankle"""
+"""right_eye, right_ear, right_shoulder, right_elbow, right_wrist, right_hip,
+right_knee, right_ankle"""
 
 # Cores para visualização COCO (BGR)
 COCO17_COLORS = {
