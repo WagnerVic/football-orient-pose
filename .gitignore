@@ -221,6 +221,9 @@ __marimo__/
 data/*
 !data/examples/
 
+# Pesos dos modelos (binários grandes, não versionar)
+models/weights/
+
 # Outputs gerados (reproduzíveis)
 results/
 
