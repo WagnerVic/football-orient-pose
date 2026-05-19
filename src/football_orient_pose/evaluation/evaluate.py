@@ -8,7 +8,6 @@ from pathlib import Path
 
 import numpy as np
 
-from football_orient_pose.estimators import RTMPoseEstimator
 from football_orient_pose.evaluation import (
     compute_mpjpe_2d,
     compute_oks,
@@ -21,8 +20,17 @@ from football_orient_pose.utils.data_io import load_clip_image, load_keypoints_2
 
 def _build_estimator(model_name: str, device: str):
     if model_name == "rtmpose":
+        from football_orient_pose.estimators.rtmpose import RTMPoseEstimator
         return RTMPoseEstimator(device=device)
-    raise ValueError(f"Modelo desconhecido: '{model_name}'. Opções: rtmpose")
+    if model_name == "hrnet":
+        from football_orient_pose.estimators.hrnet import HRNetEstimator
+        return HRNetEstimator(device=device)
+    if model_name == "openpose":
+        from football_orient_pose.estimators.openpose import OpenPoseEstimator
+        return OpenPoseEstimator(device=device)
+    raise ValueError(
+        f"Modelo desconhecido: '{model_name}'. Opções: rtmpose, hrnet, openpose"
+    )
 
 
 def _run_inference(estimator, clip_ids: list[str], data_dir: Path):
@@ -112,7 +120,7 @@ def evaluate(
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Avalia estimador de pose no 3DSP")
-    parser.add_argument("--model", default="rtmpose", choices=["rtmpose"])
+    parser.add_argument("--model", default="rtmpose", choices=["rtmpose", "hrnet", "openpose"])
     parser.add_argument("--split", default="val", choices=["train", "val"])
     parser.add_argument("--data-dir", type=Path, default=Path("data/3dsp"))
     parser.add_argument("--split-config", type=Path, default=Path("configs/split.json"))
