@@ -72,9 +72,10 @@ class TrainingMonitor:
         epochs = [r.epoch for r in self.history]
         fig, ax = plt.subplots(figsize=(8, 5))
         for attr, label in [("val_pdj", "PDJ"), ("val_pck", "PCK"), ("val_oks", "OKS")]:
-            vals = [getattr(r, attr) for r in self.history if getattr(r, attr) is not None]
-            if vals:
-                ax.plot(epochs[: len(vals)], vals, label=label)
+            pairs = [(r.epoch, getattr(r, attr)) for r in self.history if getattr(r, attr) is not None]
+            if pairs:
+                xs, ys = zip(*pairs)
+                ax.plot(xs, ys, label=label)
         ax.set_xlabel("Epoch")
         ax.set_ylabel("Score")
         ax.set_title(f"{self.model_name} — Métricas por Época")
