@@ -120,3 +120,11 @@ def test_compute_pck_discards_frames_with_zero_reference() -> None:
 
     assert result.valid_frames == 2  # frame 0 descartado
     assert result.global_score == pytest.approx(1.0)
+
+
+def test_compute_pck_raises_for_mismatched_shapes() -> None:
+    pred = np.zeros((3, 17, 2), dtype=np.float32)
+    gt = np.zeros((5, 17, 2), dtype=np.float32)
+
+    with pytest.raises(ValueError, match="mesmo shape"):
+        compute_pck(pred, gt)
