@@ -264,6 +264,49 @@ def compute_mpjpe_2d(
     )
 
 
+@dataclass(frozen=True)
+class JointDetectionReport:
+    """Precision/recall/F1 por joint tratando detecção como classificação binária.
+
+    Em avaliação single-instance, precision_j = recall_j = f1_j = PDJ_j por joint.
+    """
+
+    threshold: float
+    precision: np.ndarray
+    recall: np.ndarray
+    f1: np.ndarray
+    f1_macro: float
+    per_group: dict[str, float]
+
+
+def joint_detection_report(
+    predicted: np.ndarray,
+    target: np.ndarray,
+    threshold: float = 0.5,
+    torso_ids: tuple[int, int] = (0, 8),
+) -> JointDetectionReport:
+    """Gera relatório de detecção por joint usando PDJ como base.
+
+    Em avaliação single-instance (um crop = um jogador), precision e recall
+    por joint são numericamente iguais ao PDJ por joint. O valor diferenciado
+    só emerge com múltiplas instâncias por imagem (EPIC 4/5).
+    """
+    pdj_result = compute_pdj(predicted, target, threshold=threshold, torso_ids=torso_ids)
+    per_joint = pdj_result.per_joint
+    per_group = {
+        group_name: float(per_joint[joint_ids].mean())
+        for group_name, joint_ids in PDJ_GROUPS.items()
+    }
+    return JointDetectionReport(
+        threshold=threshold,
+        precision=per_joint.copy(),
+        recall=per_joint.copy(),
+        f1=per_joint.copy(),
+        f1_macro=float(per_joint.mean()),
+        per_group=per_group,
+    )
+
+
 def pdj_curve(
     predicted: np.ndarray,
     target: np.ndarray,

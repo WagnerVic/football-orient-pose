@@ -11,6 +11,10 @@ from football_orient_pose.evaluation import (
     PCKResult,
 )
 from football_orient_pose.evaluation.metrics import compute_oks, OKSResult, compute_mpjpe_2d, MPJPE2DResult
+from football_orient_pose.evaluation.metrics import (
+    joint_detection_report,
+    JointDetectionReport,
+)
 
 
 def _make_h3wb_keypoints() -> np.ndarray:
@@ -188,3 +192,34 @@ def test_compute_mpjpe_2d_measures_euclidean_pixels() -> None:
 
     assert result.global_mpjpe == pytest.approx(5.0)
     np.testing.assert_array_almost_equal(result.per_joint, np.full(17, 5.0))
+
+
+def _make_torso_gt(n: int = 5) -> np.ndarray:
+    gt = np.zeros((n, 17, 2), dtype=np.float32)
+    gt[:, 0] = [10.0, 0.0]   # Center of Hips
+    gt[:, 8] = [10.0, 20.0]  # Center of Shoulder → torso_size = 20
+    return gt
+
+
+def test_joint_detection_report_perfect_predictions() -> None:
+    gt = _make_torso_gt()
+
+    result = joint_detection_report(gt, gt, threshold=0.5)
+
+    assert isinstance(result, JointDetectionReport)
+    assert result.f1_macro == pytest.approx(1.0)
+    np.testing.assert_array_equal(result.f1, np.ones(17, dtype=np.float32))
+    np.testing.assert_array_equal(result.precision, result.recall)
+
+
+def test_joint_detection_report_f1_macro_equals_mean_pdj_per_joint() -> None:
+    gt = _make_torso_gt()
+    pred = gt.copy()
+    # Desloca joint 10 (Head) além do threshold: 15px / 20px torso = 0.75 > 0.5
+    pred[:, 10] = gt[:, 10] + np.array([15.0, 0.0])
+
+    pdj = compute_pdj(pred, gt, threshold=0.5)
+    report = joint_detection_report(pred, gt, threshold=0.5)
+
+    assert report.f1_macro == pytest.approx(float(pdj.per_joint.mean()))
+    assert report.f1[10] == pytest.approx(0.0)
