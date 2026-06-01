@@ -224,8 +224,10 @@ data/*
 # Pesos dos modelos (binários grandes, não versionar)
 models/weights/
 
-# Outputs gerados (reproduzíveis)
+# Outputs gerados (reproduzíveis) — exceto tabelas de benchmark (pequenas, necessárias para o artigo)
 results/
+!results/tables/
+!results/tables/*.json
 
 # Arquivos de referência
 .refs/
