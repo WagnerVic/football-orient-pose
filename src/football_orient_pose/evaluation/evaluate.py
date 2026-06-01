@@ -18,7 +18,12 @@ from football_orient_pose.evaluation import (
 from football_orient_pose.utils.data_io import load_clip_image, load_keypoints_2d
 
 
-def _build_estimator(model_name: str, device: str):
+def _build_estimator(
+    model_name: str,
+    device: str,
+    openpose_prototxt: str = "",
+    openpose_caffemodel: str = "",
+):
     if model_name == "rtmpose":
         from football_orient_pose.estimators.rtmpose import RTMPoseEstimator
         return RTMPoseEstimator(device=device)
@@ -27,7 +32,11 @@ def _build_estimator(model_name: str, device: str):
         return HRNetEstimator(device=device)
     if model_name == "openpose":
         from football_orient_pose.estimators.openpose import OpenPoseEstimator
-        return OpenPoseEstimator(device=device)
+        return OpenPoseEstimator(
+            prototxt_path=openpose_prototxt,
+            caffemodel_path=openpose_caffemodel,
+            device=device,
+        )
     raise ValueError(
         f"Modelo desconhecido: '{model_name}'. Opções: rtmpose, hrnet, openpose"
     )
@@ -75,13 +84,19 @@ def evaluate(
     split_config: Path,
     output_dir: Path,
     device: str = "cuda",
+    openpose_prototxt: str = "",
+    openpose_caffemodel: str = "",
 ) -> dict:
     split_data = json.loads(split_config.read_text())
     if split not in split_data:
         raise ValueError(f"Split '{split}' não encontrado em {split_config}")
     clip_ids: list[str] = split_data[split]
 
-    estimator = _build_estimator(model_name, device)
+    estimator = _build_estimator(
+        model_name, device,
+        openpose_prototxt=openpose_prototxt,
+        openpose_caffemodel=openpose_caffemodel,
+    )
     pred, gt = _run_inference(estimator, clip_ids, data_dir)
 
     pdj = compute_pdj(pred, gt, threshold=0.5)
@@ -122,10 +137,18 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Avalia estimador de pose no 3DSP")
     parser.add_argument("--model", default="rtmpose", choices=["rtmpose", "hrnet", "openpose"])
     parser.add_argument("--split", default="val", choices=["train", "val"])
-    parser.add_argument("--data-dir", type=Path, default=Path("data/3dsp"))
+    parser.add_argument("--data-dir", type=Path, default=Path("data"))
     parser.add_argument("--split-config", type=Path, default=Path("configs/split.json"))
     parser.add_argument("--output-dir", type=Path, default=Path("results/tables"))
     parser.add_argument("--device", default="cuda", choices=["cuda", "cpu"])
+    parser.add_argument(
+        "--openpose-prototxt", default="",
+        help="Caminho para o .prototxt do OpenPose COCO (obrigatório com --model openpose)",
+    )
+    parser.add_argument(
+        "--openpose-caffemodel", default="",
+        help="Caminho para o .caffemodel do OpenPose COCO (obrigatório com --model openpose)",
+    )
     args = parser.parse_args()
 
     evaluate(
@@ -135,6 +158,8 @@ def main() -> None:
         split_config=args.split_config,
         output_dir=args.output_dir,
         device=args.device,
+        openpose_prototxt=args.openpose_prototxt,
+        openpose_caffemodel=args.openpose_caffemodel,
     )
 
 
