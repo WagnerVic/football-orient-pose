@@ -69,4 +69,4 @@ class BasePoseEstimator(ABC):
             coordenadas ``x`` e ``y``.
         """
         coco_keypoints = self.predict(image)
-        return coco17_to_h3wb17(coco_keypoints[:, :2])
+        return coco17_to_h3wb17(coco_keypoints)  # passa (17,3) para mascarar joints não detectados
