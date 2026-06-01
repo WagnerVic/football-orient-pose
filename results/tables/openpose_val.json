@@ -1,0 +1,49 @@
+{
+  "model": "openpose",
+  "split": "val",
+  "n_clips": 40,
+  "n_frames": 800,
+  "pdj": {
+    "global": 0.560882,
+    "per_group": {
+      "head": 0.24625,
+      "shoulder": 0.7200000000000001,
+      "elbow": 0.4675,
+      "wrist": 0.28125,
+      "hip": 0.755,
+      "knee": 0.5575,
+      "ankle": 0.380625
+    }
+  },
+  "pck": {
+    "global": 0.221397,
+    "per_group": {
+      "head": 0.1175,
+      "shoulder": 0.39958333333333335,
+      "elbow": 0.14125,
+      "wrist": 0.11687499999999999,
+      "hip": 0.25375,
+      "knee": 0.11937500000000001,
+      "ankle": 0.164375
+    }
+  },
+  "oks": {
+    "global_oks": 0.485076,
+    "ap": 0.225,
+    "ap50": 0.5625,
+    "ap75": 0.14125
+  },
+  "mpjpe_2d": {
+    "global_px": 25.5831,
+    "per_group": {
+      "head": 39.8118,
+      "shoulder": 14.0742,
+      "elbow": 29.2404,
+      "wrist": 41.6213,
+      "hip": 15.5238,
+      "knee": 27.4412,
+      "ankle": 42.8193
+    }
+  },
+  "f1_macro": 0.560882
+}

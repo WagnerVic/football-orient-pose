@@ -1,0 +1,49 @@
+{
+  "model": "hrnet",
+  "split": "val",
+  "n_clips": 40,
+  "n_frames": 800,
+  "pdj": {
+    "global": 0.888971,
+    "per_group": {
+      "head": 0.96,
+      "shoulder": 0.96,
+      "elbow": 0.82875,
+      "wrist": 0.7068749999999999,
+      "hip": 0.9725,
+      "knee": 0.874375,
+      "ankle": 0.795
+    }
+  },
+  "pck": {
+    "global": 0.405147,
+    "per_group": {
+      "head": 0.18,
+      "shoulder": 0.34375,
+      "elbow": 0.44375,
+      "wrist": 0.39,
+      "hip": 0.39625,
+      "knee": 0.473125,
+      "ankle": 0.54125
+    }
+  },
+  "oks": {
+    "global_oks": 0.762221,
+    "ap": 0.590125,
+    "ap50": 0.94875,
+    "ap75": 0.65
+  },
+  "mpjpe_2d": {
+    "global_px": 6.0425,
+    "per_group": {
+      "head": 5.3908,
+      "shoulder": 4.6323,
+      "elbow": 6.8094,
+      "wrist": 10.5258,
+      "hip": 4.1927,
+      "knee": 5.7957,
+      "ankle": 8.2915
+    }
+  },
+  "f1_macro": 0.888971
+}

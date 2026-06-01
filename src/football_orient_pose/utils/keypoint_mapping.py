@@ -76,45 +76,68 @@ def coco17_to_h3wb17(keypoints_coco: np.ndarray) -> np.ndarray:
     não mapeados diretamente. Os 5 keypoints faciais do COCO (eyes, ears)
     não existem no H3WB e são descartados.
 
+    Quando ``D == 3`` (x, y, confidence), a média dos joints calculados
+    ignora joints com ``confidence == 0`` — se apenas um lado for detectado,
+    usa-o diretamente em vez de puxar o resultado para (0, 0).
+
     Parameters
     ----------
     keypoints_coco : np.ndarray
-        Array de shape ``(17, D)`` onde D é 2 (x, y) ou 3 (x, y, score/z).
+        Array de shape ``(17, D)`` onde D é 2 (x, y) ou 3 (x, y, confidence).
         Índices seguem o formato COCO-17 padrão.
 
     Returns
     -------
     np.ndarray
-        Array de shape ``(17, D)`` no formato H3WB-17 (3DSP).
+        Array de shape ``(17, 2)`` no formato H3WB-17 (3DSP), apenas x e y.
     """
     kp = keypoints_coco
+    has_conf = kp.shape[-1] >= 3
 
-    # Keypoints calculados (médias)
-    center_hips = (kp[11] + kp[12]) / 2        # H3WB 0
-    center_shoulder = (kp[5] + kp[6]) / 2      # H3WB 8
-    center_body = (center_hips + center_shoulder) / 2  # H3WB 7
-    neck = (kp[0] + center_shoulder) / 2        # H3WB 9
+    def _det(i: int) -> bool:
+        return bool(kp[i, 2] > 0) if has_conf else True
 
-    # Reordenação: COCO → H3WB
+    def _avg(i: int, j: int) -> np.ndarray:
+        """Média de dois joints COCO; ignora joint não detectado quando possível."""
+        di, dj = _det(i), _det(j)
+        if di and dj:
+            return (kp[i, :2] + kp[j, :2]) / 2
+        if di:
+            return kp[i, :2].copy()
+        if dj:
+            return kp[j, :2].copy()
+        return (kp[i, :2] + kp[j, :2]) / 2  # ambos não detectados: melhor esforço
+
+    def _avg_point_computed(pt_idx: int, computed: np.ndarray) -> np.ndarray:
+        """Média entre um joint COCO e um ponto já calculado."""
+        if has_conf and not _det(pt_idx):
+            return computed.copy()
+        return (kp[pt_idx, :2] + computed) / 2
+
+    center_hips = _avg(11, 12)
+    center_shoulder = _avg(5, 6)
+    center_body = (center_hips + center_shoulder) / 2
+    neck = _avg_point_computed(0, center_shoulder)  # nose + center_shoulder
+
     h3wb = np.array([
-        center_hips,      # 0:  Center of Hips
-        kp[11],           # 1:  Left Hip
-        kp[13],           # 2:  Left Knee
-        kp[15],           # 3:  Left Ankle
-        kp[12],           # 4:  Right Hip
-        kp[14],           # 5:  Right Knee
-        kp[16],           # 6:  Right Ankle
-        center_body,      # 7:  Center of Body
-        center_shoulder,  # 8:  Center of Shoulder
-        neck,             # 9:  Neck
-        kp[0],            # 10: Head (nose)
-        kp[6],            # 11: Right Shoulder
-        kp[8],            # 12: Right Elbow
-        kp[10],           # 13: Right Wrist
-        kp[5],            # 14: Left Shoulder
-        kp[7],            # 15: Left Elbow
-        kp[9],            # 16: Left Wrist
-    ])
+        center_hips,         # 0:  Center of Hips
+        kp[11, :2],          # 1:  Left Hip
+        kp[13, :2],          # 2:  Left Knee
+        kp[15, :2],          # 3:  Left Ankle
+        kp[12, :2],          # 4:  Right Hip
+        kp[14, :2],          # 5:  Right Knee
+        kp[16, :2],          # 6:  Right Ankle
+        center_body,         # 7:  Center of Body
+        center_shoulder,     # 8:  Center of Shoulder
+        neck,                # 9:  Neck
+        kp[0, :2],           # 10: Head (nose)
+        kp[6, :2],           # 11: Right Shoulder
+        kp[8, :2],           # 12: Right Elbow
+        kp[10, :2],          # 13: Right Wrist
+        kp[5, :2],           # 14: Left Shoulder
+        kp[7, :2],           # 15: Left Elbow
+        kp[9, :2],           # 16: Left Wrist
+    ], dtype=np.float32)
 
     return h3wb
 
@@ -125,12 +148,12 @@ def coco17_to_h3wb17_batch(keypoints_batch: np.ndarray) -> np.ndarray:
     Parameters
     ----------
     keypoints_batch : np.ndarray
-        Array de shape ``(N, 17, D)`` no formato COCO-17.
+        Array de shape ``(N, 17, D)`` no formato COCO-17, D=2 ou D=3.
 
     Returns
     -------
     np.ndarray
-        Array de shape ``(N, 17, D)`` no formato H3WB-17.
+        Array de shape ``(N, 17, 2)`` no formato H3WB-17.
     """
     return np.array([coco17_to_h3wb17(kp) for kp in keypoints_batch])
 
