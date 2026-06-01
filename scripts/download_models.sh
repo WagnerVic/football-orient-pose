@@ -29,26 +29,27 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# OpenPose COCO — caffemodel hospedado no Google Drive (pendente upload)
+# OpenPose COCO — prototxt (GitHub) + caffemodel (Hugging Face mirror)
+# O servidor original da CMU (posefs1.perception.cs.cmu.edu) está offline.
+# Mirror: huggingface.co/camenduru/openpose (~209 MB)
 # ---------------------------------------------------------------------------
 PROTO="$WEIGHTS_DIR/openpose_pose_coco.prototxt"
 CAFFE="$WEIGHTS_DIR/openpose_pose_iter_440000.caffemodel"
-# OPENPOSE_GDRIVE_ID="TODO"  # preencher após upload no Drive
+OPENPOSE_HF_URL="https://huggingface.co/camenduru/openpose/resolve/main/models/pose/coco/pose_iter_440000.caffemodel"
+OPENPOSE_PROTO_URL="https://raw.githubusercontent.com/CMU-Perceptual-Computing-Lab/openpose/master/models/pose/coco/pose_deploy_linevec.prototxt"
 
 if [ ! -f "$PROTO" ]; then
     echo "[OpenPose] Baixando prototxt..."
-    wget -q --show-progress -O "$PROTO" \
-        "https://raw.githubusercontent.com/CMU-Perceptual-Computing-Lab/openpose/master/models/pose/coco/pose_deploy_linevec.prototxt"
+    wget -q --show-progress -O "$PROTO" "$OPENPOSE_PROTO_URL"
+    echo "[OpenPose] prototxt pronto."
 else
     echo "[OpenPose] prototxt já existe, pulando."
 fi
 
 if [ ! -f "$CAFFE" ]; then
-    echo "[OpenPose] AVISO: caffemodel pendente — faça upload no Google Drive e configure OPENPOSE_GDRIVE_ID no script."
-    # Quando disponível, descomente e preencha o ID:
-    # uv run gdown "$OPENPOSE_GDRIVE_ID" -O "$WEIGHTS_DIR/openpose.zip"
-    # unzip -o "$WEIGHTS_DIR/openpose.zip" -d "$WEIGHTS_DIR"
-    # rm "$WEIGHTS_DIR/openpose.zip"
+    echo "[OpenPose] Baixando caffemodel do Hugging Face (~209 MB)..."
+    wget -q --show-progress -L -O "$CAFFE" "$OPENPOSE_HF_URL"
+    echo "[OpenPose] caffemodel pronto."
 else
     echo "[OpenPose] caffemodel já existe, pulando."
 fi
