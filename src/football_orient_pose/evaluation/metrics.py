@@ -311,19 +311,41 @@ def pdj_curve(
     predicted: np.ndarray,
     target: np.ndarray,
     thresholds: np.ndarray | None = None,
+    torso_ids: tuple[int, int] = (0, 8),
 ) -> tuple[np.ndarray, np.ndarray]:
-    """Calcula a curva PDJ para uma sequência de limiares."""
-    if thresholds is None:
-        thresholds = np.linspace(0.0, 0.5, 51, dtype=np.float32)
+    """Calcula a curva PDJ para uma sequência de limiares.
 
-    scores = np.array(
-        [
-            compute_pdj(predicted, target, threshold=float(threshold)).global_score
-            for threshold in thresholds
-        ],
-        dtype=np.float32,
-    )
-    return thresholds.astype(np.float32), scores
+    Computa as distâncias normalizadas uma única vez e aplica todos os
+    limiares por broadcasting, evitando N chamadas redundantes a compute_pdj.
+
+    O intervalo padrão é [0, 1] com 101 pontos, compatível com benchmarks
+    publicados. Passe ``thresholds`` explicitamente para intervalos customizados.
+    """
+    if thresholds is None:
+        thresholds = np.linspace(0.0, 1.0, 101, dtype=np.float32)
+
+    pred = _ensure_keypoint_batch(predicted, "predicted")
+    gt = _ensure_keypoint_batch(target, "target")
+    if pred.shape != gt.shape:
+        raise ValueError(
+            f"predicted e target devem ter o mesmo shape: {pred.shape} != {gt.shape}"
+        )
+
+    thr = np.asarray(thresholds, dtype=np.float32)
+
+    normalizer = np.linalg.norm(gt[:, torso_ids[0]] - gt[:, torso_ids[1]], axis=1)
+    valid = normalizer > 0
+    if not np.any(valid):
+        return thr, np.zeros_like(thr)
+
+    distances = np.linalg.norm(pred[valid] - gt[valid], axis=2)        # (N, 17)
+    norm_dist = distances / normalizer[valid, np.newaxis]               # (N, 17)
+
+    # broadcast (N, 17, 1) < (T,) → (N, 17, T), média sobre frames e joints
+    correct = norm_dist[:, :, np.newaxis] < thr[np.newaxis, np.newaxis, :]
+    scores = correct.mean(axis=(0, 1)).astype(np.float32)               # (T,)
+
+    return thr, scores
 
 
 def pdj_auc(
