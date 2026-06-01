@@ -49,7 +49,6 @@ OPENPOSE_TO_COCO17: list[int] = [
 ]
 
 _CONFIDENCE_THRESHOLD = 0.1
-_N_OPENPOSE_PARTS = 18
 
 
 class OpenPoseEstimator(BasePoseEstimator):

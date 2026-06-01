@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
 
 import cv2
@@ -97,6 +98,11 @@ class HRNetEstimator(BasePoseEstimator):
             raise ValueError(
                 "HRNetEstimator: 'model_path' não foi configurado. "
                 "Forneça o caminho para o arquivo ONNX exportado do HRNet-W48."
+            )
+        if not Path(self.model_path).exists():
+            raise FileNotFoundError(
+                f"HRNetEstimator: arquivo ONNX não encontrado em '{self.model_path}'. "
+                "Execute 'bash scripts/download_models.sh' para baixar os pesos."
             )
 
         providers = (

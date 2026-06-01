@@ -54,7 +54,7 @@ class RTMPoseEstimator(BasePoseEstimator):
         self.model_input_size = model_input_size
         self.backend = backend
         self.device = device
-        self._pose_model = pose_model or self._load_pose_model()
+        self._pose_model = pose_model if pose_model is not None else self._load_pose_model()
 
     @property
     def name(self) -> str:
