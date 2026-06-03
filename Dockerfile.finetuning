@@ -27,7 +27,7 @@ RUN mkdir -p /workspace/checkpoints && \
     python3 -c "\
 import torch; \
 torch.hub.download_url_to_file( \
-    'https://download.openmmlab.com/mmpose/v1/body_2d_keypoint/rtmpose/body7/rtmpose-x_simcc-body7_pt-body7_700e-384x288-71d7b7e9_20230629.pth', \
+    'https://download.openmmlab.com/mmpose/v1/projects/rtmposev1/rtmpose-x_simcc-body7_pt-body7_700e-384x288-71d7b7e9_20230629.pth', \
     '/workspace/checkpoints/rtmpose-x_coco.pth', \
     progress=True)"
 
