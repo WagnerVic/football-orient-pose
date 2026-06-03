@@ -5,9 +5,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     git wget unzip libgl1-mesa-glx libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
-# MMPose stack via OpenMIM (resolves mmcv/CUDA compatibility automatically)
+# MMPose stack — mmcv deve ser instalado antes do mmpose para evitar que o
+# mmdet (dependência do mmpose) force o pip a compilar mmcv do source.
 RUN pip install --no-cache-dir openmim && \
-    mim install --no-cache-dir "mmengine>=0.10.0" "mmcv>=2.1.0" "mmpose>=1.3.0"
+    mim install --no-cache-dir "mmengine>=0.10.0" && \
+    pip install --no-cache-dir \
+        -f https://download.openmmlab.com/mmcv/dist/cu121/torch2.4.0/index.html \
+        "mmcv==2.2.0" && \
+    pip install --no-cache-dir "mmpose>=1.3.0"
 
 # Project deps
 WORKDIR /workspace
