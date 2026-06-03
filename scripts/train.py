@@ -60,6 +60,7 @@ def _parse_args() -> argparse.Namespace:
 
 def _build_runner(config_path: str, overrides: dict):
     """Constrói um MMPose Runner com config + sobrescritas programáticas."""
+    import mmpose  # noqa: F401 — registra PoseLocalVisualizer e demais componentes
     from mmengine.config import Config
     from mmengine.runner import Runner
 
