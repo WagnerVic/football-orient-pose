@@ -1,0 +1,26 @@
+services:
+  train:
+    build:
+      context: .
+      dockerfile: Dockerfile.finetuning
+    volumes:
+      - ./data:/workspace/data:ro
+      - ./results:/workspace/results
+      - ./configs:/workspace/configs
+      - ./scripts:/workspace/scripts:ro
+      - ./src:/workspace/src:ro
+      # checkpoints/ NÃO é montado — os pesos COCO estão baked na imagem
+      # e os checkpoints de fine-tuning são salvos em results/ (já montado)
+    working_dir: /workspace
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - PYTHONPATH=/workspace/src
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    # Override at runtime: docker compose run --rm train python scripts/train.py --cenario C
+    command: python scripts/train.py --cenario A

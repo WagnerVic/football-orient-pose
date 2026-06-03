@@ -224,6 +224,10 @@ data/*
 # Pesos dos modelos (binários grandes, não versionar)
 models/weights/
 
+# Checkpoints de fine-tuning (gerados pelo train.py, não versionar)
+checkpoints/*.pth
+checkpoints/cenario_*/
+
 # Outputs gerados (reproduzíveis) — exceto tabelas de benchmark (pequenas, necessárias para o artigo)
 results/
 !results/tables/
