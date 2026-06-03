@@ -231,3 +231,10 @@ results/
 
 # Arquivos de referência
 .refs/
+
+# Task context — input pessoal de cada dev (estrutura é versionada via .gitkeep)
+.task-context/input/*
+!.task-context/input/.gitkeep
+!.task-context/input/referencias/
+.task-context/input/referencias/*
+!.task-context/input/referencias/.gitkeep
