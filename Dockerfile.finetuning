@@ -22,11 +22,14 @@ RUN pip install --no-cache-dir -e "." --no-deps && \
     pip install --no-cache-dir numpy opencv-python scipy matplotlib tqdm
 
 # Pesos COCO para Transfer Learning (Cenários C/D) — baked na imagem
-# mim download consulta o registry oficial do OpenMMLab (URL sempre atualizada).
+# torch.hub.download_url_to_file lida com redirects do CDN do OpenMMLab.
 RUN mkdir -p /workspace/checkpoints && \
-    mim download mmpose --config rtmpose-x_8xb256-700e_body7-384x288 --dest /workspace/checkpoints && \
-    find /workspace/checkpoints -name "rtmpose-x_*.pth" | head -1 | \
-    xargs -I{} mv {} /workspace/checkpoints/rtmpose-x_coco.pth
+    python3 -c "\
+import torch; \
+torch.hub.download_url_to_file( \
+    'https://download.openmmlab.com/mmpose/v1/body_2d_keypoint/rtmpose/body7/rtmpose-x_simcc-body7_pt-body7_700e-384x288-71d7b7e9_20230629.pth', \
+    '/workspace/checkpoints/rtmpose-x_coco.pth', \
+    progress=True)"
 
 COPY . .
 
