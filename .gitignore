@@ -155,6 +155,11 @@ activemq-data/
 .venv-*/
 env/
 venv/
+
+# Imagens Docker exportadas (gigantes — nunca commitar)
+*.tar
+*.tar.gz
+finetuning-image.tar.gz
 ENV/
 env.bak/
 venv.bak/
