@@ -8,7 +8,7 @@ Uso via train.py:
 """
 
 custom_imports = dict(
-    imports=["football_orient_pose.finetuning.dataset"],
+    imports=["mmpose", "football_orient_pose.finetuning.dataset"],
     allow_failed_imports=False,
 )
 
