@@ -1,0 +1,41 @@
+# Ambientes virtuais (enormes — nunca vão pra imagem)
+.venv
+.venv-mmpose
+.venv-*
+env/
+venv/
+
+# Git e metadados
+.git
+.gitignore
+.github
+
+# Saídas de treino/avaliação (checkpoints pesados; baked/montados em runtime)
+results/
+checkpoints/*.pth
+models/
+
+# Material de referência (vídeos do 3dsp-repo, PDFs — não é usado no treino)
+.refs/
+ai/
+docs/
+
+# Dados — montados em runtime via volume (docker-compose), não copiados
+data/
+*.zip
+
+# Caches e temporários
+__pycache__/
+**/__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+notebooks/
+*.log
+
+# Ferramentas/agentes locais
+.claude/
+.codex/
+.agents/
+.task-context/
