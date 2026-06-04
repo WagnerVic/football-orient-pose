@@ -66,24 +66,30 @@ train-d:
 evaluate:
 	@$(RUN_MM) scripts/evaluate.py --checkpoint $(CKPT) --config $(CONFIG) --split val
 
-## Constrói a imagem Docker de fine-tuning
-docker-build:
-	@docker compose -f docker-compose.finetuning.yml build
+IMAGE ?= football-finetuning
+TARBALL ?= finetuning-image.tar
+DATA_HOST ?= $(CURDIR)/data
+RESULTS_HOST ?= $(CURDIR)/results
 
-IMAGE ?= football-orient-pose-finetuning
-TARBALL ?= finetuning-image.tar.gz
+## Constrói a imagem Docker de fine-tuning (tag football-finetuning:latest)
+docker-build:
+	@docker build -f Dockerfile.finetuning -t $(IMAGE):latest .
 
 ## Constrói + salva a imagem num tarball (p/ transferir a um host sem internet)
 docker-save: docker-build
-	@docker tag $$(docker compose -f docker-compose.finetuning.yml config --images | head -1) $(IMAGE):latest
-	@echo "Salvando $(IMAGE):latest em $(TARBALL)..."
-	@docker save $(IMAGE):latest | gzip > $(TARBALL)
-	@echo "\033[0;32m[OK]\033[0m $(TARBALL) pronto. Transfira e rode 'docker load -i $(TARBALL)' no host."
+	@echo "Salvando $(IMAGE):latest em $(TARBALL).gz..."
+	@docker save $(IMAGE):latest | gzip > $(TARBALL).gz
+	@echo "\033[0;32m[OK]\033[0m $(TARBALL).gz pronto."
+	@echo "  Transfira:  scp $(TARBALL).gz aluno@HOST:~/"
+	@echo "  No host:    gunzip -c $(TARBALL).gz | docker load"
 
-## Roda um cenário no container (GPU): make docker-train CENARIO=C
+## Roda um cenário no container com GPU (código baked; monta só data/results)
+## Ex.: make docker-train CENARIO=C   |   no 4090 funciona via --gpus all (CDI)
 docker-train:
-	@docker compose -f docker-compose.finetuning.yml run --rm train \
-		python scripts/train.py --cenario $(CENARIO)
+	@docker run --rm --gpus all \
+		-v $(DATA_HOST):/workspace/data:ro \
+		-v $(RESULTS_HOST):/workspace/results \
+		$(IMAGE):latest python scripts/train.py --cenario $(CENARIO)
 
 ## Mostra os comandos disponíveis
 help:

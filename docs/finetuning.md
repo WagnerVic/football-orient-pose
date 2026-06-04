@@ -104,29 +104,39 @@ make train-c                 # roda o cenário (usa a GPU diretamente via PyTorc
 > Se `uv` não estiver instalado: `curl -LsSf https://astral.sh/uv/install.sh | sh` (também user-space).
 > Usamos `opencv-python-headless` justamente para não depender de `libGL.so.1` (lib de sistema).
 
-## Docker — quando o host **não consegue baixar** a stack
+## Docker — rodar no RTX 4090 sem baixar a stack
 
-Se o 4090 via SSH não tem internet (ou banda) para baixar torch/mmcv/mmpose (~vários GB),
-o Docker resolve: **constrói-se a imagem onde há internet** e transfere-se o resultado. A
-imagem traz a stack validada **+ pesos COCO baked** → no host **não baixa nada**.
+A imagem traz a stack validada **+ pesos COCO baked** e usa o **código baked** (não precisa do
+repo clonado no host) — só monta `data/` e `results/`. Fluxo "constrói onde há internet → roda
+no host sem baixar nada":
 
 ```bash
-# 1. Numa máquina COM internet (ex.: seu laptop):
-make docker-save                  # build + salva em finetuning-image.tar.gz
+# ── No laptop (com internet) ─────────────────────────────────────────────
+make docker-save          # build + finetuning-image.tar.gz  (imagem ~9.8 GB, tarball ~6 GB)
+HOST=aluno@100.95.177.8
+scp finetuning-image.tar.gz $HOST:~/
+tar czf - data | ssh $HOST 'mkdir -p ~/fop && tar xzf - -C ~/fop'   # dados (~63 MB)
 
-# 2. Transfere o tarball para o host:
-scp finetuning-image.tar.gz user@host-4090:~/
+# ── No 4090 (ssh) ────────────────────────────────────────────────────────
+gunzip -c ~/finetuning-image.tar.gz | docker load
+mkdir -p ~/fop/results
 
-# 3. No host (não baixa nada):
-docker load -i finetuning-image.tar.gz
-make docker-train CENARIO=C       # ou: docker compose -f docker-compose.finetuning.yml run --rm train ...
+# 1) a GPU é visível no container?
+docker run --rm --gpus all football-finetuning:latest \
+  python -c "import torch; print(torch.cuda.is_available(), torch.cuda.get_device_name(0))"
+
+# 2) smoke test ponta-a-ponta na GPU (~segundos)
+docker run --rm --gpus all -v ~/fop/data:/workspace/data:ro -v ~/fop/results:/workspace/results \
+  football-finetuning:latest \
+  python scripts/smoke_cenario_a.py --batch-size 16 --n-train 256 --n-val 64
+
+# 3) treino de verdade (ex.: Cenário C — TL, usa o COCO baked)
+docker run --rm --gpus all -v ~/fop/data:/workspace/data:ro -v ~/fop/results:/workspace/results \
+  football-finetuning:latest \
+  python scripts/train.py --cenario C
 ```
 
-**Pré-requisito de GPU no host (uma vez, por um admin com sudo):** NVIDIA Container Toolkit —
-`sudo nvidia-ctk runtime configure --runtime=docker && sudo systemctl restart docker`. Depois
-disso, usuários no grupo `docker` rodam **sem sudo**.
-
-> **Cheque sem sudo se o host já está pronto:** `docker info | grep -i nvidia` (deve listar o
-> runtime `nvidia`) ou `docker run --rm --gpus all ubuntu nvidia-smi`. Se funcionar, é só
-> `docker load` + `docker-train`. Se o runtime nvidia **não** estiver configurado e você não
-> tiver sudo, peça ao admin do host para rodar o comando `nvidia-ctk` acima (passo único).
+> **Pré-requisito de GPU no host:** já confirmado funcionando neste 4090 via CDI
+> (`docker run --gpus all` lista a RTX 4090, **sem sudo**). Para checar em outro host:
+> `docker run --rm --gpus all ubuntu nvidia-smi`. Se falhar e você não tiver sudo, um admin
+> precisa rodar uma vez `sudo nvidia-ctk runtime configure --runtime=docker`.
