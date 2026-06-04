@@ -21,6 +21,7 @@ Saída:
 
 from __future__ import annotations
 
+import mmpose  # noqa: F401 — registra TopdownPoseEstimator, RTMCCHead, etc. antes do Runner
 import argparse
 import glob
 import json
@@ -60,7 +61,6 @@ def _parse_args() -> argparse.Namespace:
 
 def _build_runner(config_path: str, overrides: dict):
     """Constrói um MMPose Runner com config + sobrescritas programáticas."""
-    import mmpose  # noqa: F401 — registra PoseLocalVisualizer e demais componentes
     from mmengine.config import Config
     from mmengine.runner import Runner
 
