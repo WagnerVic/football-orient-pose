@@ -8,7 +8,7 @@ Uso via train.py:
 """
 
 custom_imports = dict(
-    imports=["mmpose", "football_orient_pose.finetuning.dataset"],
+    imports=["football_orient_pose.finetuning.dataset"],
     allow_failed_imports=False,
 )
 
@@ -172,7 +172,7 @@ default_hooks = dict(
 )
 
 vis_backends = [dict(type="LocalVisBackend")]
-visualizer = dict(type="PoseLocalVisualizer", vis_backends=vis_backends, name="visualizer")
+visualizer = dict(type="Visualizer", vis_backends=vis_backends, name="visualizer")
 log_processor = dict(type="LogProcessor", window_size=50, by_epoch=True)
 log_level = "INFO"
 load_from = COCO_CHECKPOINT

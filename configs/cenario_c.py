@@ -18,7 +18,7 @@ Uso via train.py:
 """
 
 custom_imports = dict(
-    imports=["mmpose", "football_orient_pose.finetuning.dataset"],
+    imports=["football_orient_pose.finetuning.dataset"],
     allow_failed_imports=False,
 )
 
@@ -193,7 +193,7 @@ default_hooks = dict(
 
 vis_backends = [dict(type="LocalVisBackend")]
 visualizer = dict(
-    type="PoseLocalVisualizer",
+    type="Visualizer",
     vis_backends=vis_backends,
     name="visualizer",
 )
