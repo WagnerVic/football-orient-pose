@@ -25,10 +25,11 @@ make help         # Lista os comandos disponíveis
 Estrutura após extração:
 ```
 data/
-└── train/
-    └── 00001/
-        ├── img/       # Imagens dos jogadores (100×100 px)
-        └── posture/   # Anotações de pose (JSON, formato H3WB-17)
+└── 3dsp/
+    └── train/
+        └── 00001/
+            ├── img/       # Imagens dos jogadores (100×100 px)
+            └── posture/   # Anotações de pose (JSON, formato H3WB-17)
 ```
 
 ### 2. Variáveis de ambiente
@@ -146,3 +147,19 @@ uv run python -m football_orient_pose.evaluation.evaluate \
 | RTMPose-X | **93.62%** | 89.51% |
 | HRNet-W48 | **88.90%** | ~56.08% |
 | OpenPose  | — | inédito |
+
+---
+
+## Fine-tuning (Épico 1)
+
+Infraestrutura para treinar o RTMPose-X nos 4 cenários da matriz experimental 2×2
+(From Scratch vs Transfer Learning × Com vs Sem augmentation) e avaliar checkpoints
+com PDJ@0.5, PCK@0.2, OKS e MPJPE-2D. **Documentação completa:** [docs/finetuning.md](docs/finetuning.md).
+
+```bash
+make finetuning-env          # cria a venv dedicada .venv-mmpose (stack MMPose)
+make finetuning-checkpoint   # baixa os pesos COCO (Transfer Learning)
+make finetuning-smoke        # smoke test ponta-a-ponta (~30s)
+make train-a                 # treina o Cenário A (from scratch, sem augmentation)
+make help                    # lista todos os comandos
+```

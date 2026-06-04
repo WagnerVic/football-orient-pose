@@ -47,7 +47,7 @@ def _parse_args() -> argparse.Namespace:
         help="Path para o config MMPose. Se omitido, infere do nome do checkpoint.",
     )
     p.add_argument("--split", default="val", choices=["train", "val"])
-    p.add_argument("--data-dir", type=Path, default=Path("data"))
+    p.add_argument("--data-dir", type=Path, default=Path("data/3dsp"))
     p.add_argument("--split-config", type=Path, default=Path("configs/split.json"))
     p.add_argument("--output-dir", type=Path, default=Path("results/tables"))
     p.add_argument("--device", default="cuda", choices=["cuda", "cpu"])

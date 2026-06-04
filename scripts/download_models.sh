@@ -17,7 +17,7 @@ mkdir -p "$WEIGHTS_DIR" "$CHECKPOINTS_DIR"
 # Fonte: openmmlab official model zoo
 # ---------------------------------------------------------------------------
 RTMPOSE_PTH="$CHECKPOINTS_DIR/rtmpose-x_coco.pth"
-RTMPOSE_PTH_URL="https://download.openmmlab.com/mmpose/v1/body_2d_keypoint/rtmpose/body7/rtmpose-x_simcc-body7_pt-body7_700e-384x288-71d7b7e9_20230629.pth"
+RTMPOSE_PTH_URL="https://download.openmmlab.com/mmpose/v1/projects/rtmposev1/rtmpose-x_simcc-body7_pt-body7_700e-384x288-71d7b7e9_20230629.pth"
 
 if [ ! -f "$RTMPOSE_PTH" ]; then
     echo "[RTMPose-X PyTorch] Baixando pesos COCO para fine-tuning (~370 MB)..."

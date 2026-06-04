@@ -136,14 +136,14 @@ class DSP3Dataset(BaseDataset):
                 keypoints = keypoints_2d[np.newaxis]     # (1, 17, 2)
                 keypoints_visible = visibility[np.newaxis]  # (1, 17)
 
-                # bbox xyxy
-                x, y, w, h = (
-                    float(bbox_dict["x"]),
-                    float(bbox_dict["y"]),
-                    float(bbox_dict["w"]),
-                    float(bbox_dict["h"]),
-                )
-                bbox = np.array([[x, y, x + w, y + h]], dtype=np.float32)  # (1, 4)
+                # bbox xyxy — IMPORTANTE: o (x, y) do JSON é a posição do crop no
+                # frame broadcast ORIGINAL, mas img/NNN.jpg já é o crop 100×100 e os
+                # keypoints estão em coordenadas do crop (0–100). Portanto o bbox que
+                # o GetBBoxCenterScale/TopdownAffine usam deve cobrir a imagem inteira
+                # ([0, 0, w, h]); usar o (x, y) do frame jogaria a ROI para fora do
+                # crop e zeraria todos os pesos da SimCC loss.
+                w, h = float(bbox_dict["w"]), float(bbox_dict["h"])
+                bbox = np.array([[0.0, 0.0, w, h]], dtype=np.float32)  # (1, 4)
                 bbox_score = np.ones(1, dtype=np.float32)                   # (1,)
 
                 data_list.append(dict(
@@ -160,6 +160,10 @@ class DSP3Dataset(BaseDataset):
                     category_id=1,
                     iscrowd=0,
                     segmentation=[],
+                    # mmengine.BaseDataset não injeta metainfo por amostra como o
+                    # BaseCocoStyleDataset do mmpose; RandomFlip/PackPoseInputs leem
+                    # flip_indices de cada `results`, então o propagamos aqui.
+                    flip_indices=_H3WB_METAINFO["flip_indices"],
                 ))
                 item_id += 1
 

@@ -54,6 +54,14 @@ def _parse_args() -> argparse.Namespace:
     )
     p.add_argument("--device", default="cuda", choices=["cuda", "cpu"])
     p.add_argument(
+        "--batch-size", type=int, default=None,
+        help="Sobrescreve o batch_size do train/val dataloader (útil p/ GPUs pequenas/smoke test)",
+    )
+    p.add_argument(
+        "--val-interval", type=int, default=None,
+        help="Sobrescreve val_interval (épocas entre validações; útil p/ treinos curtos)",
+    )
+    p.add_argument(
         "--work-dir", default=None,
         help="Diretório raiz de checkpoints (default: results/checkpoints/cenario_<X>)",
     )
@@ -131,7 +139,10 @@ def _read_best_pck_from_log(work_dir: str) -> float | None:
     return best_pck if best_pck > 0 else None
 
 
-def _run_from_scratch(cenario: str, work_dir: str, epochs: int, device: str) -> str:
+def _run_from_scratch(
+    cenario: str, work_dir: str, epochs: int, device: str,
+    batch_size: int | None = None, val_interval: int | None = None,
+) -> str:
     """Treina cenário A/B (from scratch, fase única). Retorna path do best checkpoint."""
     config_path = f"configs/cenario_{cenario.lower()}.py"
     print(f"\n{'='*60}")
@@ -144,6 +155,11 @@ def _run_from_scratch(cenario: str, work_dir: str, epochs: int, device: str) -> 
         "work_dir": work_dir,
         "train_cfg.max_epochs": epochs,
     }
+    if batch_size is not None:
+        overrides["train_dataloader.batch_size"] = batch_size
+        overrides["val_dataloader.batch_size"] = batch_size
+    if val_interval is not None:
+        overrides["train_cfg.val_interval"] = val_interval
     runner = _build_runner(config_path, overrides)
     runner.train()
 
@@ -187,12 +203,22 @@ def _run_transfer_learning(
     epochs_fase3: int,
     delta_pck: float,
     device: str,
+    batch_size: int | None = None,
+    val_interval: int | None = None,
 ) -> str:
     """Treina cenário C/D com 3 fases de progressive unfreezing.
 
     Retorna o path do melhor checkpoint final.
     """
     config_path = f"configs/cenario_{cenario.lower()}.py"
+
+    def _bs(overrides: dict) -> dict:
+        if batch_size is not None:
+            overrides["train_dataloader.batch_size"] = batch_size
+            overrides["val_dataloader.batch_size"] = batch_size
+        if val_interval is not None:
+            overrides["train_cfg.val_interval"] = val_interval
+        return overrides
 
     from mmengine.config import Config
     base_cfg = Config.fromfile(config_path)
@@ -215,7 +241,7 @@ def _run_transfer_learning(
         "load_from": coco_checkpoint,
         "optim_wrapper": _build_tl_optim_override(1),
     }
-    runner1 = _build_runner(config_path, overrides_f1)
+    runner1 = _build_runner(config_path, _bs(overrides_f1))
     runner1.train()
 
     ckpt_f1 = _find_best_checkpoint(work_dir_f1)
@@ -239,7 +265,7 @@ def _run_transfer_learning(
         "load_from": ckpt_f1,
         "optim_wrapper": _build_tl_optim_override(2),
     }
-    runner2 = _build_runner(config_path, overrides_f2)
+    runner2 = _build_runner(config_path, _bs(overrides_f2))
     runner2.train()
 
     ckpt_f2 = _find_best_checkpoint(work_dir_f2)
@@ -268,7 +294,7 @@ def _run_transfer_learning(
             "load_from": ckpt_f2,
             "optim_wrapper": _build_tl_optim_override(3),
         }
-        runner3 = _build_runner(config_path, overrides_f3)
+        runner3 = _build_runner(config_path, _bs(overrides_f3))
         runner3.train()
 
         ckpt_f3 = _find_best_checkpoint(work_dir_f3)
@@ -298,6 +324,8 @@ def main() -> None:
             work_dir=work_dir,
             epochs=args.epochs,
             device=args.device,
+            batch_size=args.batch_size,
+            val_interval=args.val_interval,
         )
     else:  # C ou D
         _run_transfer_learning(
@@ -308,6 +336,8 @@ def main() -> None:
             epochs_fase3=args.epochs_fase3,
             delta_pck=args.delta_pck,
             device=args.device,
+            batch_size=args.batch_size,
+            val_interval=args.val_interval,
         )
 
 

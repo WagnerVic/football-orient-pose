@@ -22,6 +22,8 @@ custom_imports = dict(
     allow_failed_imports=False,
 )
 
+default_scope = "mmpose"
+
 codec = dict(
     type="SimCCLabel",
     input_size=(288, 384),
@@ -66,15 +68,14 @@ model = dict(
         simcc_split_ratio=codec["simcc_split_ratio"],
         final_layer_kernel_size=7,
         gau_cfg=dict(
-            num_token=17,
-            in_token_dims=256,
-            out_token_dims=256,
+            hidden_dims=256,
             s=128,
             expansion_factor=2,
             dropout_rate=0.0,
             drop_path=0.0,
             act_fn="SiLU",
             use_rel_bias=False,
+            pos_enc=False,
         ),
         loss=dict(
             type="KLDiscretLoss",
@@ -88,7 +89,7 @@ model = dict(
 )
 
 dataset_type = "DSP3Dataset"
-data_root = "data"
+data_root = "data/3dsp"
 split_file = "configs/split.json"
 
 train_pipeline = [
