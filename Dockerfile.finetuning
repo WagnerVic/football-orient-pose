@@ -1,0 +1,47 @@
+FROM pytorch/pytorch:2.4.0-cuda12.1-cudnn9-runtime
+
+# System deps (gcc/g++ p/ eventuais builds de source de deps do mmpose)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git wget unzip libgl1-mesa-glx libglib2.0-0 gcc g++ \
+    && rm -rf /var/lib/apt/lists/*
+
+# MMPose stack — versões validadas localmente (torch 2.4 / cu121):
+#   mmcv 2.2.0 (único com wheel p/ torch2.4/cu121) + mmpose 1.3.x + mmdet 3.3.x
+# Notas:
+#  - setuptools<81: a partir da v81 o pkg_resources foi removido, e o mmengine
+#    ainda depende dele (ImportError em runtime sem este pin).
+#  - numpy<2.0: evita quebra de ABI do xtcocotools (compilado contra numpy 1.x).
+#  - mmdet é REQUERIDO: register_all_modules() do mmpose importa o RTMOHead, que
+#    importa mmdet — sem ele o train.py quebra na inicialização.
+#  - mmdet 3.3.0 trava mmcv<2.2.0 num assert estrito demais; como só há wheel de
+#    mmcv 2.2.0 p/ torch2.4, relaxamos o teto (funciona na prática).
+RUN pip install --no-cache-dir openmim "setuptools<81" "numpy<2.0" && \
+    mim install --no-cache-dir "mmengine>=0.10.0" && \
+    pip install --no-cache-dir \
+        -f https://download.openmmlab.com/mmcv/dist/cu121/torch2.4.0/index.html \
+        "mmcv==2.2.0" && \
+    pip install --no-cache-dir "mmpose>=1.3.0" "mmdet>=3.3.0" "numpy<2.0" && \
+    python3 -c "import importlib.util as u; p=u.find_spec('mmdet').origin; s=open(p).read().replace(\"mmcv_maximum_version = '2.2.0'\", \"mmcv_maximum_version = '2.3.0'\"); open(p,'w').write(s)"
+
+# Project deps
+WORKDIR /workspace
+COPY pyproject.toml README.md ./
+COPY src/ src/
+RUN pip install --no-cache-dir -e "." --no-deps && \
+    pip install --no-cache-dir albumentations opencv-python scipy matplotlib tqdm "numpy<2.0"
+
+# Pesos COCO para Transfer Learning (Cenários C/D) — baked na imagem
+RUN mkdir -p /workspace/checkpoints && \
+    python3 -c "\
+import torch; \
+torch.hub.download_url_to_file( \
+    'https://download.openmmlab.com/mmpose/v1/projects/rtmposev1/rtmpose-x_simcc-body7_pt-body7_700e-384x288-71d7b7e9_20230629.pth', \
+    '/workspace/checkpoints/rtmpose-x_coco.pth', \
+    progress=True)"
+
+COPY . .
+
+# Sanidade: garante que a stack registra todos os módulos do mmpose no build.
+RUN python3 -c "from mmpose.utils import register_all_modules; register_all_modules(); print('mmpose stack OK')"
+
+ENV PYTHONPATH=/workspace/src:$PYTHONPATH

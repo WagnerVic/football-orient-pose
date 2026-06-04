@@ -11,9 +11,11 @@ from football_orient_pose.utils.dataset import DSPDataset
 from football_orient_pose.utils.keypoint_mapping import (
     COCO17_NAMES,
     H3WB17_NAMES,
+    H3WB_COMPUTED_IDS,
     ORIENTATION_KP_IDS,
     coco17_to_h3wb17,
     coco17_to_h3wb17_batch,
+    derive_h3wb_centers,
 )
 from football_orient_pose.utils.skeleton import (
     COCO17_BONES,
@@ -25,6 +27,8 @@ from football_orient_pose.utils.skeleton import (
 __all__ = [
     "coco17_to_h3wb17",
     "coco17_to_h3wb17_batch",
+    "derive_h3wb_centers",
+    "H3WB_COMPUTED_IDS",
     "COCO17_NAMES",
     "H3WB17_NAMES",
     "ORIENTATION_KP_IDS",

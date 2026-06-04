@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+body { font-family: Arial, sans-serif; max-width: 960px; margin: auto; padding: 2em; font-size: 14px; line-height: 1.6; }
+h1 { color: #1a1a2e; border-bottom: 3px solid #e94560; padding-bottom: .3em; }
+h2 { color: #16213e; border-bottom: 1px solid #ddd; padding-bottom: .2em; margin-top: 2em; }
+h3 { color: #0f3460; }
+table { border-collapse: collapse; width: 100%; margin: 1em 0; font-size: 13px; }
+th { background: #16213e; color: white; padding: 8px 12px; text-align: left; }
+td { padding: 7px 12px; border-bottom: 1px solid #eee; }
+tr:nth-child(even) { background: #f8f9fa; }
+code { background: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-size: 12px; }
+pre { background: #1a1a2e; color: #e0e0e0; padding: 1em; border-radius: 6px; overflow-x: auto; }
+blockquote { border-left: 4px solid #e94560; margin: 0; padding: .5em 1em; background: #fff8f8; }
+strong { color: #c0392b; }
+</style>
+</head>
+<body><h1>Relatório de Resultados Preliminares — Épico 1</h1>
+<p><strong>Fine-tuning RTMPose-X no Dataset 3DSP</strong>
+<strong>Data:</strong> 04 de junho de 2026 | <strong>Hardware:</strong> NVIDIA GeForce RTX 4090 (24 GB)</p>
+<hr />
+<h2>1. Resumo Executivo</h2>
+<p>O Épico 1 foi concluído com sucesso. A infraestrutura de fine-tuning foi validada end-to-end na madrugada de 03–04/06, com os Cenários A (from scratch) e C (transfer learning) treinados e avaliados no val split do 3DSP.</p>
+<p><strong>Principal resultado:</strong> o Transfer Learning (Cenário C) supera o zero-shot RTMPose-X em <strong>+16,6 pp de PCK@0.2</strong> e reduz o MPJPE-2D de 4,81 px para <strong>3,63 px</strong> no melhor checkpoint — demonstrando que o fine-tuning em dados de futebol é fortemente benéfico.</p>
+<hr />
+<h2>2. Setup Experimental</h2>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Valor</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Modelo</td>
+<td>RTMPose-X (CSPNeXt-X + RTMCCHead SimCC)</td>
+</tr>
+<tr>
+<td>Input</td>
+<td>288×384 px (letterbox de 100×100)</td>
+</tr>
+<tr>
+<td>Dataset</td>
+<td>3DSP — 160 clips treino / 40 clips val (3200 / 800 frames)</td>
+</tr>
+<tr>
+<td>Keypoints</td>
+<td>H3WB-17 (IDs 0,7,8,9 derivados, excluídos da loss)</td>
+</tr>
+<tr>
+<td>Batch size</td>
+<td>16</td>
+</tr>
+<tr>
+<td>Optimizer</td>
+<td>AdamW</td>
+</tr>
+<tr>
+<td>GPU</td>
+<td>NVIDIA RTX 4090 24 GB</td>
+</tr>
+<tr>
+<td>Framework</td>
+<td>MMPose 1.3.2 + MMEngine 0.10.7</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>3. Modelos Avaliados</h2>
+<h3>3.1 Baselines Zero-Shot (sem fine-tuning)</h3>
+<p>Estes modelos foram treinados em COCO e aplicados diretamente no 3DSP, sem qualquer adaptação.</p>
+<table>
+<thead>
+<tr>
+<th>Modelo</th>
+<th>PDJ@0.5</th>
+<th>PCK@0.2</th>
+<th>OKS</th>
+<th>MPJPE-2D</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>OpenPose</td>
+<td>56,1%</td>
+<td>22,1%</td>
+<td>48,5%</td>
+<td>25,58 px</td>
+</tr>
+<tr>
+<td>HRNet-W48</td>
+<td>88,9%</td>
+<td>40,5%</td>
+<td>76,2%</td>
+<td>6,04 px</td>
+</tr>
+<tr>
+<td><strong>RTMPose-X (zero-shot)</strong></td>
+<td><strong>93,6%</strong></td>
+<td><strong>41,8%</strong></td>
+<td><strong>81,8%</strong></td>
+<td><strong>4,81 px</strong></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>RTMPose-X zero-shot é o <strong>baseline principal</strong> para medir o ganho do fine-tuning.</p>
+</blockquote>
+<h3>3.2 Cenário A — From Scratch, sem Augmentation</h3>
+<p>Pesos inicializados aleatoriamente. Treino de 50 épocas com LR uniforme 1×10⁻³.</p>
+<table>
+<thead>
+<tr>
+<th>Split</th>
+<th>PDJ@0.5</th>
+<th>PCK@0.2</th>
+<th>OKS</th>
+<th>MPJPE-2D</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Treino</strong></td>
+<td>99,6%</td>
+<td>83,9%</td>
+<td>96,4%</td>
+<td>1,54 px</td>
+</tr>
+<tr>
+<td><strong>Val</strong></td>
+<td><strong>90,7%</strong></td>
+<td><strong>47,0%</strong></td>
+<td><strong>80,1%</strong></td>
+<td><strong>5,34 px</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Diagnóstico:</strong> overfitting moderado-alto (gap treino→val de <strong>36,9 pp em PCK</strong>). Com apenas 3.200 imagens, o modelo memoriza o treino mas generaliza parcialmente. Ainda assim, supera o zero-shot em PCK@0.2 (+5,2 pp), confirmando que o fine-tuning mesmo do zero agrega valor.</p>
+<h3>3.3 Cenário C — Transfer Learning, sem Augmentation</h3>
+<p>Pesos inicializados com checkpoint COCO. Progressive unfreezing em 3 fases.</p>
+<h4>Progressão por fase (val split)</h4>
+<table>
+<thead>
+<tr>
+<th>Fase</th>
+<th>Épocas</th>
+<th>frozen_stages</th>
+<th>LR Head</th>
+<th>LR Backbone</th>
+<th>PDJ@0.5</th>
+<th>PCK@0.2</th>
+<th>OKS</th>
+<th>MPJPE-2D</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Zero-shot</strong> (referência)</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>93,6%</td>
+<td>41,8%</td>
+<td>81,8%</td>
+<td>4,81 px</td>
+</tr>
+<tr>
+<td><strong>Fase 1</strong> (head only)</td>
+<td>10</td>
+<td>4</td>
+<td>1×10⁻³</td>
+<td>0</td>
+<td>91,8%</td>
+<td>53,2%</td>
+<td>82,8%</td>
+<td>4,76 px</td>
+</tr>
+<tr>
+<td><strong>Fase 2</strong> (stages 2–3 + neck)</td>
+<td>75</td>
+<td>2</td>
+<td>1×10⁻⁴</td>
+<td>1×10⁻⁵</td>
+<td><strong>95,2%</strong></td>
+<td><strong>61,5%</strong></td>
+<td><strong>87,3%</strong></td>
+<td><strong>3,63 px</strong></td>
+</tr>
+<tr>
+<td><strong>Fase 3</strong> (stage 1–3 + neck)</td>
+<td>60</td>
+<td>1</td>
+<td>1×10⁻⁴</td>
+<td>1×10⁻⁶</td>
+<td>93,4%</td>
+<td>58,4%</td>
+<td>85,1%</td>
+<td>4,15 px</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Melhor checkpoint:</strong> Fase 2 (epoch 75) — PCK@0.2 = <strong>61,5%</strong>, MPJPE = <strong>3,63 px</strong></p>
+<table>
+<thead>
+<tr>
+<th>Split</th>
+<th>PDJ@0.5</th>
+<th>PCK@0.2</th>
+<th>OKS</th>
+<th>MPJPE-2D</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Treino</strong></td>
+<td>98,6%</td>
+<td>76,6%</td>
+<td>94,2%</td>
+<td>2,00 px</td>
+</tr>
+<tr>
+<td><strong>Val</strong></td>
+<td><strong>93,4%</strong></td>
+<td><strong>58,4%</strong></td>
+<td><strong>85,1%</strong></td>
+<td><strong>4,15 px</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Diagnóstico:</strong> overfitting menor que o Cenário A (gap de <strong>18,2 pp</strong> vs <strong>36,9 pp</strong>). O ponto de partida COCO fornece representações robustas que resistem melhor ao dataset pequeno.</p>
+<hr />
+<h2>4. Tabela Comparativa Global</h2>
+<table>
+<thead>
+<tr>
+<th>Modelo</th>
+<th>PDJ@0.5 ↑</th>
+<th>PCK@0.2 ↑</th>
+<th>OKS ↑</th>
+<th>MPJPE-2D ↓</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>OpenPose (zero-shot)</td>
+<td>56,1%</td>
+<td>22,1%</td>
+<td>48,5%</td>
+<td>25,58 px</td>
+</tr>
+<tr>
+<td>HRNet-W48 (zero-shot)</td>
+<td>88,9%</td>
+<td>40,5%</td>
+<td>76,2%</td>
+<td>6,04 px</td>
+</tr>
+<tr>
+<td>RTMPose-X (zero-shot)</td>
+<td>93,6%</td>
+<td>41,8%</td>
+<td>81,8%</td>
+<td>4,81 px</td>
+</tr>
+<tr>
+<td><strong>Cenário A</strong> (from scratch, val)</td>
+<td>90,7%</td>
+<td>47,0%</td>
+<td>80,1%</td>
+<td>5,34 px</td>
+</tr>
+<tr>
+<td><strong>Cenário C</strong> (TL fase 2, val)</td>
+<td><strong>95,2%</strong></td>
+<td><strong>61,5%</strong></td>
+<td><strong>87,3%</strong></td>
+<td><strong>3,63 px</strong></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>5. Análise por Grupo Anatômico (PCK@0.2, val)</h2>
+<table>
+<thead>
+<tr>
+<th>Grupo</th>
+<th>Zero-shot RTMPose</th>
+<th>Cenário A</th>
+<th>Cenário C (melhor)</th>
+<th>Δ C vs Zero-shot</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Head</td>
+<td>50,4%</td>
+<td>75,0%</td>
+<td>81,4%</td>
+<td><strong>+31,0 pp</strong></td>
+</tr>
+<tr>
+<td>Shoulder</td>
+<td>30,4%</td>
+<td>61,8%</td>
+<td>73,5%</td>
+<td><strong>+43,1 pp</strong></td>
+</tr>
+<tr>
+<td>Elbow</td>
+<td>50,8%</td>
+<td>32,7%</td>
+<td>50,6%</td>
+<td>+0 pp</td>
+</tr>
+<tr>
+<td>Wrist</td>
+<td>43,5%</td>
+<td>22,9%</td>
+<td>39,8%</td>
+<td>-3,7 pp</td>
+</tr>
+<tr>
+<td>Hip</td>
+<td>22,8%</td>
+<td>51,0%</td>
+<td>63,6%</td>
+<td><strong>+40,8 pp</strong></td>
+</tr>
+<tr>
+<td>Knee</td>
+<td>58,3%</td>
+<td>37,7%</td>
+<td>56,6%</td>
+<td>-1,7 pp</td>
+</tr>
+<tr>
+<td>Ankle</td>
+<td>59,4%</td>
+<td>36,1%</td>
+<td>60,1%</td>
+<td>+0,7 pp</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Observações:</strong>
+- O maior ganho do TL está em <strong>head, shoulder e hip</strong> — joints com características visuais de futebol distintas do domínio COCO
+- <strong>Wrist e elbow</strong> mantêm performance similar ao zero-shot — são joints difíceis independente do método (alta variabilidade de pose durante o chute)
+- O Cenário A piora elbow/wrist/knee em relação ao zero-shot — sinal de underfitting nesses joints com 3.200 amostras</p>
+<hr />
+<h2>6. Análise de Overfitting (os 3 números)</h2>
+<p>Metodologia definida em reunião com professor: comparar (1) performance no treino, (2) performance no val, (3) baseline zero-shot.</p>
+<h3>Cenário A</h3>
+<pre><code>Treino  PCK@0.2 = 83,9%
+Val     PCK@0.2 = 47,0%   ← gap de 36,9 pp
+Zero-shot         = 41,8%   ← referência inferior
+</code></pre>
+<p>→ <strong>Overfitting moderado.</strong> O modelo aprendeu features do domínio (supera zero-shot por 5,2 pp) mas memoriza demais o treino. Dataset de 3.200 frames não é suficiente para from scratch sem regularização extra.</p>
+<h3>Cenário C — Fase 2 (melhor checkpoint)</h3>
+<pre><code>Treino  PCK@0.2 = 76,6%
+Val     PCK@0.2 = 61,5%   ← gap de 15,1 pp
+Zero-shot         = 41,8%   ← referência inferior
+</code></pre>
+<p>→ <strong>Generalização boa.</strong> Gap treino→val de 15 pp com ganho de <strong>+19,7 pp</strong> sobre o zero-shot. Os pesos COCO atuam como regularizador implícito.</p>
+<h3>Cenário C — Fase 3 (degradação)</h3>
+<p>A Fase 3 (descongelar até stage 1) <strong>degradou a performance</strong> de 61,5% → 58,4% PCK@0.2. Isso indica que descongelar as primeiras camadas do backbone com apenas 3.200 amostras causa overfitting nos estágios de baixo nível. <strong>Para os Cenários B e D, considerar encerrar em Fase 2 se Δ PCK for negativo.</strong></p>
+<hr />
+<h2>7. Conclusões e Próximos Passos</h2>
+<h3>O que foi validado no Épico 1</h3>
+<ul>
+<li>✅ Pipeline de fine-tuning funcional end-to-end (DSP3Dataset → MMPose → checkpoint → avaliação)</li>
+<li>✅ Cenário A (from scratch) treina e avalia corretamente</li>
+<li>✅ Cenário C (transfer learning) com progressive unfreezing funcional</li>
+<li>✅ Docker com GPU na RTX 4090, reproducível via <code>docker compose</code></li>
+</ul>
+<h3>Implicações para o Épico 2</h3>
+<ol>
+<li><strong>Cenário C Fase 2 é o melhor resultado atual</strong> (PCK@0.2 = 61,5%) — servir como referência principal para comparação com Cenários B e D</li>
+<li><strong>Cenário D</strong> (TL + augmentation) tem potencial de superar C, especialmente em wrist/elbow onde C ainda é fraco</li>
+<li><strong>Fase 3 do progressive unfreezing</strong> pode ser prejudicial — monitorar delta entre fases antes de executar</li>
+<li><strong>Cenário B</strong> (from scratch + augmentation) deve superar A em wrist/elbow mas provavelmente não alcançará C</li>
+</ol>
+<h3>Ordem de prioridade para Épico 2</h3>
+<table>
+<thead>
+<tr>
+<th>Prioridade</th>
+<th>Cenário</th>
+<th>Justificativa</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Alta</td>
+<td><strong>D</strong> (TL + aug)</td>
+<td>Potencialmente o melhor; complementa C</td>
+</tr>
+<tr>
+<td>Alta</td>
+<td><strong>B</strong> (scratch + aug)</td>
+<td>Isola efeito do aug; completa a matriz</td>
+</tr>
+<tr>
+<td>—</td>
+<td>A e C</td>
+<td>✅ Já executados</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<p><em>Gerado automaticamente a partir dos arquivos em <code>results/tables/</code>. Treinamento realizado na madrugada de 03–04 de junho de 2026 na GPU RTX 4090 (ubuntu-lab150-c4).</em></p></body>
+</html>

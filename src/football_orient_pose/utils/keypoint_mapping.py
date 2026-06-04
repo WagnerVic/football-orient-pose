@@ -180,3 +180,24 @@ COCO_DISCARDED_IDS: list[int] = [1, 2, 3, 4]  # left/right eye/ear
 
 # Keypoints H3WB que são calculados (não existem no COCO)
 H3WB_COMPUTED_IDS: list[int] = [0, 7, 8, 9]  # center_hips, center_body, center_shoulder, neck
+
+
+def derive_h3wb_centers(keypoints: np.ndarray) -> np.ndarray:
+    """Preenche os 4 keypoints derivados H3WB (IDs 0,7,8,9) como médias dos
+    anotados, mesma definição usada no GT e em :func:`coco17_to_h3wb17`.
+
+    Esses 4 são treinados com ``visibility=0`` (não supervisionados), então o
+    modelo não os prediz; derivá-los das predições torna a avaliação justa vs.
+    o baseline (que também os calcula como médias).
+
+    Parameters
+    ----------
+    keypoints : np.ndarray
+        Shape ``(..., 17, 2)`` em ordem H3WB. Não é modificado in-place.
+    """
+    k = keypoints.copy()
+    k[..., 0, :] = (k[..., 1, :] + k[..., 4, :]) / 2      # center_hips = avg(L_hip, R_hip)
+    k[..., 8, :] = (k[..., 11, :] + k[..., 14, :]) / 2    # center_shoulder = avg(R_sh, L_sh)
+    k[..., 7, :] = (k[..., 0, :] + k[..., 8, :]) / 2      # center_body = avg(hips, shoulders)
+    k[..., 9, :] = (k[..., 10, :] + k[..., 8, :]) / 2     # neck ~ avg(head, center_shoulder)
+    return k

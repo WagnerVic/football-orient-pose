@@ -9,7 +9,23 @@
 set -euo pipefail
 
 WEIGHTS_DIR="models/weights"
-mkdir -p "$WEIGHTS_DIR"
+CHECKPOINTS_DIR="checkpoints"
+mkdir -p "$WEIGHTS_DIR" "$CHECKPOINTS_DIR"
+
+# ---------------------------------------------------------------------------
+# RTMPose-X — pesos PyTorch para fine-tuning (Transfer Learning, Cenários C/D)
+# Fonte: openmmlab official model zoo
+# ---------------------------------------------------------------------------
+RTMPOSE_PTH="$CHECKPOINTS_DIR/rtmpose-x_coco.pth"
+RTMPOSE_PTH_URL="https://download.openmmlab.com/mmpose/v1/projects/rtmposev1/rtmpose-x_simcc-body7_pt-body7_700e-384x288-71d7b7e9_20230629.pth"
+
+if [ ! -f "$RTMPOSE_PTH" ]; then
+    echo "[RTMPose-X PyTorch] Baixando pesos COCO para fine-tuning (~370 MB)..."
+    wget -q --show-progress -L -O "$RTMPOSE_PTH" "$RTMPOSE_PTH_URL"
+    echo "[RTMPose-X PyTorch] Pronto: $RTMPOSE_PTH"
+else
+    echo "[RTMPose-X PyTorch] Pesos já existem, pulando."
+fi
 
 # ---------------------------------------------------------------------------
 # HRNet-W48 (256×192) — ONNX exportado, hospedado no Google Drive

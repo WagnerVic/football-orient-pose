@@ -1,7 +1,12 @@
-"""Wrapper RTMPose para inferência de keypoints COCO-17."""
+"""Wrappers RTMPose para inferência de keypoints.
+
+RTMPoseEstimator  — zero-shot via rtmlib/ONNX, saída COCO-17.
+RTMPoseFinetunedEstimator — modelo fine-tunado via MMPose, saída H3WB-17.
+"""
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
 
 import numpy as np
@@ -122,6 +127,31 @@ class RTMPoseEstimator(BasePoseEstimator):
         raise ValueError(f"RTMPose retornou scores com shape inesperado: {scores.shape}")
 
     @staticmethod
+    def from_checkpoint(
+        checkpoint_path: str,
+        config_path: str | None = None,
+        device: str = "cuda",
+    ) -> "RTMPoseFinetunedEstimator":
+        """Carrega modelo fine-tunado via MMPose.
+
+        Retorna um ``RTMPoseFinetunedEstimator`` com a mesma interface de
+        ``predict()`` / ``predict_h3wb()``, mas com saída direta em H3WB-17
+        (sem conversão COCO→H3WB).
+
+        Parameters
+        ----------
+        checkpoint_path : str
+            Path para o .pth gerado pelo train.py.
+        config_path : str | None
+            Path para o config MMPose. Se None, infere pelo nome do checkpoint.
+        device : str
+            ``"cuda"`` ou ``"cpu"``.
+        """
+        if config_path is None:
+            config_path = _infer_config_from_checkpoint(checkpoint_path)
+        return RTMPoseFinetunedEstimator(checkpoint_path, config_path, device)
+
+    @staticmethod
     def _select_best_instance(keypoints: np.ndarray, image_shape: tuple[int, int]) -> int:
         if keypoints.shape[0] == 1:
             return 0
@@ -132,3 +162,101 @@ class RTMPoseEstimator(BasePoseEstimator):
         center_body = (center_hips + center_shoulders) / 2
         distances = np.linalg.norm(center_body - image_center, axis=1)
         return int(np.argmin(distances))
+
+
+def _infer_config_from_checkpoint(checkpoint_path: str) -> str:
+    p = Path(checkpoint_path)
+    for part in p.parts:
+        for cenario in ("a", "b", "c", "d"):
+            if f"cenario_{cenario}" in part.lower():
+                candidate = Path("configs") / f"cenario_{cenario}.py"
+                if candidate.exists():
+                    return str(candidate)
+    raise ValueError(
+        f"Não foi possível inferir o config a partir de '{checkpoint_path}'. "
+        "Passe config_path explicitamente."
+    )
+
+
+class RTMPoseFinetunedEstimator:
+    """RTMPose-X fine-tunado via MMPose.
+
+    Saída em H3WB-17 — não realiza conversão COCO→H3WB, ao contrário do
+    ``RTMPoseEstimator`` zero-shot. Compatível com as funções de métricas do
+    projeto (que esperam coordenadas H3WB).
+
+    Parameters
+    ----------
+    checkpoint_path : str
+        Path para o .pth gerado pelo train.py.
+    config_path : str
+        Path para o config MMPose do cenário treinado.
+    device : str
+        ``"cuda"`` ou ``"cpu"``.
+    """
+
+    def __init__(
+        self,
+        checkpoint_path: str,
+        config_path: str,
+        device: str = "cuda",
+    ) -> None:
+        try:
+            from mmpose.apis import init_model
+        except ImportError as exc:
+            raise ImportError(
+                "RTMPoseFinetunedEstimator requer MMPose. "
+                "Instale com 'mim install mmpose' ou use o Docker de fine-tuning."
+            ) from exc
+
+        self._model = init_model(config_path, checkpoint_path, device=device)
+        self._model.eval()
+        self._checkpoint_path = checkpoint_path
+
+    @property
+    def name(self) -> str:
+        return f"rtmpose-x-finetuned({Path(self._checkpoint_path).parent.name})"
+
+    def predict(self, image: np.ndarray) -> np.ndarray:
+        """Retorna keypoints H3WB-17 para uma imagem.
+
+        Parameters
+        ----------
+        image : np.ndarray
+            Crop do jogador em formato H×W×C (BGR, 100×100).
+
+        Returns
+        -------
+        np.ndarray
+            Array ``(17, 3)`` com x, y (coordenadas do crop) e confidence.
+        """
+        from mmpose.apis import inference_topdown
+
+        H, W = image.shape[:2]
+        results = inference_topdown(
+            self._model,
+            image,
+            bboxes=np.array([[0.0, 0.0, float(W), float(H)]]),
+            bbox_format="xyxy",
+        )
+        if not results or len(results[0].pred_instances.keypoints) == 0:
+            return np.zeros((17, 3), dtype=np.float32)
+
+        kps = np.asarray(results[0].pred_instances.keypoints[0], dtype=np.float32)      # (17, 2)
+        scores = np.asarray(results[0].pred_instances.keypoint_scores[0], dtype=np.float32)  # (17,)
+        return np.column_stack([kps, scores]).astype(np.float32)  # (17, 3)
+
+    def predict_h3wb(self, image: np.ndarray) -> np.ndarray:
+        """Retorna keypoints H3WB-17 sem a coluna de confiança.
+
+        Returns
+        -------
+        np.ndarray
+            Array ``(17, 2)`` com x, y no espaço do crop.
+        """
+        return self.predict(image)[:, :2]
+
+    def predict_batch(self, images: list[np.ndarray]) -> np.ndarray:
+        if not images:
+            return np.empty((0, 17, 3), dtype=np.float32)
+        return np.stack([self.predict(img) for img in images])
