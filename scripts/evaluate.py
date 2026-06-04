@@ -37,23 +37,7 @@ from football_orient_pose.evaluation import (
     compute_pdj,
 )
 from football_orient_pose.utils.data_io import load_clip_image, load_keypoints_2d
-
-
-# IDs H3WB derivados (médias de outros keypoints) — o modelo é treinado com
-# visibility=0 nesses canais, então não os prediz. O GT e o baseline rtmlib os
-# calculam como médias; para uma comparação justa, derivamos aqui também.
-_DERIVED_KP_IDS = (0, 7, 8, 9)
-
-
-def _derive_computed_keypoints(kps: np.ndarray) -> np.ndarray:
-    """Preenche os 4 keypoints derivados H3WB a partir dos anotados (mesma
-    definição do GT). ``kps`` shape ``(..., 17, 2)``."""
-    k = kps.copy()
-    k[..., 0, :] = (k[..., 1, :] + k[..., 4, :]) / 2      # center_hips = avg(L_hip, R_hip)
-    k[..., 8, :] = (k[..., 11, :] + k[..., 14, :]) / 2    # center_shoulder = avg(R_sh, L_sh)
-    k[..., 7, :] = (k[..., 0, :] + k[..., 8, :]) / 2      # center_body = avg(hips, shoulders)
-    k[..., 9, :] = (k[..., 10, :] + k[..., 8, :]) / 2     # neck ~ avg(head, center_shoulder)
-    return k
+from football_orient_pose.utils.keypoint_mapping import derive_h3wb_centers
 
 
 def _parse_args() -> argparse.Namespace:
@@ -163,7 +147,7 @@ def run_evaluation(
     # Os IDs [0,7,8,9] são derivados (médias) e não supervisionados no treino —
     # o modelo prediz lixo neles. Derivamos das predições, igual ao GT/baseline,
     # para a comparação ser justa (senão PDJ/PCK/OKS despencam sem motivo real).
-    pred = _derive_computed_keypoints(pred)
+    pred = derive_h3wb_centers(pred)
 
     pdj_r = compute_pdj(pred, gt, threshold=0.5)
     pck_r = compute_pck(pred, gt, threshold=0.2)

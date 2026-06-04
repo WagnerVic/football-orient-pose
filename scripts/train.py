@@ -25,7 +25,6 @@ from mmpose.utils import register_all_modules
 register_all_modules()  # registra TopdownPoseEstimator, RTMCCHead, CSPNeXt, etc.
 import argparse
 import glob
-import json
 import os
 import shutil
 import sys
@@ -33,6 +32,13 @@ from pathlib import Path
 
 # Garante que o src/ do projeto está no path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+
+import torch
+
+# O MMEngine Runner usa GPU automaticamente quando disponível; não há override
+# por-run simples (daí o --device foi removido). Este device serve só para o
+# eval de gating da fase 3.
+_DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 
 def _parse_args() -> argparse.Namespace:
@@ -52,7 +58,6 @@ def _parse_args() -> argparse.Namespace:
         "--delta-pck", type=float, default=0.05,
         help="Δ PCK mínimo (fase2-fase1) para ativar fase 3 (default: 0.05 = 5pp)",
     )
-    p.add_argument("--device", default="cuda", choices=["cuda", "cpu"])
     p.add_argument(
         "--batch-size", type=int, default=None,
         help="Sobrescreve o batch_size do train/val dataloader (útil p/ GPUs pequenas/smoke test)",
@@ -112,35 +117,45 @@ def _find_best_checkpoint(work_dir: str) -> str:
     )
 
 
-def _read_best_pck_from_log(work_dir: str) -> float | None:
-    """Lê o melhor PCK@0.2 do log JSON gerado pelo MMEngine."""
-    # MMEngine salva vis_data/scalars.json — cada linha é um dict com métricas
-    log_files = sorted(
-        glob.glob(str(Path(work_dir) / "**" / "scalars.json"), recursive=True),
-        key=os.path.getmtime,
-        reverse=True,
+def _scheduler_override(max_epochs: int) -> list[dict]:
+    """param_scheduler proporcional ao nº de épocas da fase.
+
+    Sem isto, o warmup (LinearLR) e o cosseno (CosineAnnealingLR) ficam presos
+    nas épocas hardcoded do config (ex.: 5/50) e não acompanham ``--epochs`` nem
+    as fases do TL (15/20/15) — o LR fica inconsistente entre cenários e
+    contamina a comparação. Aqui o warmup é ~10% das épocas e o cosseno anela
+    de ponta a ponta até ``eta_min``.
+    """
+    warmup = max(1, min(5, round(max_epochs * 0.1)))
+    if warmup >= max_epochs:
+        warmup = max(1, max_epochs - 1)
+    return [
+        dict(type="LinearLR", start_factor=1e-3, begin=0, end=warmup,
+             by_epoch=True, convert_to_iter_based=True),
+        dict(type="CosineAnnealingLR", eta_min=1e-6, begin=warmup, end=max_epochs,
+             by_epoch=True, convert_to_iter_based=True),
+    ]
+
+
+def _strict_pck_on_val(checkpoint: str, config_path: str, data_dir: Path,
+                       split_config: Path, device: str) -> float:
+    """PCK@0.2 ESTRITO (``compute_pck`` do projeto) no val — a métrica do artigo.
+
+    Usado na decisão da fase 3. Substitui o parsing do log, que devolvia a PCK
+    LENIENTE do ``PCKAccuracy(norm_item='bbox')`` (escala ~0.9), incompatível
+    com ``--delta-pck`` (pensado na escala estrita ~0.2).
+    """
+    from evaluate import run_evaluation
+    res = run_evaluation(
+        checkpoint_path=checkpoint, config_path=config_path, split="val",
+        data_dir=data_dir, split_config=split_config,
+        output_dir=Path("results/tables"), device=device,
     )
-    if not log_files:
-        return None
-
-    best_pck = 0.0
-    try:
-        for line in Path(log_files[0]).read_text().splitlines():
-            if not line.strip():
-                continue
-            entry = json.loads(line)
-            # Chave pode ser 'PCK' ou 'val/PCK' dependendo da versão MMPose
-            for key in ("PCK", "val/PCK", "val_PCK"):
-                if key in entry:
-                    best_pck = max(best_pck, float(entry[key]))
-    except Exception:
-        pass
-
-    return best_pck if best_pck > 0 else None
+    return float(res["pck_02"])
 
 
 def _run_from_scratch(
-    cenario: str, work_dir: str, epochs: int, device: str,
+    cenario: str, work_dir: str, epochs: int,
     batch_size: int | None = None, val_interval: int | None = None,
 ) -> str:
     """Treina cenário A/B (from scratch, fase única). Retorna path do best checkpoint."""
@@ -154,6 +169,7 @@ def _run_from_scratch(
     overrides = {
         "work_dir": work_dir,
         "train_cfg.max_epochs": epochs,
+        "param_scheduler": _scheduler_override(epochs),
     }
     if batch_size is not None:
         overrides["train_dataloader.batch_size"] = batch_size
@@ -202,7 +218,6 @@ def _run_transfer_learning(
     epochs_fase2: int,
     epochs_fase3: int,
     delta_pck: float,
-    device: str,
     batch_size: int | None = None,
     val_interval: int | None = None,
 ) -> str:
@@ -223,6 +238,8 @@ def _run_transfer_learning(
     from mmengine.config import Config
     base_cfg = Config.fromfile(config_path)
     coco_checkpoint = getattr(base_cfg, "COCO_CHECKPOINT", "checkpoints/rtmpose-x_coco.pth")
+    data_dir = Path(getattr(base_cfg, "data_root", "data/3dsp"))
+    split_config = Path(getattr(base_cfg, "split_file", "configs/split.json"))
 
     # ── Fase 1: backbone completamente congelado, treina só o head ──────────
     work_dir_f1 = str(Path(work_dir) / "fase1")
@@ -237,6 +254,7 @@ def _run_transfer_learning(
     overrides_f1 = {
         "work_dir": work_dir_f1,
         "train_cfg.max_epochs": epochs_total_f1,
+        "param_scheduler": _scheduler_override(epochs_total_f1),
         "model.backbone.frozen_stages": 4,
         "load_from": coco_checkpoint,
         "optim_wrapper": _build_tl_optim_override(1),
@@ -245,8 +263,8 @@ def _run_transfer_learning(
     runner1.train()
 
     ckpt_f1 = _find_best_checkpoint(work_dir_f1)
-    pck_f1 = _read_best_pck_from_log(work_dir_f1) or 0.0
-    print(f"\n[Fase 1] Best checkpoint: {ckpt_f1}  |  PCK@0.2 = {pck_f1:.4f}")
+    pck_f1 = _strict_pck_on_val(ckpt_f1, config_path, data_dir, split_config, _DEVICE)
+    print(f"\n[Fase 1] Best checkpoint: {ckpt_f1}  |  PCK@0.2 (estrito) = {pck_f1:.4f}")
 
     # ── Fase 2: descongelar stages 2-3, LR diferenciado ─────────────────────
     work_dir_f2 = str(Path(work_dir) / "fase2")
@@ -261,6 +279,7 @@ def _run_transfer_learning(
     overrides_f2 = {
         "work_dir": work_dir_f2,
         "train_cfg.max_epochs": epochs_total_f2,
+        "param_scheduler": _scheduler_override(epochs_total_f2),
         "model.backbone.frozen_stages": 2,
         "load_from": ckpt_f1,
         "optim_wrapper": _build_tl_optim_override(2),
@@ -269,8 +288,8 @@ def _run_transfer_learning(
     runner2.train()
 
     ckpt_f2 = _find_best_checkpoint(work_dir_f2)
-    pck_f2 = _read_best_pck_from_log(work_dir_f2) or 0.0
-    print(f"\n[Fase 2] Best checkpoint: {ckpt_f2}  |  PCK@0.2 = {pck_f2:.4f}")
+    pck_f2 = _strict_pck_on_val(ckpt_f2, config_path, data_dir, split_config, _DEVICE)
+    print(f"\n[Fase 2] Best checkpoint: {ckpt_f2}  |  PCK@0.2 (estrito) = {pck_f2:.4f}")
 
     delta = pck_f2 - pck_f1
     print(f"\n[Δ PCK fase2−fase1] = {delta:.4f} (threshold = {delta_pck})")
@@ -290,6 +309,7 @@ def _run_transfer_learning(
         overrides_f3 = {
             "work_dir": work_dir_f3,
             "train_cfg.max_epochs": epochs_total_f3,
+            "param_scheduler": _scheduler_override(epochs_total_f3),
             "model.backbone.frozen_stages": 1,
             "load_from": ckpt_f2,
             "optim_wrapper": _build_tl_optim_override(3),
@@ -298,8 +318,8 @@ def _run_transfer_learning(
         runner3.train()
 
         ckpt_f3 = _find_best_checkpoint(work_dir_f3)
-        pck_f3 = _read_best_pck_from_log(work_dir_f3) or 0.0
-        print(f"\n[Fase 3] Best checkpoint: {ckpt_f3}  |  PCK@0.2 = {pck_f3:.4f}")
+        pck_f3 = _strict_pck_on_val(ckpt_f3, config_path, data_dir, split_config, _DEVICE)
+        print(f"\n[Fase 3] Best checkpoint: {ckpt_f3}  |  PCK@0.2 (estrito) = {pck_f3:.4f}")
         final_ckpt = ckpt_f3
     else:
         print(f"[Fase 3] PULADA (Δ PCK {delta:.4f} ≤ {delta_pck})")
@@ -323,7 +343,6 @@ def main() -> None:
             cenario=cenario,
             work_dir=work_dir,
             epochs=args.epochs,
-            device=args.device,
             batch_size=args.batch_size,
             val_interval=args.val_interval,
         )
@@ -335,7 +354,6 @@ def main() -> None:
             epochs_fase2=args.epochs_fase2,
             epochs_fase3=args.epochs_fase3,
             delta_pck=args.delta_pck,
-            device=args.device,
             batch_size=args.batch_size,
             val_interval=args.val_interval,
         )

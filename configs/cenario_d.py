@@ -85,7 +85,7 @@ train_pipeline = [
     dict(type="GetBBoxCenterScale"),
     dict(type="RandomFlip", direction="horizontal"),
     dict(type="Albu", transforms=[
-        dict(type="MotionBlur", blur_limit=(3, 5), p=0.5),
+        dict(type="MotionBlur", blur_limit=(3, 9), p=0.5),
     ]),
     dict(type="TopdownAffine", input_size=codec["input_size"], use_udp=True),
     dict(type="RandomErasing",

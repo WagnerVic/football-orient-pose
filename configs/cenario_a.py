@@ -17,7 +17,11 @@ default_scope = "mmpose"
 
 # ─── Codec SimCC ────────────────────────────────────────────────────────────
 # Entrada: 288×384 (largura × altura). Split ratio 2.0 → 576 bins-x, 768 bins-y.
-# Sigma calibrado para crops 100×100 escalados 2.88× com padding 48px top/bottom.
+# Letterboxing: GetBBoxCenterScale (padding=1.25 default) + TopdownAffine(use_udp)
+# preservam o aspect ratio do crop 100×100 (fator efetivo ~2.3× + margem; a affine
+# inversa devolve as coords no espaço do crop). Mantemos padding=1.25 (padrão MMPose)
+# para evitar clipping de keypoints nas bordas — difere do "2.88×/48px" da issue #68,
+# mas é consistente em treino e avaliação, que é o que a comparação exige.
 codec = dict(
     type="SimCCLabel",
     input_size=(288, 384),
@@ -169,7 +173,7 @@ param_scheduler = [
     dict(
         type="CosineAnnealingLR",
         begin=5,
-        end=50,  # sobrescrito pelo train.py
+        end=50,  # train.py reconstrói o param_scheduler por época (_scheduler_override)
         eta_min=1e-6,
         by_epoch=True,
         convert_to_iter_based=True,

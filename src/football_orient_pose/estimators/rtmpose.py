@@ -126,9 +126,8 @@ class RTMPoseEstimator(BasePoseEstimator):
             return scores
         raise ValueError(f"RTMPose retornou scores com shape inesperado: {scores.shape}")
 
-    @classmethod
+    @staticmethod
     def from_checkpoint(
-        cls,
         checkpoint_path: str,
         config_path: str | None = None,
         device: str = "cuda",

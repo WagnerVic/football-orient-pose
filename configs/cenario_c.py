@@ -170,7 +170,7 @@ param_scheduler = [
     dict(
         type="CosineAnnealingLR",
         begin=3,
-        end=15,  # sobrescrito pelo train.py
+        end=15,  # train.py reconstrói o param_scheduler por época (_scheduler_override)
         eta_min=1e-6,
         by_epoch=True,
         convert_to_iter_based=True,
