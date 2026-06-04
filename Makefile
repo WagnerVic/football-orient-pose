@@ -70,6 +70,16 @@ evaluate:
 docker-build:
 	@docker compose -f docker-compose.finetuning.yml build
 
+IMAGE ?= football-orient-pose-finetuning
+TARBALL ?= finetuning-image.tar.gz
+
+## Constrói + salva a imagem num tarball (p/ transferir a um host sem internet)
+docker-save: docker-build
+	@docker tag $$(docker compose -f docker-compose.finetuning.yml config --images | head -1) $(IMAGE):latest
+	@echo "Salvando $(IMAGE):latest em $(TARBALL)..."
+	@docker save $(IMAGE):latest | gzip > $(TARBALL)
+	@echo "\033[0;32m[OK]\033[0m $(TARBALL) pronto. Transfira e rode 'docker load -i $(TARBALL)' no host."
+
 ## Roda um cenário no container (GPU): make docker-train CENARIO=C
 docker-train:
 	@docker compose -f docker-compose.finetuning.yml run --rm train \

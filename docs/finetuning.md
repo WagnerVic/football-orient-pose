@@ -87,13 +87,46 @@ PYTHONPATH=src .venv-mmpose/bin/python scripts/evaluate.py \
 - **`default_scope="mmpose"`** nos configs e **`mmdet` instalado** são obrigatórios:
   sem eles o `register_all_modules()` e a construção do `TopdownPoseEstimator` falham.
 
-## Docker (treino no RTX 4090)
+## Rodar no RTX 4090 via SSH **sem sudo** (recomendado)
+
+Não é preciso Docker nem `sudo`/`apt`: o `setup_mmpose_env.sh` instala tudo em user-space
+com `uv` (a stack MMPose vai para `.venv-mmpose`). Num servidor com driver NVIDIA já
+instalado (sempre é, em máquina com GPU), basta:
 
 ```bash
-make docker-build                 # constrói a imagem (Dockerfile.finetuning)
-make docker-train CENARIO=C       # roda um cenário no container com GPU
+git clone <repo> && cd football-orient-pose
+make setup                   # extrai os dados (data/3dsp/...)
+make finetuning-env          # cria .venv-mmpose (user-space, sem sudo)
+make finetuning-checkpoint   # baixa pesos COCO
+make train-c                 # roda o cenário (usa a GPU diretamente via PyTorch)
 ```
 
-A imagem já traz a stack MMPose validada + pesos COCO baked. **Pré-requisito no host:**
-NVIDIA Container Toolkit instalado e configurado —
-`sudo nvidia-ctk runtime configure --runtime=docker && sudo systemctl restart docker`.
+> Se `uv` não estiver instalado: `curl -LsSf https://astral.sh/uv/install.sh | sh` (também user-space).
+> Usamos `opencv-python-headless` justamente para não depender de `libGL.so.1` (lib de sistema).
+
+## Docker — quando o host **não consegue baixar** a stack
+
+Se o 4090 via SSH não tem internet (ou banda) para baixar torch/mmcv/mmpose (~vários GB),
+o Docker resolve: **constrói-se a imagem onde há internet** e transfere-se o resultado. A
+imagem traz a stack validada **+ pesos COCO baked** → no host **não baixa nada**.
+
+```bash
+# 1. Numa máquina COM internet (ex.: seu laptop):
+make docker-save                  # build + salva em finetuning-image.tar.gz
+
+# 2. Transfere o tarball para o host:
+scp finetuning-image.tar.gz user@host-4090:~/
+
+# 3. No host (não baixa nada):
+docker load -i finetuning-image.tar.gz
+make docker-train CENARIO=C       # ou: docker compose -f docker-compose.finetuning.yml run --rm train ...
+```
+
+**Pré-requisito de GPU no host (uma vez, por um admin com sudo):** NVIDIA Container Toolkit —
+`sudo nvidia-ctk runtime configure --runtime=docker && sudo systemctl restart docker`. Depois
+disso, usuários no grupo `docker` rodam **sem sudo**.
+
+> **Cheque sem sudo se o host já está pronto:** `docker info | grep -i nvidia` (deve listar o
+> runtime `nvidia`) ou `docker run --rm --gpus all ubuntu nvidia-smi`. Se funcionar, é só
+> `docker load` + `docker-train`. Se o runtime nvidia **não** estiver configurado e você não
+> tiver sudo, peça ao admin do host para rodar o comando `nvidia-ctk` acima (passo único).

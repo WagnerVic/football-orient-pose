@@ -26,7 +26,12 @@ uv pip install --python "$PY" "mmcv==2.2.0" \
 
 echo "[5/6] mmpose + deps de runtime (augmentation/metrics/io)..."
 uv pip install --python "$PY" "mmpose>=1.3.0"
-uv pip install --python "$PY" albumentations opencv-python scipy matplotlib tqdm
+# mmdet é REQUERIDO: register_all_modules() do mmpose importa o RTMOHead (mmdet).
+# Como só há wheel de mmcv 2.2.0 p/ torch2.4, relaxamos o teto de mmcv no mmdet.
+uv pip install --python "$PY" "mmdet>=3.3.0"
+"$PY" -c "import mmdet, os; p=os.path.join(os.path.dirname(mmdet.__file__), '__init__.py'); s=open(p).read().replace(\"mmcv_maximum_version = '2.2.0'\", \"mmcv_maximum_version = '2.3.0'\"); open(p,'w').write(s)"
+# opencv-python-headless: NÃO precisa de libGL.so.1 — roda em servidor headless SEM sudo/apt.
+uv pip install --python "$PY" albumentations opencv-python-headless scipy matplotlib tqdm
 
 echo "[6/6] Instalando o projeto (editable, sem deps)..."
 uv pip install --python "$PY" -e . --no-deps
