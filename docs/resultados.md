@@ -25,13 +25,16 @@
 | **C** — transfer learning (TL) | **51.46%** | 90.04% | 80.39% | 5.14 px |
 
 > O zero-shot **detecta** bem (PDJ ~93%) mas é **impreciso** no domínio (PCK 41.76%).
-> O fine-tuning melhora a precisão: A e C **passam o baseline no PCK**. O PDJ cai um
-> pouco (detecção marginalmente menor), mas o alvo do trabalho — precisão — sobe.
+> O fine-tuning sobe o **PCK@0.2** (A e C passam o baseline), mas **PDJ, OKS e MPJPE
+> pioram** — o ganho de precisão se concentra no tronco, não nos membros (ver
+> [ressalva](#️-ressalva--regressão-em-extremidades-vs-baseline) abaixo).
 
 ## Diagnóstico over/underfitting (train vs val)
 
 Seguindo o framework dos **3 números** (treino, val, base ótimo) — overfitting é
-avaliado pela diferença entre as métricas finais, não por curva de loss.
+avaliado pela diferença entre as métricas finais, não por curva de loss. O **PCK train**
+é o mesmo PCK@0.2 estrito (`compute_pck`, ref. ombros/quadris), medido com
+`evaluate.py --split train` sobre o best checkpoint.
 
 | Cenário | PCK **train** | PCK **val** | gap | Diagnóstico |
 |---------|------------:|----------:|----:|-------------|
@@ -56,6 +59,25 @@ avaliado pela diferença entre as métricas finais, não por curva de loss.
 
 > O TL melhora principalmente as **extremidades** (wrist, ankle, knee, elbow) vs. o
 > from-scratch — coerente com o backbone do COCO já trazer features ricas de membros.
+
+### ⚠️ Ressalva — regressão em extremidades vs. baseline
+
+O PCK global sobe, mas **MPJPE, PDJ e OKS pioram** nos dois cenários (A: 5.32px, C: 5.14px
+vs. baseline 4.81px). Não é contradição: o PCK@0.2 conta a fração abaixo do limiar e é
+dominado pelo **tronco**, enquanto o MPJPE é média que **inclui os outliers**. O breakdown
+por grupo explica:
+
+- **Tronco melhora muito:** hip 22.8%→54.0%, shoulder 30.4%→62.8%, head 50.4%→71.4% (C vs. baseline).
+- **Extremidades regridem vs. o baseline COCO:** wrist 43.5%→31.9%, elbow 50.8%→39.9%,
+  knee 58.3%→46.6%, ankle 59.4%→47.5% (C). O from-scratch (A) é ainda pior nos membros.
+
+Ou seja, o fine-tuning **melhora o tronco e piora os membros** — e são esses membros que
+arrastam MPJPE/PDJ/OKS pra baixo. A leitura "TL melhora extremidades" vale **apenas relativa
+ao from-scratch** (C > A nos membros); contra o **baseline**, ambos regridem.
+
+**Implicação:** como o alvo do trabalho é precisão, a regressão nos membros é uma limitação
+real a reportar. Hipótese testável nos próximos cenários: **B/D (augmentation) recuperam as
+extremidades?** Acompanhar o breakdown por grupo, não só o PCK global.
 
 ## Conclusão preliminar
 
