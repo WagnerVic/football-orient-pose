@@ -126,12 +126,12 @@ docker run --rm --gpus all football-finetuning:latest \
   python -c "import torch; print(torch.cuda.is_available(), torch.cuda.get_device_name(0))"
 
 # 2) smoke test ponta-a-ponta na GPU (~segundos)
-docker run --rm --gpus all -v ~/fop/data:/workspace/data:ro -v ~/fop/results:/workspace/results \
+docker run --rm --gpus all --shm-size=16g -v ~/fop/data:/workspace/data:ro -v ~/fop/results:/workspace/results \
   football-finetuning:latest \
   python scripts/smoke_cenario_a.py --batch-size 16 --n-train 256 --n-val 64
 
 # 3) treino de verdade (ex.: Cenário C — TL, usa o COCO baked)
-docker run --rm --gpus all -v ~/fop/data:/workspace/data:ro -v ~/fop/results:/workspace/results \
+docker run --rm --gpus all --shm-size=16g -v ~/fop/data:/workspace/data:ro -v ~/fop/results:/workspace/results \
   football-finetuning:latest \
   python scripts/train.py --cenario C
 ```

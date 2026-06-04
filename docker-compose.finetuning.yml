@@ -12,6 +12,8 @@ services:
       # checkpoints/ NÃO é montado — os pesos COCO estão baked na imagem
       # e os checkpoints de fine-tuning são salvos em results/ (já montado)
     working_dir: /workspace
+    # /dev/shm padrão do Docker (64MB) estoura com os DataLoader workers do PyTorch
+    shm_size: "16gb"
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
       - PYTHONPATH=/workspace/src

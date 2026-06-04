@@ -85,8 +85,9 @@ docker-save: docker-build
 
 ## Roda um cenário no container com GPU (código baked; monta só data/results)
 ## Ex.: make docker-train CENARIO=C   |   no 4090 funciona via --gpus all (CDI)
+## --shm-size=16g: o /dev/shm padrão do Docker (64MB) estoura com os DataLoader workers
 docker-train:
-	@docker run --rm --gpus all \
+	@docker run --rm --gpus all --shm-size=16g \
 		-v $(DATA_HOST):/workspace/data:ro \
 		-v $(RESULTS_HOST):/workspace/results \
 		$(IMAGE):latest python scripts/train.py --cenario $(CENARIO)
