@@ -21,7 +21,8 @@ Saída:
 
 from __future__ import annotations
 
-import mmpose  # noqa: F401 — registra TopdownPoseEstimator, RTMCCHead, etc. antes do Runner
+from mmpose.utils import register_all_modules
+register_all_modules()  # registra TopdownPoseEstimator, RTMCCHead, CSPNeXt, etc.
 import argparse
 import glob
 import json
