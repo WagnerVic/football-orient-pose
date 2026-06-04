@@ -29,7 +29,8 @@ uv pip install --python "$PY" "mmpose>=1.3.0"
 # mmdet é REQUERIDO: register_all_modules() do mmpose importa o RTMOHead (mmdet).
 # Como só há wheel de mmcv 2.2.0 p/ torch2.4, relaxamos o teto de mmcv no mmdet.
 uv pip install --python "$PY" "mmdet>=3.3.0"
-"$PY" -c "import mmdet, os; p=os.path.join(os.path.dirname(mmdet.__file__), '__init__.py'); s=open(p).read().replace(\"mmcv_maximum_version = '2.2.0'\", \"mmcv_maximum_version = '2.3.0'\"); open(p,'w').write(s)"
+# Acha o __init__.py SEM importar mmdet (importar dispara o assert do mmcv).
+"$PY" -c "import importlib.util as u; p=u.find_spec('mmdet').origin; s=open(p).read().replace(\"mmcv_maximum_version = '2.2.0'\", \"mmcv_maximum_version = '2.3.0'\"); open(p,'w').write(s)"
 # opencv-python-headless: NÃO precisa de libGL.so.1 — roda em servidor headless SEM sudo/apt.
 uv pip install --python "$PY" albumentations opencv-python-headless scipy matplotlib tqdm
 
