@@ -180,8 +180,13 @@ def _run_from_scratch(
     runner.train()
 
     best_ckpt = _find_best_checkpoint(work_dir)
+    # Copia para um nome estável (igual o TL faz) — path uniforme entre A/B e C/D.
+    dest = str(Path(work_dir) / "best_PCK.pth")
+    if Path(best_ckpt).resolve() != Path(dest).resolve():
+        shutil.copy2(best_ckpt, dest)
     print(f"\n[Cenário {cenario}] Treinamento concluído. Best checkpoint: {best_ckpt}")
-    return best_ckpt
+    print(f"  (copiado para {dest})")
+    return dest
 
 
 def _build_tl_optim_override(phase: int) -> dict:
