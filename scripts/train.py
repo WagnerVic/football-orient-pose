@@ -44,7 +44,7 @@ _DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 def _parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Fine-tuning RTMPose-X — Épico 1")
     p.add_argument(
-        "--cenario", required=True, choices=["A", "B", "C", "D", "C2"],
+        "--cenario", required=True, choices=["A", "B", "C", "D", "C2", "A-RAW", "C-RAW"],
         help="Cenário da matriz 2×2 (A=from scratch/sem aug, B=from scratch/aug, "
              "C=TL/sem aug, D=TL/aug)",
     )
@@ -345,7 +345,9 @@ def main() -> None:
     work_dir = args.work_dir or f"results/checkpoints/cenario_{cenario}"
     Path(work_dir).mkdir(parents=True, exist_ok=True)
 
-    if cenario in ("A", "B", "C2"):  # C2 = TL fase única (ablação), também single-phase
+    # Fase única: A/B (from scratch), C2 (TL fase única) e A-RAW (from scratch sem flip).
+    # C-RAW cai na rota de TL (3 fases), igual ao C.
+    if cenario in ("A", "B", "C2", "A-RAW"):
         _run_from_scratch(
             cenario=cenario,
             work_dir=work_dir,
