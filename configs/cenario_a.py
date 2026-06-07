@@ -9,7 +9,7 @@ Uso via train.py:
 """
 
 custom_imports = dict(
-    imports=["football_orient_pose.finetuning.dataset"],
+    imports=["football_orient_pose.finetuning.dataset", "football_orient_pose.finetuning.metric"],
     allow_failed_imports=False,
 )
 
@@ -141,11 +141,7 @@ val_dataloader = dict(
 test_dataloader = val_dataloader
 
 # ─── Métricas ────────────────────────────────────────────────────────────────
-val_evaluator = dict(
-    type="PCKAccuracy",
-    thr=0.2,
-    norm_item="bbox",
-)
+val_evaluator = dict(type="StrictPCKMetric", pck_thr=0.2, pdj_thr=0.5)
 test_evaluator = val_evaluator
 
 # ─── Treinamento ─────────────────────────────────────────────────────────────
