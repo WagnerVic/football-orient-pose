@@ -240,6 +240,10 @@ results/
 !results/tables/
 !results/tables/*.json
 
+# Relatórios em formatos gerados (versionar só o .md fonte; PDF/HTML são gerados sob demanda)
+docs/**/*.pdf
+docs/**/*.html
+
 # Arquivos de referência
 .refs/
 

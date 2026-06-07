@@ -386,7 +386,7 @@ openpose_val.json   ← PDJ 56.09%, PCK 22.14%, OKS 48.51%, MPJPE 25.58px
 scripts/download_models.sh      ← HRNet (Drive) + OpenPose (HuggingFace)
 .env.example                    ← DATA_DIR, SPLIT_CONFIG
 .gitignore                      ← exceção results/tables/*.json
-docs/epic2_retrospectiva.md     ← retrospectiva técnica detalhada
+docs/vision/epic2-retrospectiva.md  ← retrospectiva técnica detalhada
 ```
 
 ---

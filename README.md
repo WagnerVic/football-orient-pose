@@ -74,10 +74,9 @@ football-orient-pose/
 │           ├── img/                # Frames do jogador (100×100 px, BGR)
 │           └── posture/            # Anotações H3WB-17 por frame (JSON)
 │
-├── docs/
-│   ├── epic2_retrospectiva.md      # Retrospectiva técnica do Épico 2
-│   └── validation/
-│       └── rtmpose_zero_shot.md    # Resultados RTMPose no 3DSP
+├── docs/                           # Documentação por projeto (ver docs/README.md)
+│   ├── vision/                     # Projeto de visão (estimadores, baseline)
+│   └── finetuning/                 # Projeto Transfer Learning / RNP
 │
 ├── models/
 │   └── weights/                    # Pesos dos modelos — ignorado pelo Git
@@ -268,4 +267,4 @@ Métricas salvas em `results/tables/finetuned_cenario_{A,B,C,D}_val.json`.
 | **Cenário A** (from scratch, val) | 90,7% | 47,0% | 80,1% | 5,34 px |
 | **Cenário C** (TL fase 2, val) | **95,2%** | **61,5%** | **87,3%** | **3,63 px** |
 
-Relatório completo: [docs/relatorio_epico1_resultados_preliminares.pdf](docs/relatorio_epico1_resultados_preliminares.pdf)
+Relatório completo: [docs/finetuning/relatorio-preliminar.md](docs/finetuning/relatorio-preliminar.md)
