@@ -44,7 +44,7 @@ _DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 def _parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Fine-tuning RTMPose-X — Épico 1")
     p.add_argument(
-        "--cenario", required=True, choices=["A", "B", "C", "D"],
+        "--cenario", required=True, choices=["A", "B", "C", "D", "C2"],
         help="Cenário da matriz 2×2 (A=from scratch/sem aug, B=from scratch/aug, "
              "C=TL/sem aug, D=TL/aug)",
     )
@@ -158,10 +158,10 @@ def _run_from_scratch(
     cenario: str, work_dir: str, epochs: int,
     batch_size: int | None = None, val_interval: int | None = None,
 ) -> str:
-    """Treina cenário A/B (from scratch, fase única). Retorna path do best checkpoint."""
+    """Treina cenário de fase única (A/B from scratch, ou C2 = TL fase única). Retorna best."""
     config_path = f"configs/cenario_{cenario.lower()}.py"
     print(f"\n{'='*60}")
-    print(f"[Cenário {cenario}] From scratch — {epochs} épocas")
+    print(f"[Cenário {cenario}] Fase única — {epochs} épocas")
     print(f"  Config:   {config_path}")
     print(f"  work_dir: {work_dir}")
     print(f"{'='*60}")
@@ -345,7 +345,7 @@ def main() -> None:
     work_dir = args.work_dir or f"results/checkpoints/cenario_{cenario}"
     Path(work_dir).mkdir(parents=True, exist_ok=True)
 
-    if cenario in ("A", "B"):
+    if cenario in ("A", "B", "C2"):  # C2 = TL fase única (ablação), também single-phase
         _run_from_scratch(
             cenario=cenario,
             work_dir=work_dir,
