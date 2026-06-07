@@ -325,7 +325,9 @@ def _run_transfer_learning(
         ckpt_f3 = _find_best_checkpoint(work_dir_f3)
         pck_f3 = _strict_pck_on_val(ckpt_f3, config_path, data_dir, split_config, _DEVICE)
         print(f"\n[Fase 3] Best checkpoint: {ckpt_f3}  |  PCK@0.2 (estrito) = {pck_f3:.4f}")
-        final_ckpt = ckpt_f3
+        # fica com o melhor entre fase 2 e 3 (a fase 3 pode degradar)
+        final_ckpt = ckpt_f3 if pck_f3 > pck_f2 else ckpt_f2
+        print(f"[Seleção] fase2={pck_f2:.4f} fase3={pck_f3:.4f} → {'fase3' if pck_f3 > pck_f2 else 'fase2'}")
     else:
         print(f"[Fase 3] PULADA (Δ PCK {delta:.4f} ≤ {delta_pck})")
 

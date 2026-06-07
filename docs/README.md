@@ -17,7 +17,8 @@ Fine-tuning do RTMPose-X na matriz experimental 2×2 (Épico 1 do projeto RNP).
 
 | Arquivo | O que é |
 |---|---|
+| [`finetuning/visao-geral.md`](finetuning/visao-geral.md) | **Comece por aqui** — panorama completo do que foi feito (infra + execução + resultados + pendências) |
 | [`finetuning/guia.md`](finetuning/guia.md) | Guia de setup e execução do pipeline de fine-tuning (ambiente, Docker, comandos) |
-| [`finetuning/relatorio-preliminar.md`](finetuning/relatorio-preliminar.md) | Relatório de resultados preliminares do Épico 1 (Cenários A e C) |
+| [`finetuning/epic1-relatorio-preliminar.md`](finetuning/epic1-relatorio-preliminar.md) | Relatório de resultados preliminares (Cenários A e C) |
 
 > **Nota:** PDF/HTML de relatórios não são versionados (ver `.gitignore`) — gere sob demanda a partir do `.md` fonte.

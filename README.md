@@ -267,4 +267,4 @@ Métricas salvas em `results/tables/finetuned_cenario_{A,B,C,D}_val.json`.
 | **Cenário A** (from scratch, val) | 90,7% | 47,0% | 80,1% | 5,34 px |
 | **Cenário C** (TL fase 2, val) | **95,2%** | **61,5%** | **87,3%** | **3,63 px** |
 
-Relatório completo: [docs/finetuning/relatorio-preliminar.md](docs/finetuning/relatorio-preliminar.md)
+Relatório completo: [docs/finetuning/epic1-relatorio-preliminar.md](docs/finetuning/epic1-relatorio-preliminar.md)
