@@ -17,9 +17,11 @@ Fine-tuning do RTMPose-X na matriz experimental 2×2 (Épico 1 do projeto RNP).
 
 | Arquivo | O que é |
 |---|---|
-| [`finetuning/visao-geral.md`](finetuning/visao-geral.md) | **Comece por aqui** — panorama completo do que foi feito (infra + execução + resultados + pendências) |
-| [`finetuning/guia.md`](finetuning/guia.md) | Guia de setup e execução do pipeline de fine-tuning (ambiente, Docker, comandos) |
-| [`finetuning/epic1-relatorio-preliminar.md`](finetuning/epic1-relatorio-preliminar.md) | Relatório preliminar (pré-fixes do review) — Cenários A e C |
-| [`finetuning/epic2-relatorio.md`](finetuning/epic2-relatorio.md) | **Relatório do Épico 2** — run canônico pós-fixes (A e C); B/D pendentes |
+| [`finetuning/epico-1/visao-geral.md`](finetuning/epico-1/visao-geral.md) | **Comece por aqui** — panorama completo do que foi feito (infra + execução + resultados + pendências) |
+| [`finetuning/epico-1/guia.md`](finetuning/epico-1/guia.md) | Guia de setup e execução do pipeline de fine-tuning (ambiente, Docker, comandos) |
+| [`finetuning/epico-1/epic1-relatorio-preliminar.md`](finetuning/epico-1/epic1-relatorio-preliminar.md) | Relatório preliminar (pré-fixes do review) — Cenários A e C |
+| [`finetuning/epico-2/epic2-relatorio-final.md`](finetuning/epico-2/epic2-relatorio-final.md) | ⭐ **Relatório FINAL do Épico 2 (canônico)** — matriz 2×2 completa (10 modelos); funde A/C + B/D. Receita campeã: TL + aug geométrica (D-FULL 67,5% · extremidades resolvidas) |
+| [`finetuning/epico-2/epic2-relatorio-a-c.md`](finetuning/epico-2/epic2-relatorio-a-c.md) | *(histórico/detalhe)* parcial A/C — A/C/RAW + ablações C2 e flip |
+| [`finetuning/epico-2/epic2-relatorio-bd.md`](finetuning/epico-2/epic2-relatorio-bd.md) | *(histórico/detalhe)* B/D — cenários com augmentation, ladder fino do TL e atribuição por mecanismo |
 
 > **Nota:** PDF/HTML de relatórios não são versionados (ver `.gitignore`) — gere sob demanda a partir do `.md` fonte.
