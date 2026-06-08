@@ -10,7 +10,11 @@ Uso via train.py:
 """
 
 custom_imports = dict(
-    imports=["football_orient_pose.finetuning.dataset", "football_orient_pose.finetuning.metric"],
+    imports=[
+        "football_orient_pose.finetuning.dataset",
+        "football_orient_pose.finetuning.metric",
+        "football_orient_pose.finetuning.transforms",
+    ],
     allow_failed_imports=False,
 )
 
@@ -88,14 +92,9 @@ train_pipeline = [
     dict(type="RandomFlip", direction="horizontal"),
     dict(type="RandomBBoxTransform",
          scale_factor=(0.75, 1.25), rotate_factor=30.0, shift_factor=0.1),
-    dict(type="Albu", transforms=[
-        dict(type="MotionBlur", blur_limit=(3, 9), p=0.5),
-    ]),
+    dict(type="SimpleMotionBlur", blur_limit=(3, 9), p=0.5),
     dict(type="TopdownAffine", input_size=codec["input_size"], use_udp=True),
-    dict(type="RandomErasing",
-         n_patches=(1, 1),
-         ratio=(0.02, 0.10),
-         prob=0.3),
+    dict(type="SimpleRandomErasing", n_patches=(1, 1), ratio=(0.02, 0.10), prob=0.3),
     dict(type="GenerateTarget", encoder=codec),
     dict(type="PackPoseInputs"),
 ]

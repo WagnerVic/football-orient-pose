@@ -130,7 +130,11 @@ def _scheduler_override(max_epochs: int) -> list[dict]:
     """
     warmup = max(1, min(5, round(max_epochs * 0.1)))
     if warmup >= max_epochs:
-        warmup = max(1, max_epochs - 1)
+        # max_epochs muito curto (ex.: smoke com 1 época) — só warmup, sem cosine
+        return [
+            dict(type="LinearLR", start_factor=1e-3, begin=0, end=max_epochs,
+                 by_epoch=True, convert_to_iter_based=True),
+        ]
     return [
         dict(type="LinearLR", start_factor=1e-3, begin=0, end=warmup,
              by_epoch=True, convert_to_iter_based=True),
