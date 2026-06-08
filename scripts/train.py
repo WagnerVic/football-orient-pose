@@ -44,9 +44,11 @@ _DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 def _parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Fine-tuning RTMPose-X — Épico 1")
     p.add_argument(
-        "--cenario", required=True, choices=["A", "B", "C", "D", "C2", "A-RAW", "C-RAW"],
+        "--cenario", required=True,
+        choices=["A", "B", "C", "D", "C2", "A-RAW", "C-RAW", "D-GEOM", "D-OCCL"],
         help="Cenário da matriz 2×2 (A=from scratch/sem aug, B=from scratch/aug, "
-             "C=TL/sem aug, D=TL/aug)",
+             "C=TL/sem aug, D=TL/aug). D-GEOM/D-OCCL = degraus do ladder de aug no TL "
+             "(geométrico / geométrico+oclusão).",
     )
     # Épocas para A/B
     p.add_argument("--epochs", type=int, default=50, help="Épocas totais (A/B)")

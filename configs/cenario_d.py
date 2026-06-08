@@ -1,10 +1,14 @@
-"""Cenário D — Transfer Learning, com Data Augmentation.
+"""Cenário D (= D-FULL) — Transfer Learning + augmentation COMPLETA.
 
-Igual ao Cenário C mas com MotionBlur e RandomErasing no pipeline de treino.
-Testa se augmentation potencializa o TL.
+Topo do ladder de aug no lado TL: TL (progressive unfreezing) + flip +
+geométrica (RandomBBoxTransform) + oclusão (RandomErasing) + blur (MotionBlur).
+Junto com D-GEOM e D-OCCL forma o ladder fino que isola cada mecanismo:
+    geométrico = D-GEOM − C-FLIP
+    oclusão    = D-OCCL − D-GEOM
+    blur       = D-FULL − D-OCCL
 
 Uso via train.py:
-    python scripts/train.py --cenario D [--epochs-fase1 15] [--epochs-fase2 20] [--epochs-fase3 15]
+    python scripts/train.py --cenario D [--epochs-fase1 45] [--epochs-fase2 60] [--epochs-fase3 45]
 """
 
 custom_imports = dict(
@@ -79,11 +83,15 @@ dataset_type = "DSP3Dataset"
 data_root = "data/3dsp"
 split_file = "configs/split.json"
 
-# Pipeline de treino com MotionBlur + RandomErasing
+# Pipeline de treino COMPLETO: flip + geométrica + oclusão + blur.
+# Ordem padrão RTMPose: RandomBBoxTransform (geométrica, no bbox) antes do
+# TopdownAffine; RandomErasing (oclusão) depois, na imagem final 288×384.
 train_pipeline = [
     dict(type="LoadImage"),
     dict(type="GetBBoxCenterScale"),
     dict(type="RandomFlip", direction="horizontal"),
+    dict(type="RandomBBoxTransform",
+         scale_factor=(0.75, 1.25), rotate_factor=30.0, shift_factor=0.1),
     dict(type="Albu", transforms=[
         dict(type="MotionBlur", blur_limit=(3, 9), p=0.5),
     ]),

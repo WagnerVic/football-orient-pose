@@ -1,12 +1,18 @@
-"""Cenário B (= B-FULL) — From Scratch + augmentation COMPLETA.
+"""Cenário D-GEOM — Transfer Learning + augmentation GEOMÉTRICA.
 
-Célula scratch+aug da matriz 2×2: pesos aleatórios + flip + geométrica
-(RandomBBoxTransform) + oclusão (RandomErasing) + blur (MotionBlur) — a mesma
-recipe completa do D-FULL, mas do zero. Testa se a augmentation regulariza o
-overfitting severo do from-scratch (A-FLIP: gap treino→val de 47,6pp).
+Degrau do ladder de augmentation: igual ao Cenário C (TL com progressive
+unfreezing), mas adiciona `RandomBBoxTransform` (rotação/escala/shift) ao
+pipeline de treino — SEM oclusão (erasing) nem blur.
+
+É o 1º degrau de aug "forte" sobre o C-FLIP. A contribuição do geométrico é
+medida por: D-GEOM − C-FLIP.
+
+Params geométricos conservadores: crops apertados de jogadores ~verticais,
+então rotação ±30° (não ±80° do default RTMPose, que viraria jogador de cabeça
+pra baixo) e escala 0,75–1,25 para não cortar joints.
 
 Uso via train.py:
-    python scripts/train.py --cenario B [--epochs 150]
+    python scripts/train.py --cenario D-GEOM [--epochs-fase1 45] [--epochs-fase2 60] [--epochs-fase3 45]
 """
 
 custom_imports = dict(
@@ -24,6 +30,9 @@ codec = dict(
     normalize=False,
     use_dark=False,
 )
+
+# Pesos COCO PyTorch para transfer learning (igual ao C/D).
+COCO_CHECKPOINT = "checkpoints/rtmpose-x_coco.pth"
 
 model = dict(
     type="TopdownPoseEstimator",
@@ -43,7 +52,8 @@ model = dict(
         channel_attention=True,
         norm_cfg=dict(type="BN", momentum=0.03, eps=0.001),
         act_cfg=dict(type="SiLU", inplace=True),
-        frozen_stages=0,
+        # frozen_stages e init_cfg são sobrescritos pelo train.py por fase.
+        frozen_stages=4,
         init_cfg=None,
     ),
     head=dict(
@@ -79,23 +89,15 @@ dataset_type = "DSP3Dataset"
 data_root = "data/3dsp"
 split_file = "configs/split.json"
 
-# Pipeline de treino COMPLETO: flip + geométrica + oclusão + blur (= D-FULL, mas scratch).
-# Ordem padrão RTMPose: RandomBBoxTransform (geométrica, no bbox) antes do
-# TopdownAffine; RandomErasing (oclusão) depois, na imagem final 288×384.
+# Pipeline de treino: flip + augmentation GEOMÉTRICA (RandomBBoxTransform).
+# RandomBBoxTransform vem entre o flip e o TopdownAffine (atua no bbox center/scale).
 train_pipeline = [
     dict(type="LoadImage"),
     dict(type="GetBBoxCenterScale"),
     dict(type="RandomFlip", direction="horizontal"),
     dict(type="RandomBBoxTransform",
          scale_factor=(0.75, 1.25), rotate_factor=30.0, shift_factor=0.1),
-    dict(type="Albu", transforms=[
-        dict(type="MotionBlur", blur_limit=(3, 9), p=0.5),
-    ]),
     dict(type="TopdownAffine", input_size=codec["input_size"], use_udp=True),
-    dict(type="RandomErasing",
-         n_patches=(1, 1),
-         ratio=(0.02, 0.10),
-         prob=0.3),
     dict(type="GenerateTarget", encoder=codec),
     dict(type="PackPoseInputs"),
 ]
@@ -142,10 +144,12 @@ test_dataloader = val_dataloader
 val_evaluator = dict(type="StrictPCKMetric", pck_thr=0.2, pdj_thr=0.5)
 test_evaluator = val_evaluator
 
-train_cfg = dict(type="EpochBasedTrainLoop", max_epochs=50, val_interval=5)
+# train_cfg.max_epochs é sobrescrito pelo train.py por fase.
+train_cfg = dict(type="EpochBasedTrainLoop", max_epochs=15, val_interval=5)
 val_cfg = dict(type="ValLoop")
 test_cfg = dict(type="TestLoop")
 
+# optim_wrapper é sobrescrito pelo train.py por fase (LR diferenciado por camada).
 optim_wrapper = dict(
     type="OptimWrapper",
     optimizer=dict(type="AdamW", lr=1e-3, weight_decay=0.05),
@@ -154,12 +158,12 @@ optim_wrapper = dict(
 param_scheduler = [
     dict(
         type="LinearLR",
-        begin=0, end=5, start_factor=1e-3,
+        begin=0, end=3, start_factor=1e-3,
         by_epoch=True, convert_to_iter_based=True,
     ),
     dict(
         type="CosineAnnealingLR",
-        begin=5, end=50, eta_min=1e-6,
+        begin=3, end=15, eta_min=1e-6,  # train.py reconstrói por fase (_scheduler_override)
         by_epoch=True, convert_to_iter_based=True,
     ),
 ]
@@ -180,5 +184,5 @@ vis_backends = [dict(type="LocalVisBackend")]
 visualizer = dict(type="Visualizer", vis_backends=vis_backends, name="visualizer")
 log_processor = dict(type="LogProcessor", window_size=50, by_epoch=True)
 log_level = "INFO"
-load_from = None
+load_from = COCO_CHECKPOINT
 resume = False
