@@ -26,11 +26,13 @@
   as extremidades** e leva o modelo ao seu melhor patamar. A receita campeã é **TL + augmentation
   geométrica**.
 - **O melhor modelo do projeto é o D-FULL: PCK@0.2 = 67,54%** — **+25,8pp sobre o baseline**
-  zero-shot (41,76%), +9,2pp sobre o melhor modelo "sem aug forte" (C-FLIP 58,4%). Vence em todas as
-  métricas (PDJ 96,6% · OKS 89,8% · MPJPE 3,08px).
-- **Os dois fatores valem em escala parecida (~+9 a +12pp cada) e se combinam.** TL: +12,3pp (nível
-  flip) / +9,4pp (nível full). Augmentation: +12,1pp (scratch) / +9,2pp (TL). A combinação é
-  **levemente sub-aditiva** — ambos atacam o mesmo gargalo (overfitting por baixa diversidade).
+  zero-shot (41,76%) e **+14,7pp sobre a célula TL-sem-aug da matriz (C-RAW 52,9%)**. Vence em todas
+  as métricas (PDJ 96,6% · OKS 89,8% · MPJPE 3,08px).
+- **Os dois fatores da matriz (TL e augmentation) são fortes e se combinam.** Medindo as células da
+  matriz (sem-aug = RAW, com-aug = full): **TL vale +15,1pp (sem aug) / +9,4pp (com aug)**;
+  **augmentation vale +20,3pp (scratch) / +14,7pp (TL)**. A aug (a stack completa flip+geom+ocl+blur)
+  é a alavanca um pouco **maior**; a combinação é **sub-aditiva (~−5,7pp)** — ambos atacam o mesmo
+  gargalo (overfitting por baixa diversidade).
 - **A augmentation que paga é geométrica.** Decompondo o ganho de aug do TL: **geométrica +7,77pp**,
   oclusão +0,71pp, blur +0,67pp. Some-se o flip (+5,5pp no TL) e fica claro: ~90% do efeito da
   augmentation é **diversidade de pose/ângulo** (flip + rotação/escala/shift).
@@ -38,8 +40,9 @@
   (punho/cotovelo/joelho/tornozelo **abaixo** do baseline COCO em todos os cenários) **virou**: os
   cenários D ficam **acima** do baseline em todas as extremidades. É o TL **+ geométrica** que
   conserta (o scratch com aug, B-FULL, não recupera).
-- **TL + aug forte quase não overfita:** gap treino→val do D-FULL = **1,1pp** (vs 47,6pp do A-FLIP
-  do zero). A augmentação geométrica praticamente elimina o overfitting quando há o prior do COCO.
+- **TL + aug forte quase não overfita:** gap treino→val do D-FULL = **1,1pp** — contra **12,2pp do
+  C-RAW** (TL sem aug) e **37–55pp do scratch**. A augmentação geométrica praticamente elimina o
+  overfitting quando há o prior do COCO.
 
 ---
 
@@ -75,11 +78,15 @@ broadcast — e quanto a augmentation contribui?** A metodologia varia **W₀** 
 O lado TL é um **ladder fino** (cada degrau = +1 augmentation, isolando o mecanismo); no scratch
 rodamos só os extremos (RAW, flip, full), já que "TL > scratch" se confirma cedo.
 
-### A matriz 2×2 clássica (W₀ × aug), com flip=baixo e full=alto
-| | +flip (aug baixa) | full (aug alta) |
+### A matriz 2×2 (W₀ × aug) — célula "sem aug" = **RAW**, célula "com aug" = **full**
+Como o flip é augmentation (§4), as células canônicas da matriz são o **RAW** (sem aug nenhuma) e o
+**full** (stack completa). A-FLIP/C-FLIP/D-GEOM/D-OCCL são degraus intermediários do ladder, não
+células da matriz.
+
+| | RAW (sem aug) | full (com aug) |
 |---|---:|---:|
-| **From scratch** | A-FLIP 46,06 | B-FULL 58,13 |
-| **Transfer learning** | C-FLIP 58,39 | **D-FULL 67,54** |
+| **From scratch** | A-RAW 37,82 | B-FULL 58,13 |
+| **Transfer learning** | C-RAW 52,88 | **D-FULL 67,54** |
 
 ### Ablações que complementam
 - **C2** — o progressive unfreezing é necessário? (§9)
@@ -149,8 +156,10 @@ Tudo idêntico entre cenários — **só mudam W₀, a estratégia de descongela
   D-GEOM 66,2 < D-OCCL 66,9 < **D-FULL 67,5**. (*A-RAW abaixo do baseline: overfitting + zero aug.)
 - **D-FULL é o teto** e melhora **detecção e precisão ao mesmo tempo** (único, com o C-FLIP, a bater
   o baseline em PDJ — e com folga).
-- **B-FULL ≈ C-FLIP no PCK** (58,1 vs 58,4), mas com **overfitting brutalmente maior** (gap 37,1 vs
-  11,7pp): scratch+aug "alcança" o TL+flip no número, **decorando** — não é a mesma qualidade.
+- **Leitura da matriz (células RAW/full):** o **B-FULL (scratch+aug, 58,1) supera o C-RAW (TL sem
+  aug, 52,9) em +5,3pp** — ou seja, augmentation no scratch supera o TL cru no número global. Mas o
+  B-FULL **overfita muito mais** (gap 37,1 vs 12,2pp) e não recupera as extremidades (§10): vence no
+  PCK global **decorando**, não generalizando.
 - **MPJPE despenca** ao longo da escada: 6,76 (A-RAW) → 3,08px (D-FULL), −1,73px vs baseline.
 
 ---
@@ -201,17 +210,20 @@ Ganho **marginal** de PCK@0.2 (val) ao subir cada degrau:
 - O ganho do TL **diminui** conforme a aug sobe (15 → 12 → 9pp): aug e TL atacam parcialmente o
   **mesmo** problema (pouca diversidade), então sobra menos para o TL recuperar quando a aug já age.
 
-### A matriz 2×2 e a interação
-| | +flip | full | **Δ aug** |
+### A matriz 2×2 e a interação (células RAW × full)
+| | RAW (sem aug) | full (com aug) | **Δ aug** |
 |---|---:|---:|---:|
-| **scratch** | 46,06 | 58,13 | +12,07 |
-| **TL** | 58,39 | 67,54 | +9,15 |
-| **Δ TL** | +12,33 | +9,41 | |
+| **scratch** | A-RAW 37,82 | B-FULL 58,13 | **+20,31** |
+| **TL** | C-RAW 52,88 | D-FULL 67,54 | **+14,66** |
+| **Δ TL** | **+15,06** | **+9,41** | |
 
-Partindo do A-FLIP (46,06), somar os efeitos isolados daria +12,33 (TL) + 12,07 (aug) = +24,4pp →
-~70,5%. O D-FULL real é **67,54 (+21,48pp)** → **interação ≈ −2,9pp (sub-aditiva)**. Confirma que
-os dois fatores se sobrepõem em parte. **Ainda assim, combiná-los é nitidamente melhor:** cada um
-sozinho leva a ~58%, juntos a 67,5%.
+Partindo do A-RAW (37,82), somar os efeitos isolados daria +15,06 (TL) + 20,31 (aug) = +35,37pp →
+73,19%. O D-FULL real é **67,54 (+29,72pp sobre o A-RAW)** → **interação ≈ −5,65pp (sub-aditiva)**.
+Confirma que os dois fatores se sobrepõem em parte (ambos combatem a mesma falta de diversidade).
+**Ainda assim, combiná-los é nitidamente melhor:** cada fator isolado fica abaixo (só-TL = C-RAW
+52,9%; só-aug no scratch = B-FULL 58,1%), e a célula completa (D-FULL) chega a 67,5%. Note que **a
+augmentation é a alavanca um pouco maior** que o TL na matriz (+20,3/+14,7 vs +15,1/+9,4), mas "aug"
+aqui é a stack inteira (flip+geom+ocl+blur), enquanto "TL" é um único fator.
 
 ---
 
@@ -325,36 +337,38 @@ discriminativo (cabeça 1e-3, backbone 1e-5), 150 épocas, com flip.
 
 ### MPJPE-2D por grupo (px, ↓ melhor) — val
 
-| Grupo | A-FLIP | C-FLIP | B-FULL | D-GEOM | D-OCCL | **D-FULL** |
-|---|---:|---:|---:|---:|---:|---:|
-| head | 2,63 | 2,50 | 1,62 | 1,43 | 1,47 | **1,40** |
-| shoulder | 3,41 | 2,40 | 2,40 | 1,92 | 1,89 | **1,86** |
-| hip | 3,59 | 2,90 | 2,91 | 2,47 | 2,38 | **2,40** |
-| elbow | 7,09 | 5,00 | 5,35 | 3,91 | 3,77 | **3,67** |
-| knee | 5,70 | 4,20 | 4,34 | 3,56 | 3,47 | **3,35** |
-| ankle | 8,64 | 6,10 | 6,08 | 4,39 | 4,64 | **4,39** |
-| wrist | 11,21 | 7,80 | 8,05 | 5,91 | 5,76 | **5,63** |
+| Grupo | A-RAW | A-FLIP | C-RAW | C-FLIP | B-FULL | D-GEOM | D-OCCL | **D-FULL** |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| head | 3,9 | 2,63 | 3,0 | 2,50 | 1,62 | 1,43 | 1,47 | **1,40** |
+| shoulder | 3,9 | 3,41 | 2,9 | 2,40 | 2,40 | 1,92 | 1,89 | **1,86** |
+| hip | 4,5 | 3,59 | 3,4 | 2,90 | 2,91 | 2,47 | 2,38 | **2,40** |
+| elbow | 8,1 | 7,09 | 6,1 | 5,00 | 5,35 | 3,91 | 3,77 | **3,67** |
+| knee | 7,2 | 5,70 | 5,0 | 4,20 | 4,34 | 3,56 | 3,47 | **3,35** |
+| ankle | 11,2 | 8,64 | 7,2 | 6,10 | 6,08 | 4,39 | 4,64 | **4,39** |
+| wrist | 12,9 | 11,21 | 8,9 | 7,80 | 8,05 | 5,91 | 5,76 | **5,63** |
 
 ### O arco do projeto: extremidades resolvidas
 Os relatórios parciais fecharam com uma ressalva honesta: **nenhum** modelo (nem o C-FLIP)
 alcançava o baseline COCO nas extremidades — o fine-tuning ganhava no **tronco** e regredia nos
-**membros**. Os cenários D **viram esse jogo:**
+**membros**. **Olhando as 4 células da matriz** (RAW e full × scratch e TL), só a célula completa
+resolve:
 
-| Grupo | baseline | D-GEOM | D-OCCL | **D-FULL** |
-|---|---:|---:|---:|---:|
-| wrist | 43,5 | 45,4 ✅ | 45,1 ✅ | **46,1 ✅** |
-| elbow | 50,8 | 54,3 ✅ | 55,0 ✅ | **56,4 ✅** |
-| knee | 58,3 | 62,3 ✅ | 63,2 ✅ | **64,8 ✅** |
-| ankle | 59,4 | 65,2 ✅ | 67,2 ✅ | **67,2 ✅** |
+| Grupo | baseline | A-RAW | C-RAW | B-FULL | **D-FULL** |
+|---|---:|---:|---:|---:|---:|
+| wrist | 43,5 | 15,6 | 31,0 | 33,6 | **46,1 ✅** |
+| elbow | 50,8 | 27,9 | 39,4 | 42,6 | **56,4 ✅** |
+| knee | 58,3 | 27,2 | 47,3 | 53,5 | **64,8 ✅** |
+| ankle | 59,4 | 22,0 | 51,6 | 54,0 | **67,2 ✅** |
 
-- **Já o D-GEOM (só geométrica) recupera todas as 4 extremidades** — reforçando que a alavanca é
-  geométrica. O erro de punho cai de 7,80 → 5,63px e o de tornozelo de 6,10 → 4,39px (vs C-FLIP).
-- **Honestidade científica:** **B-FULL (scratch + aug) NÃO recupera nenhuma** extremidade (wrist
-  33,6 < 43,5; elbow 42,6 < 50,8; knee 53,5 < 58,3; ankle 54,0 < 59,4). **É a combinação TL +
-  augmentação geométrica que conserta os membros** — nem o TL sozinho (C-FLIP ainda abaixo), nem a
-  aug sozinha (B-FULL abaixo).
-- **Ganho do D-FULL sobre o C-FLIP é transversal:** head +13,0 · knee +11,9 · elbow +10,9 · ankle
-  +10,0 · wrist +8,7 · hip +8,7 · shoulder +7,4 — as extremidades sobem **tanto quanto** o tronco.
+- **Só o D-FULL (TL + augmentation) passa o baseline em todas as extremidades.** A-RAW (scratch
+  cru), C-RAW (TL sem aug) e B-FULL (scratch + aug) ficam **todos abaixo** — ou seja, **nem o TL
+  sozinho, nem a augmentation sozinha bastam: é a combinação que conserta os membros.**
+- **A alavanca dentro do TL é geométrica:** já o D-GEOM (TL + só geométrica) cruza o baseline em
+  todas as 4 (wrist 45,4 / elbow 54,3 / knee 62,3 / ankle 65,2 ✅) — ver §4. O erro de punho cai de
+  **8,9 → 5,63px** e o de tornozelo de **7,2 → 4,39px** (D-FULL vs C-RAW).
+- **Ganho do D-FULL sobre o C-RAW (efeito da augmentation no TL) é transversal e grande:** elbow
+  +17,0 · knee +17,5 · ankle +15,6 · wrist +15,1 · head +15,6 · hip +14,8 · shoulder +13,5 — as
+  extremidades sobem **tanto quanto** o tronco (+13,5 a +17,5pp em todos).
 
 ---
 
@@ -391,17 +405,20 @@ teste. Defensável no artigo.
 
 > **A receita campeã é Transfer Learning + augmentação geométrica forte.** O D-FULL (W₀ = COCO +
 > flip + RandomBBoxTransform + oclusão + blur) atinge **PCK@0.2 = 67,54%** — **+25,8pp sobre o
-> baseline** e +9,2pp sobre o melhor modelo sem aug forte. Vence em todas as métricas, **generaliza
-> quase perfeitamente** (gap 1,1pp) e **resolve as extremidades** (acima do baseline COCO pela
-> primeira vez).
+> baseline** e **+14,7pp sobre a célula TL-sem-aug da matriz (C-RAW)**. Vence em todas as métricas,
+> **generaliza quase perfeitamente** (gap 1,1pp) e **resolve as extremidades** (acima do baseline
+> COCO pela primeira vez).
 
 Conclusões de suporte:
-- **TL > scratch, sempre** (+9 a +15pp por nível de aug). Até sem aug nenhuma, o C-RAW supera o
-  A-FLIP. Comprovado por ablação com W₀ aleatório, não por suposição.
+- **TL > scratch, sempre** — na matriz, **+15,1pp (sem aug) / +9,4pp (com aug)**. Até sem aug
+  nenhuma, o C-RAW supera o A-FLIP (scratch com flip). Comprovado por ablação com W₀ aleatório, não
+  por suposição.
 - **A augmentation que paga é geométrica** (~90% do ganho): flip + rotação/escala/shift atacam a
   baixa diversidade do dataset; oclusão e blur são refino marginal mas consistente.
-- **TL e aug combinam (sub-aditivos):** cada fator ~+9–12pp; juntos levam de ~58% a 67,5%.
-- **As extremidades só se resolvem com TL + geométrica** — nem o TL nem a aug sozinhos bastam.
+- **TL e aug combinam (sub-aditivos −5,7pp):** na matriz a aug vale **+20,3pp (scratch) / +14,7pp
+  (TL)** e o TL **+15,1 / +9,4pp** — ambos fortes; juntos levam o scratch cru (37,8%) a 67,5%.
+- **As extremidades só se resolvem com TL + augmentação** — A-RAW, C-RAW e B-FULL ficam todos
+  abaixo do baseline nos membros; só o D-FULL passa. Nem o TL nem a aug sozinhos bastam.
 - **O progressive unfreezing vale** (+3,6pp e menos overfitting), mas **a fase 3 deve ser cortada**
   (degradou em todos os casos).
 
