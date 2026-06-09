@@ -6,8 +6,8 @@
 # runs anteriores. Passe GIT_COMMIT (no host) para registrar a proveniência.
 #
 # Uso (dentro do container, com data/results/scripts/configs/src montados):
-#   bash scripts/run_experiments.sh
-#   EPOCHS_A=150 F1=45 F2=60 F3=45 BATCH=64 GIT_COMMIT=$(git rev-parse HEAD) bash scripts/run_experiments.sh
+#   bash scripts/training/run_experiments.sh
+#   EPOCHS_A=150 F1=45 F2=60 F3=45 BATCH=64 GIT_COMMIT=$(git rev-parse HEAD) bash scripts/training/run_experiments.sh
 #
 # Saídas (tudo sob results/runs/<timestamp>/):
 #   checkpoints/cenario_{A,C}/best_PCK.pth   — melhores checkpoints
@@ -44,26 +44,26 @@ step() { echo -e "\n========== $1 ==========\n"; }
 
 # ── Cenário A: from scratch ──────────────────────────────────────────────────
 step "TREINO Cenário A (from scratch, ${EPOCHS_A} épocas)"
-python scripts/train.py --cenario A --epochs "$EPOCHS_A" --batch-size "$BATCH" \
+python scripts/training/train.py --cenario A --epochs "$EPOCHS_A" --batch-size "$BATCH" \
     --work-dir "$RUN/checkpoints/cenario_A" 2>&1 | tee "$LOG/train_A.log"
 
 step "AVALIAÇÃO Cenário A — val"
-python scripts/evaluate.py --checkpoint "$RUN/checkpoints/cenario_A/best_PCK.pth" \
+python scripts/evaluation/evaluate.py --checkpoint "$RUN/checkpoints/cenario_A/best_PCK.pth" \
     --config configs/cenario_a.py --split val   --output-dir "$RUN/tables" 2>&1 | tee "$LOG/eval_A_val.log"
 step "AVALIAÇÃO Cenário A — train"
-python scripts/evaluate.py --checkpoint "$RUN/checkpoints/cenario_A/best_PCK.pth" \
+python scripts/evaluation/evaluate.py --checkpoint "$RUN/checkpoints/cenario_A/best_PCK.pth" \
     --config configs/cenario_a.py --split train --output-dir "$RUN/tables" 2>&1 | tee "$LOG/eval_A_train.log"
 
 # ── Cenário C: transfer learning (3 fases) ───────────────────────────────────
 step "TREINO Cenário C (transfer learning, fases ${F1}/${F2}/${F3})"
-python scripts/train.py --cenario C --epochs-fase1 "$F1" --epochs-fase2 "$F2" --epochs-fase3 "$F3" \
+python scripts/training/train.py --cenario C --epochs-fase1 "$F1" --epochs-fase2 "$F2" --epochs-fase3 "$F3" \
     --batch-size "$BATCH" --work-dir "$RUN/checkpoints/cenario_C" 2>&1 | tee "$LOG/train_C.log"
 
 step "AVALIAÇÃO Cenário C — val"
-python scripts/evaluate.py --checkpoint "$RUN/checkpoints/cenario_C/best_PCK.pth" \
+python scripts/evaluation/evaluate.py --checkpoint "$RUN/checkpoints/cenario_C/best_PCK.pth" \
     --config configs/cenario_c.py --split val   --output-dir "$RUN/tables" 2>&1 | tee "$LOG/eval_C_val.log"
 step "AVALIAÇÃO Cenário C — train"
-python scripts/evaluate.py --checkpoint "$RUN/checkpoints/cenario_C/best_PCK.pth" \
+python scripts/evaluation/evaluate.py --checkpoint "$RUN/checkpoints/cenario_C/best_PCK.pth" \
     --config configs/cenario_c.py --split train --output-dir "$RUN/tables" 2>&1 | tee "$LOG/eval_C_train.log"
 
 # ── Resumo consolidado ───────────────────────────────────────────────────────

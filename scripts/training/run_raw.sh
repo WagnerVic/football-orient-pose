@@ -5,7 +5,7 @@
 # results/runs/<timestamp>_raw/.
 #
 # Uso (no container, com data/results/scripts/configs/src montados):
-#   EPOCHS_A=150 F1=45 F2=60 F3=45 BATCH=64 GIT_COMMIT=$(git rev-parse HEAD) bash scripts/run_raw.sh
+#   EPOCHS_A=150 F1=45 F2=60 F3=45 BATCH=64 GIT_COMMIT=$(git rev-parse HEAD) bash scripts/training/run_raw.sh
 set -eo pipefail
 
 EPOCHS_A=${EPOCHS_A:-150}
@@ -31,26 +31,26 @@ step() { echo -e "\n========== $1 ==========\n"; }
 
 # ── A-RAW: from scratch, sem flip ────────────────────────────────────────────
 step "TREINO A-RAW (from scratch, sem flip, ${EPOCHS_A} épocas)"
-python scripts/train.py --cenario A-RAW --epochs "$EPOCHS_A" --batch-size "$BATCH" \
+python scripts/training/train.py --cenario A-RAW --epochs "$EPOCHS_A" --batch-size "$BATCH" \
     --work-dir "$RUN/checkpoints/cenario_A-RAW" 2>&1 | tee "$LOG/train_A-RAW.log"
 
 step "AVALIAÇÃO A-RAW — val"
-python scripts/evaluate.py --checkpoint "$RUN/checkpoints/cenario_A-RAW/best_PCK.pth" \
+python scripts/evaluation/evaluate.py --checkpoint "$RUN/checkpoints/cenario_A-RAW/best_PCK.pth" \
     --config configs/cenario_a-raw.py --split val   --output-dir "$RUN/tables" 2>&1 | tee "$LOG/eval_A-RAW_val.log"
 step "AVALIAÇÃO A-RAW — train"
-python scripts/evaluate.py --checkpoint "$RUN/checkpoints/cenario_A-RAW/best_PCK.pth" \
+python scripts/evaluation/evaluate.py --checkpoint "$RUN/checkpoints/cenario_A-RAW/best_PCK.pth" \
     --config configs/cenario_a-raw.py --split train --output-dir "$RUN/tables" 2>&1 | tee "$LOG/eval_A-RAW_train.log"
 
 # ── C-RAW: transfer learning (3 fases), sem flip ─────────────────────────────
 step "TREINO C-RAW (transfer learning, sem flip, fases ${F1}/${F2}/${F3})"
-python scripts/train.py --cenario C-RAW --epochs-fase1 "$F1" --epochs-fase2 "$F2" --epochs-fase3 "$F3" \
+python scripts/training/train.py --cenario C-RAW --epochs-fase1 "$F1" --epochs-fase2 "$F2" --epochs-fase3 "$F3" \
     --batch-size "$BATCH" --work-dir "$RUN/checkpoints/cenario_C-RAW" 2>&1 | tee "$LOG/train_C-RAW.log"
 
 step "AVALIAÇÃO C-RAW — val"
-python scripts/evaluate.py --checkpoint "$RUN/checkpoints/cenario_C-RAW/best_PCK.pth" \
+python scripts/evaluation/evaluate.py --checkpoint "$RUN/checkpoints/cenario_C-RAW/best_PCK.pth" \
     --config configs/cenario_c-raw.py --split val   --output-dir "$RUN/tables" 2>&1 | tee "$LOG/eval_C-RAW_val.log"
 step "AVALIAÇÃO C-RAW — train"
-python scripts/evaluate.py --checkpoint "$RUN/checkpoints/cenario_C-RAW/best_PCK.pth" \
+python scripts/evaluation/evaluate.py --checkpoint "$RUN/checkpoints/cenario_C-RAW/best_PCK.pth" \
     --config configs/cenario_c-raw.py --split train --output-dir "$RUN/tables" 2>&1 | tee "$LOG/eval_C-RAW_train.log"
 
 # ── Resumo ───────────────────────────────────────────────────────────────────

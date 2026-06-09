@@ -13,7 +13,7 @@
 # Autocontido em results/runs/<timestamp>_bd/.
 #
 # Uso (no container, com data/results/scripts/configs/src montados):
-#   EPOCHS_B=150 F1=45 F2=60 F3=45 BATCH=64 GIT_COMMIT=$(git rev-parse HEAD) bash scripts/run_bd.sh
+#   EPOCHS_B=150 F1=45 F2=60 F3=45 BATCH=64 GIT_COMMIT=$(git rev-parse HEAD) bash scripts/training/run_bd.sh
 set -eo pipefail
 
 EPOCHS_B=${EPOCHS_B:-150}
@@ -40,26 +40,26 @@ step() { echo -e "\n========== $1 ==========\n"; }
 train_scratch() {  # $1 = cenario, $2 = config-stem
   local cen="$1" cfg="$2"
   step "TREINO ${cen} (from scratch, ${EPOCHS_B} épocas)"
-  python scripts/train.py --cenario "$cen" --epochs "$EPOCHS_B" --batch-size "$BATCH" \
+  python scripts/training/train.py --cenario "$cen" --epochs "$EPOCHS_B" --batch-size "$BATCH" \
       --work-dir "$RUN/checkpoints/cenario_${cen}" 2>&1 | tee "$LOG/train_${cen}.log"
   step "AVALIAÇÃO ${cen} — val"
-  python scripts/evaluate.py --checkpoint "$RUN/checkpoints/cenario_${cen}/best_PCK.pth" \
+  python scripts/evaluation/evaluate.py --checkpoint "$RUN/checkpoints/cenario_${cen}/best_PCK.pth" \
       --config "configs/cenario_${cfg}.py" --split val   --output-dir "$RUN/tables" 2>&1 | tee "$LOG/eval_${cen}_val.log"
   step "AVALIAÇÃO ${cen} — train"
-  python scripts/evaluate.py --checkpoint "$RUN/checkpoints/cenario_${cen}/best_PCK.pth" \
+  python scripts/evaluation/evaluate.py --checkpoint "$RUN/checkpoints/cenario_${cen}/best_PCK.pth" \
       --config "configs/cenario_${cfg}.py" --split train --output-dir "$RUN/tables" 2>&1 | tee "$LOG/eval_${cen}_train.log"
 }
 
 train_tl() {  # $1 = cenario, $2 = config-stem
   local cen="$1" cfg="$2"
   step "TREINO ${cen} (transfer learning, fases ${F1}/${F2}/${F3})"
-  python scripts/train.py --cenario "$cen" --epochs-fase1 "$F1" --epochs-fase2 "$F2" --epochs-fase3 "$F3" \
+  python scripts/training/train.py --cenario "$cen" --epochs-fase1 "$F1" --epochs-fase2 "$F2" --epochs-fase3 "$F3" \
       --batch-size "$BATCH" --work-dir "$RUN/checkpoints/cenario_${cen}" 2>&1 | tee "$LOG/train_${cen}.log"
   step "AVALIAÇÃO ${cen} — val"
-  python scripts/evaluate.py --checkpoint "$RUN/checkpoints/cenario_${cen}/best_PCK.pth" \
+  python scripts/evaluation/evaluate.py --checkpoint "$RUN/checkpoints/cenario_${cen}/best_PCK.pth" \
       --config "configs/cenario_${cfg}.py" --split val   --output-dir "$RUN/tables" 2>&1 | tee "$LOG/eval_${cen}_val.log"
   step "AVALIAÇÃO ${cen} — train"
-  python scripts/evaluate.py --checkpoint "$RUN/checkpoints/cenario_${cen}/best_PCK.pth" \
+  python scripts/evaluation/evaluate.py --checkpoint "$RUN/checkpoints/cenario_${cen}/best_PCK.pth" \
       --config "configs/cenario_${cfg}.py" --split train --output-dir "$RUN/tables" 2>&1 | tee "$LOG/eval_${cen}_train.log"
 }
 

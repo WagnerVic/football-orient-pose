@@ -29,7 +29,7 @@ import json
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+sys.path.insert(0, str(Path(__file__).parents[2] / "src"))
 
 from football_orient_pose.clip_extractor import cut_clip, write_clip
 

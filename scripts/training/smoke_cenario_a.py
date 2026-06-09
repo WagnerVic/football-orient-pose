@@ -5,7 +5,7 @@ Valida, num subconjunto pequeno e em 1 época, que: dataset carrega, modelo
 constrói, treino roda, validação calcula PCK e o CheckpointHook salva o best.
 Não é treino real — é verificação de fiação.
 
-    python scripts/smoke_cenario_a.py [--batch-size 2] [--n-train 32] [--n-val 16]
+    python scripts/training/smoke_cenario_a.py [--batch-size 2] [--n-train 32] [--n-val 16]
 """
 
 from __future__ import annotations
@@ -18,7 +18,7 @@ import argparse
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+sys.path.insert(0, str(Path(__file__).parents[2] / "src"))
 
 from train import _build_runner, _find_best_checkpoint  # reutiliza o caminho real
 

@@ -45,7 +45,7 @@ Os pesos não são versionados no Git (`models/weights/` está no `.gitignore`).
 Execute o script abaixo para baixar todos os modelos:
 
 ```bash
-bash scripts/download_models.sh
+bash scripts/setup/download_models.sh
 ```
 
 O que o script faz por modelo:
@@ -175,20 +175,20 @@ docker pull phael777/football-finetuning:latest
 ```bash
 # Cenário A — From Scratch, sem augmentation (baseline)
 docker compose -f docker-compose.finetuning.yml run --rm train \
-    python scripts/train.py --cenario A --epochs 50
+    python scripts/training/train.py --cenario A --epochs 50
 
 # Cenário B — From Scratch, com augmentation
 docker compose -f docker-compose.finetuning.yml run --rm train \
-    python scripts/train.py --cenario B --epochs 50
+    python scripts/training/train.py --cenario B --epochs 50
 
 # Cenário C — Transfer Learning, sem augmentation [ALTA PRIORIDADE]
 docker compose -f docker-compose.finetuning.yml run --rm train \
-    python scripts/train.py --cenario C \
+    python scripts/training/train.py --cenario C \
     --epochs-fase1 15 --epochs-fase2 20 --epochs-fase3 15
 
 # Cenário D — Transfer Learning, com augmentation
 docker compose -f docker-compose.finetuning.yml run --rm train \
-    python scripts/train.py --cenario D \
+    python scripts/training/train.py --cenario D \
     --epochs-fase1 15 --epochs-fase2 20 --epochs-fase3 15
 ```
 
@@ -197,13 +197,13 @@ docker compose -f docker-compose.finetuning.yml run --rm train \
 ```bash
 for CENARIO in A B C D; do
   docker compose -f docker-compose.finetuning.yml run --rm train \
-    python scripts/train.py --cenario $CENARIO
+    python scripts/training/train.py --cenario $CENARIO
 done
 ```
 
 ### Treino orquestrado A + C (fire-and-forget) — usado nos experimentos
 
-`scripts/run_experiments.sh` roda os Cenários A e C de ponta a ponta
+`scripts/training/run_experiments.sh` roda os Cenários A e C de ponta a ponta
 (treino → avaliação train/val de cada um → resumo consolidado) num container
 **destacado** (`-d`), que sobrevive à queda da sessão SSH. Foi este o comando usado
 para gerar os resultados abaixo (RTX 4090, GPU via CDI — `--gpus all`, sem sudo):
@@ -218,7 +218,7 @@ docker run -d --name exp --gpus all --shm-size=16g \
   -v ~/football-orient-pose/configs:/workspace/configs:ro \
   -v ~/football-orient-pose/src:/workspace/src:ro \
   -e EPOCHS_A=200 -e F1=60 -e F2=80 -e F3=60 \
-  football-finetuning:latest bash scripts/run_experiments.sh
+  football-finetuning:latest bash scripts/training/run_experiments.sh
 ```
 
 Parâmetros (via `-e`): `EPOCHS_A` (épocas do A), `F1/F2/F3` (épocas das 3 fases do C),
@@ -243,14 +243,14 @@ mesmo após remover o container (`docker rm exp`).
 ```bash
 # Avaliar um checkpoint no val split
 docker compose -f docker-compose.finetuning.yml run --rm train \
-    python scripts/evaluate.py \
+    python scripts/evaluation/evaluate.py \
     --checkpoint results/checkpoints/cenario_C/best_PCK.pth \
     --split val
 
 # Avaliar todos os cenários treinados
 for CENARIO in A B C D; do
   docker compose -f docker-compose.finetuning.yml run --rm train \
-    python scripts/evaluate.py \
+    python scripts/evaluation/evaluate.py \
     --checkpoint results/checkpoints/cenario_${CENARIO}/best_PCK.pth \
     --split val
 done

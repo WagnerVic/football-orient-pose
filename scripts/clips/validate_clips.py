@@ -16,7 +16,7 @@ import argparse
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+sys.path.insert(0, str(Path(__file__).parents[2] / "src"))
 
 from football_orient_pose.utils.data_io import load_clip_image, load_clip_info
 
@@ -72,7 +72,9 @@ def main() -> int:
         print(f"ERRO: diretório não encontrado: {args.root}")
         return 1
 
-    clips = sorted(d for d in args.root.iterdir() if d.is_dir())
+    # um clip é qualquer diretório que contenha uma subpasta img/ — acha tanto
+    # clips planos (data/clips/<id>) quanto aninhados por fonte (data/clips/brazil/<id>)
+    clips = sorted({p.parent for p in args.root.rglob("img") if p.is_dir()})
     errors: list[str] = []
     for clip in clips:
         errors.extend(validate_clip(clip, n=args.n, min_height=args.min_height))
