@@ -30,8 +30,8 @@ métricas do projeto (PDJ@0.5, PCK@0.2, OKS, MPJPE-2D).
 | [`configs/cenario_b.py`](../configs/cenario_b.py) | Cenário B — from scratch, MotionBlur + RandomErasing | [#59](https://github.com/WagnerVic/football-orient-pose/issues/59) · [#63](https://github.com/WagnerVic/football-orient-pose/issues/63) |
 | [`configs/cenario_c.py`](../configs/cenario_c.py) | Cenário C — TL, 3 fases (sem aug) | [#64](https://github.com/WagnerVic/football-orient-pose/issues/64) |
 | [`configs/cenario_d.py`](../configs/cenario_d.py) | Cenário D — TL, 3 fases (com aug) | [#65](https://github.com/WagnerVic/football-orient-pose/issues/65) |
-| [`scripts/train.py`](../scripts/train.py) | Orquestrador `--cenario [A\|B\|C\|D]` (fases + decisão Δ PCK) | [#66](https://github.com/WagnerVic/football-orient-pose/issues/66) |
-| [`scripts/evaluate.py`](../scripts/evaluate.py) | Avaliação no val split — PDJ/PCK/OKS/MPJPE | [#69](https://github.com/WagnerVic/football-orient-pose/issues/69) |
+| [`scripts/training/train.py`](../scripts/training/train.py) | Orquestrador `--cenario [A\|B\|C\|D]` (fases + decisão Δ PCK) | [#66](https://github.com/WagnerVic/football-orient-pose/issues/66) |
+| [`scripts/evaluation/evaluate.py`](../scripts/evaluation/evaluate.py) | Avaliação no val split — PDJ/PCK/OKS/MPJPE | [#69](https://github.com/WagnerVic/football-orient-pose/issues/69) |
 | Letterboxing via `TopdownAffine(use_udp=True)` nos configs | 100×100 → 288×384 sem distorção | [#68](https://github.com/WagnerVic/football-orient-pose/issues/68) |
 | [`src/.../estimators/rtmpose.py`](../src/football_orient_pose/estimators/rtmpose.py) | `RTMPoseEstimator.from_checkpoint()` p/ carregar `.pth` fine-tunado | [#70](https://github.com/WagnerVic/football-orient-pose/issues/70) |
 
@@ -46,7 +46,7 @@ make finetuning-env          # cria .venv-mmpose com a stack pinada
 make finetuning-checkpoint   # baixa os pesos COCO p/ Transfer Learning (C/D)
 ```
 
-> `make finetuning-env` chama [`scripts/setup_mmpose_env.sh`](../scripts/setup_mmpose_env.sh).
+> `make finetuning-env` chama [`scripts/setup/setup_mmpose_env.sh`](../scripts/setup/setup_mmpose_env.sh).
 > Requer `uv` instalado.
 
 ## Rodando os experimentos
@@ -56,11 +56,11 @@ make finetuning-checkpoint   # baixa os pesos COCO p/ Transfer Learning (C/D)
 make finetuning-smoke
 
 # Treino completo de cada cenário
-make train-a   # = python scripts/train.py --cenario A
+make train-a   # = python scripts/training/train.py --cenario A
 make train-c   # Cenário C: 3 fases de progressive unfreezing
 
 # Treino leve p/ GPU pequena (ex.: RTX 4050 6GB)
-PYTHONPATH=src .venv-mmpose/bin/python scripts/train.py \
+PYTHONPATH=src .venv-mmpose/bin/python scripts/training/train.py \
   --cenario A --epochs 10 --batch-size 8 --val-interval 2
 ```
 
@@ -72,7 +72,7 @@ Avaliação de um checkpoint salvo:
 ```bash
 make evaluate CKPT=results/checkpoints/cenario_A/best_PCK.pth CONFIG=configs/cenario_a.py
 # ou direto:
-PYTHONPATH=src .venv-mmpose/bin/python scripts/evaluate.py \
+PYTHONPATH=src .venv-mmpose/bin/python scripts/evaluation/evaluate.py \
   --checkpoint results/checkpoints/cenario_A/best_PCK.pth \
   --config configs/cenario_a.py --split val
 ```
@@ -128,12 +128,12 @@ docker run --rm --gpus all football-finetuning:latest \
 # 2) smoke test ponta-a-ponta na GPU (~segundos)
 docker run --rm --gpus all --shm-size=16g -v ~/fop/data:/workspace/data:ro -v ~/fop/results:/workspace/results \
   football-finetuning:latest \
-  python scripts/smoke_cenario_a.py --batch-size 16 --n-train 256 --n-val 64
+  python scripts/training/smoke_cenario_a.py --batch-size 16 --n-train 256 --n-val 64
 
 # 3) treino de verdade (ex.: Cenário C — TL, usa o COCO baked)
 docker run --rm --gpus all --shm-size=16g -v ~/fop/data:/workspace/data:ro -v ~/fop/results:/workspace/results \
   football-finetuning:latest \
-  python scripts/train.py --cenario C
+  python scripts/training/train.py --cenario C
 ```
 
 > **Pré-requisito de GPU no host:** já confirmado funcionando neste 4090 via CDI

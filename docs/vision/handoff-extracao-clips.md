@@ -1,4 +1,4 @@
-# Handoff p/ o time — Extração de Clips Reais (Épicos 8 + 13)
+# Handoff p/ o time — Extração de Clips Reais (Épico 13)
 
 > **Para quem vai mexer em clips reais, anotação ou pipeline.** A ferramenta de extração de clips
 > **já existe, está testada e versionada**. Este doc diz **o que reaproveitar** e **o que NÃO
@@ -25,15 +25,15 @@ Uma cadeia **vídeo bruto → clips estruturados**, reutilizável por detecção
 |---|---|---|
 | Módulo | `src/football_orient_pose/video_io.py` | `extract_frames(video)` → lista de frames |
 | Módulo | `src/football_orient_pose/clip_extractor.py` | `cut_clip` (corta 20 frames) + `write_clip` (grava `img/`+`info.ini`) |
-| Script | `scripts/cut_clips.py` | CLI: vídeo + intervalos → `data/clips/<id>/` |
-| Script | `scripts/validate_clips.py` | confere se os clips batem com as regras |
+| Script | `scripts/clips/cut_clips.py` | CLI: vídeo + intervalos → `data/clips/<fonte>/<id>/` |
+| Script | `scripts/clips/validate_clips.py` | confere se os clips batem com as regras |
 | Doc | `docs/vision/formato-clips.md` | **especificação** do formato de clip |
-| Testes | `tests/test_video_io.py`, `test_clip_extractor.py`, `test_validate_clips.py` | 17 testes, todos verdes |
+| Testes | `tests/clips/test_video_io.py`, `test_clip_extractor.py`, `test_validate_clips.py` | verdes |
 
 **Saída de cada clip** (idêntica ao 3DSP, então os loaders do projeto leem sem mudança):
 
 ```
-data/clips/<clip_id>/
+data/clips/<fonte>/<clip_id>/        # fonte = examples | brazil
 ├── img/001.jpg ... 020.jpg     # 20 frames INTEIROS 1280×720 (não são crops!)
 └── info.ini                    # metadados [info]
 ```
@@ -64,28 +64,29 @@ data/raw/brasil_x_adversario.mp4      # baixado do YouTube, ≥720p
 ```
 Salve como `intervals_brazil.json`. (Cada intervalo ~1s rende os 20 frames.)
 
-**3. Gere os clips:**
+**3. Gere os clips** (na pasta da fonte `brazil`):
 ```bash
-python scripts/cut_clips.py --video data/raw/brasil_x_adversario.mp4 --intervals intervals_brazil.json
+python scripts/clips/cut_clips.py --video data/raw/brasil_x_adversario.mp4 \
+  --intervals intervals_brazil.json --root data/clips/brazil
 ```
-→ cria `data/clips/brazil_01..05/` (cada um com `img/001..020.jpg` + `info.ini`).
+→ cria `data/clips/brazil/brazil_01..05/` (cada um com `img/001..020.jpg` + `info.ini`).
 
 **4. Valide:**
 ```bash
-python scripts/validate_clips.py --root data/clips
+python scripts/clips/validate_clips.py --root data/clips
 ```
 → tem que dar `✅ clips válidos`. Se reclamar (ex.: "intervalo curto", "altura < 720"), ajuste o
 JSON/vídeo e rode de novo.
 
 **5. Commite os clips** (eles entram no git — é o substrato da anotação).
 
-Pronto. **Você não toca em Python.** O resto da equipe pega `data/clips/brazil_*` daí.
+Pronto. **Você não toca em Python.** O resto da equipe pega `data/clips/brazil/*` daí.
 
 ---
 
 ## 🏷️ Para o dev da anotação (Épico 9)
 
-- Os clips (`data/clips/example_*` e, em breve, `brazil_*`) já estão **no repo, no formato certo**.
+- Os clips (`data/clips/examples/*` e, em breve, `data/clips/brazil/*`) já estão **no repo, no formato certo**.
 - Você anota **em cima deles** (bbox de pessoa e/ou keypoints do finalizador) — **não gera clip**.
 - Os loaders já existentes leem qualquer clip: `load_clip_image(clip_dir, i)`, `load_clip_info(clip_dir)`.
 - A anotação cria o `posture/` depois; o formato já prevê isso (clip nasce só com `img/` + `info.ini`).
@@ -125,11 +126,12 @@ Detalhe completo em [`docs/vision/formato-clips.md`](formato-clips.md).
 ```
 src/football_orient_pose/video_io.py         # ler vídeo
 src/football_orient_pose/clip_extractor.py   # cortar + gravar clip
-scripts/cut_clips.py                         # CLI gerar
-scripts/validate_clips.py                    # CLI validar
+scripts/clips/cut_clips.py                         # CLI gerar
+scripts/clips/validate_clips.py                    # CLI validar
 docs/vision/formato-clips.md                 # spec do formato
-data/clips/                                   # clips gerados (versionados — anotação ocorre aqui)
+data/clips/{examples,brazil}/                 # clips gerados, sem crop (versionados — anotação ocorre aqui)
+data/crops/                                   # (futuro) crops 100x100 do finalizador (Épico 11)
 ```
 
-Issues de referência: Épico 8 (#93, US #94), Épico 13 (#134; tasks #136/#137/#139/#140/#141; aplicar #145).
+Issues de referência: Épico 13 (#134; US #135/#138/#142; tasks #146 video_io, #136/#137/#139/#140/#141; aplicar #145).
 Geração dos clips do Brasil: **#143** (fornecer vídeo + intervalos) e **#144** (rodar + validar).

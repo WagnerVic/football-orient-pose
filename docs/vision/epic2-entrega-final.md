@@ -76,7 +76,7 @@ Output: (17, 3) COCO-17
 **Modelo:** HRNet-W48, input 256×192  
 **Framework:** ONNX + onnxruntime (não MMPose — ver decisão técnica abaixo)  
 **Pesos:** `models/weights/hrnet_w48_coco_256x192.onnx` (~242 MB) + `.onnx.data`  
-**Download:** Google Drive via `gdown` — `scripts/download_models.sh`
+**Download:** Google Drive via `gdown` — `scripts/setup/download_models.sh`
 
 ```
 Input: 100×100 BGR crop
@@ -231,7 +231,7 @@ Nossos resultados são superiores ao paper em ambos (~4pp cada). Hipóteses docu
 
 ### 6.1 Download de Pesos
 
-**Script:** `scripts/download_models.sh`
+**Script:** `scripts/setup/download_models.sh`
 
 | Modelo | Fonte | Tamanho | Estratégia |
 |--------|-------|---------|-----------|
@@ -383,7 +383,7 @@ openpose_val.json   ← PDJ 56.09%, PCK 22.14%, OKS 48.51%, MPJPE 25.58px
 
 ### Infra
 ```
-scripts/download_models.sh      ← HRNet (Drive) + OpenPose (HuggingFace)
+scripts/setup/download_models.sh      ← HRNet (Drive) + OpenPose (HuggingFace)
 .env.example                    ← DATA_DIR, SPLIT_CONFIG
 .gitignore                      ← exceção results/tables/*.json
 docs/vision/epic2-retrospectiva.md  ← retrospectiva técnica detalhada

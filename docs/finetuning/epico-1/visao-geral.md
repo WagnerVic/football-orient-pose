@@ -43,7 +43,7 @@ cruza épicos:
 | Épico | O que é | Arquivos principais |
 |---|---|---|
 | **1 — Infraestrutura** | Código que faz o pipeline rodar | `src/.../finetuning/dataset.py`, `configs/cenario_*.py`, `scripts/{train,evaluate,smoke_cenario_a}.py`, `src/.../estimators/rtmpose.py`, `src/.../utils/keypoint_mapping.py`, Docker/Makefile, `docs/finetuning/guia.md` |
-| **2 — Execução** | Rodar os experimentos de verdade | `scripts/run_experiments.sh` + as rodadas de A e C (checkpoints, JSONs em `results/tables/`) |
+| **2 — Execução** | Rodar os experimentos de verdade | `scripts/training/run_experiments.sh` + as rodadas de A e C (checkpoints, JSONs em `results/tables/`) |
 | **3 — Análise** | Interpretar os resultados | `docs/finetuning/epic1-relatorio-preliminar.md` |
 
 > Ou seja: o "Épico 1" smoke-test virou, na prática, um primeiro corte do projeto inteiro.
@@ -101,7 +101,7 @@ CSPNeXt-X, RTMCCHead, `KLDiscretLoss beta=10`). O que muda:
 > do dataset — decisão consciente (era a issue #59).
 
 ### 3.5 `train.py` — o orquestrador
-[`scripts/train.py`](../../scripts/train.py)
+[`scripts/training/train.py`](../../scripts/training/train.py)
 
 - **A/B (from scratch):** uma fase só. LR uniforme 1e-3, `--epochs` (default 50).
 - **C/D (transfer learning):** 3 fases de **progressive unfreezing** (descongela o backbone
@@ -119,7 +119,7 @@ CSPNeXt-X, RTMCCHead, `KLDiscretLoss beta=10`). O que muda:
   conforme o nº de épocas — ambos corrigidos no code review (ver §6).
 
 ### 3.6 `evaluate.py` — as 4 métricas
-[`scripts/evaluate.py`](../../scripts/evaluate.py)
+[`scripts/evaluation/evaluate.py`](../../scripts/evaluation/evaluate.py)
 
 Carrega o checkpoint, roda inferência no split e calcula, com as funções do projeto
 ([`evaluation/metrics.py`](../../src/football_orient_pose/evaluation/metrics.py)):
@@ -147,7 +147,7 @@ Carrega o checkpoint, roda inferência no split e calcula, com as funções do p
 
 ## 4. Épico 2 — O que foi efetivamente rodado
 
-[`scripts/run_experiments.sh`](../../scripts/run_experiments.sh) encadeia treino + avaliação
+[`scripts/training/run_experiments.sh`](../../scripts/training/run_experiments.sh) encadeia treino + avaliação
 (train e val) dos Cenários **A e C** num container só (fire-and-forget) e gera um `SUMMARY.md`.
 Hardware: **RTX 4090** (Docker), madrugada de **03–04/jun/2026**. Cenários **B e D ainda não
 foram rodados**.

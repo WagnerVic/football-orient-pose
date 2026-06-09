@@ -5,10 +5,24 @@ broadcast bruto é transformado em clips estruturados que reutilizam a convenç�
 para serem anotados (Épico 9) e processados pelo pipeline (Épico 12) sem nenhuma adaptação dos
 loaders existentes.
 
-## Estrutura de diretório
+## Onde os clips vivem (estágios de processamento)
 
 ```
-data/clips/<clip_id>/
+data/
+├── raw/                      # vídeos broadcast brutos (.mp4) — gitignored
+├── clips/                    # clips de frames INTEIROS, SEM crop  ← este doc
+│   ├── examples/<id>/        # derivados dos data/examples
+│   └── brazil/<id>/          # 5 clips do jogo do Brasil
+└── crops/                    # (futuro) crops 100×100 do finalizador (estágio COM crop, Épico 11)
+```
+
+`clips/` (sem crop) e `crops/` (com crop) são estágios distintos — os clips são "raw" no sentido de
+**frames inteiros, ainda não recortados**.
+
+## Estrutura de um clip
+
+```
+data/clips/<fonte>/<clip_id>/
 ├── img/
 │   ├── 001.jpg
 │   ├── 002.jpg
@@ -17,7 +31,7 @@ data/clips/<clip_id>/
 ```
 
 - **`img/` guarda frames inteiros** do broadcast (1280×720), **não** crops 100×100 — a detecção e o
-  crop do finalizador acontecem depois (Épicos 10/11/12).
+  crop do finalizador acontecem depois (Épicos 10/11/12), indo para `data/crops/`.
 - Naming `{:03d}.jpg`, **1-indexed** (`001.jpg`), exatamente como o 3DSP — compatível com
   `load_clip_image(clip_dir, idx)` (lê `img/{idx:03d}.jpg`).
 - **Sem `posture/` e `gt/` no início.** A anotação de keypoints (Épico 9) cria o `posture/` depois;
@@ -67,10 +81,12 @@ notes = chute a gol
 
 ## Ferramentas
 
-- **Gerar:** `scripts/cut_clips.py --video <mp4> --intervals <intervals.json>` →
-  usa `clip_extractor.cut_clip` (corte + amostragem) e `clip_extractor.write_clip` (escrita).
-- **Validar:** `scripts/validate_clips.py --root data/clips` → confere todas as regras e a
-  compatibilidade com `load_clip_image`/`load_clip_info` (exit code ≠ 0 em caso de erro).
+- **Gerar:** `scripts/clips/cut_clips.py --video <mp4> --intervals <intervals.json> --root data/clips/<fonte>`
+  (ex.: `--root data/clips/brazil`) → usa `clip_extractor.cut_clip` (corte + amostragem) e
+  `clip_extractor.write_clip` (escrita).
+- **Validar:** `scripts/clips/validate_clips.py --root data/clips` → varre recursivamente (acha clips
+  por fonte), confere todas as regras e a compatibilidade com `load_clip_image`/`load_clip_info`
+  (exit code ≠ 0 em caso de erro).
 
 `intervals.json`:
 

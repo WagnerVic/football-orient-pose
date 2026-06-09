@@ -320,6 +320,6 @@ artefatos   checkpoints/<cenario>/best_PCK.pth
             tables/finetuned_cenario_*_{train,val}.json   (8 JSONs)
             logs/ · SUMMARY.md · PROVENANCE.txt
 ```
-Reproduzir: `bash scripts/run_bd.sh` (no container `football-finetuning:latest`, pesos COCO baked
+Reproduzir: `bash scripts/training/run_bd.sh` (no container `football-finetuning:latest`, pesos COCO baked
 ou em `checkpoints/rtmpose-x_coco.pth`). Transforms custom em
 `src/football_orient_pose/finetuning/transforms.py`.
