@@ -227,6 +227,8 @@ __marimo__/
 # Dataset 3DSP: ignorar dados pesados, manter exemplos
 data/*
 !data/examples/
+# Clips reais extraídos (Épico 13): versionados — a anotação (Épico 9) ocorre sobre eles
+!data/clips/
 
 # Pesos dos modelos (binários grandes, não versionar)
 models/weights/
