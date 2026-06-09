@@ -5,7 +5,7 @@ from pathlib import Path
 
 import numpy as np
 
-sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
+sys.path.insert(0, str(Path(__file__).parents[2] / "scripts" / "clips"))
 
 from football_orient_pose.clip_extractor import write_clip
 from validate_clips import validate_clip
