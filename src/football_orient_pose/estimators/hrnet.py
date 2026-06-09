@@ -102,7 +102,7 @@ class HRNetEstimator(BasePoseEstimator):
         if not Path(self.model_path).exists():
             raise FileNotFoundError(
                 f"HRNetEstimator: arquivo ONNX não encontrado em '{self.model_path}'. "
-                "Execute 'bash scripts/download_models.sh' para baixar os pesos."
+                "Execute 'bash scripts/setup/download_models.sh' para baixar os pesos."
             )
 
         providers = (

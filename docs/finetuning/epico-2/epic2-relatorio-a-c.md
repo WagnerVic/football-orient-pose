@@ -386,5 +386,5 @@ artefatos         checkpoints/<cenario>/best_PCK.pth
                   tables/finetuned_cenario_*_{train,val}.json
                   logs/  ·  SUMMARY.md  ·  PROVENANCE.txt
 ```
-Reproduzir: `bash scripts/run_experiments.sh` (A-FLIP+C-FLIP) · `bash scripts/run_c2.sh` (C2) ·
-`bash scripts/run_raw.sh` (A-RAW+C-RAW). Ver `docs/finetuning/epico-1/guia.md`.
+Reproduzir: `bash scripts/training/run_experiments.sh` (A-FLIP+C-FLIP) · `bash scripts/training/run_c2.sh` (C2) ·
+`bash scripts/training/run_raw.sh` (A-RAW+C-RAW). Ver `docs/finetuning/epico-1/guia.md`.

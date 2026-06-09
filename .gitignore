@@ -227,6 +227,8 @@ __marimo__/
 # Dataset 3DSP: ignorar dados pesados, manter exemplos
 data/*
 !data/examples/
+# Clips reais extraídos (Épico 13): versionados — a anotação (Épico 9) ocorre sobre eles
+!data/clips/
 
 # Pesos dos modelos (binários grandes, não versionar)
 models/weights/
@@ -253,3 +255,13 @@ docs/**/*.html
 !.task-context/input/referencias/
 .task-context/input/referencias/*
 !.task-context/input/referencias/.gitkeep
+
+# data/raw: vídeos broadcast brutos NÃO versionados — mantém só o README
+!data/raw/
+data/raw/*
+!data/raw/README.md
+# data/crops: crops derivados (estágio com crop)
+!data/crops/
+
+# Inputs de corte de clips (por execução; provenance fica no info.ini de cada clip)
+intervals_*.json

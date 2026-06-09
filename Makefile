@@ -42,29 +42,29 @@ clean-data:
 
 ## Cria a venv dedicada .venv-mmpose com a stack MMPose pinada
 finetuning-env:
-	@bash scripts/setup_mmpose_env.sh
+	@bash scripts/setup/setup_mmpose_env.sh
 
 ## Baixa os pesos COCO p/ Transfer Learning (Cenários C/D)
 finetuning-checkpoint:
-	@bash scripts/download_models.sh
+	@bash scripts/setup/download_models.sh
 
 ## Smoke test ponta-a-ponta (subconjunto pequeno, ~30s)
 finetuning-smoke:
-	@$(RUN_MM) scripts/smoke_cenario_a.py --batch-size 8 --n-train 256 --n-val 64
+	@$(RUN_MM) scripts/training/smoke_cenario_a.py --batch-size 8 --n-train 256 --n-val 64
 
 ## Treina um cenário: make train-a [EPOCHS=50] [BATCH=16]
 train-a:
-	@$(RUN_MM) scripts/train.py --cenario A $(if $(EPOCHS),--epochs $(EPOCHS),) $(if $(BATCH),--batch-size $(BATCH),)
+	@$(RUN_MM) scripts/training/train.py --cenario A $(if $(EPOCHS),--epochs $(EPOCHS),) $(if $(BATCH),--batch-size $(BATCH),)
 train-b:
-	@$(RUN_MM) scripts/train.py --cenario B $(if $(EPOCHS),--epochs $(EPOCHS),) $(if $(BATCH),--batch-size $(BATCH),)
+	@$(RUN_MM) scripts/training/train.py --cenario B $(if $(EPOCHS),--epochs $(EPOCHS),) $(if $(BATCH),--batch-size $(BATCH),)
 train-c:
-	@$(RUN_MM) scripts/train.py --cenario C $(if $(BATCH),--batch-size $(BATCH),)
+	@$(RUN_MM) scripts/training/train.py --cenario C $(if $(BATCH),--batch-size $(BATCH),)
 train-d:
-	@$(RUN_MM) scripts/train.py --cenario D $(if $(BATCH),--batch-size $(BATCH),)
+	@$(RUN_MM) scripts/training/train.py --cenario D $(if $(BATCH),--batch-size $(BATCH),)
 
 ## Avalia um checkpoint: make evaluate CKPT=... CONFIG=...
 evaluate:
-	@$(RUN_MM) scripts/evaluate.py --checkpoint $(CKPT) --config $(CONFIG) --split val
+	@$(RUN_MM) scripts/evaluation/evaluate.py --checkpoint $(CKPT) --config $(CONFIG) --split val
 
 IMAGE ?= football-finetuning
 TARBALL ?= finetuning-image.tar
@@ -90,7 +90,7 @@ docker-train:
 	@docker run --rm --gpus all --shm-size=16g \
 		-v $(DATA_HOST):/workspace/data:ro \
 		-v $(RESULTS_HOST):/workspace/results \
-		$(IMAGE):latest python scripts/train.py --cenario $(CENARIO)
+		$(IMAGE):latest python scripts/training/train.py --cenario $(CENARIO)
 
 ## Mostra os comandos disponíveis
 help:

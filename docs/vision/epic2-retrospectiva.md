@@ -88,7 +88,7 @@ O HRNet original usa `mmpose` + `mmcv` — ecossistema pesado com dependências 
 
 **Por que Google Drive e não versionar no git:** O ONNX é dividido em dois arquivos (`hrnet_w48_coco_256x192.onnx` + `hrnet_w48_coco_256x192.onnx.data`) totalizando ~489 MB, que mesmo zipados ficam ~451 MB — acima do limite de 100 MB por arquivo do GitHub. O padrão adotado (zip no Drive + `gdown`) é o mesmo já usado para o dataset do projeto.
 
-### `scripts/download_models.sh` — HRNet
+### `scripts/setup/download_models.sh` — HRNet
 
 ```bash
 uv run gdown "1dNC22Hvp-oHqb6vYKuQhs7TQDLoanB1K" -O models/weights/hrnet_w48_coco_256x192.zip
@@ -210,12 +210,12 @@ O `.env.example` é commitado como template. O `.env` real fica no `.gitignore`.
 
 **Descoberta importante:** O caminho correto dos dados é `data/train/00001/...`, não `data/3dsp/train/00001/`. O README antigo tinha o path errado — corrigido.
 
-### `scripts/download_models.sh`
+### `scripts/setup/download_models.sh`
 
 Script idempotente (pula se já existe) que faz tudo em um comando:
 
 ```bash
-bash scripts/download_models.sh
+bash scripts/setup/download_models.sh
 ```
 
 | Modelo | Ação |

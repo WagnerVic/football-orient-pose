@@ -455,8 +455,8 @@ artefatos   checkpoints/<cenario>/best_PCK.pth
             tables/finetuned_cenario_*_{train,val}.json
             logs/ · SUMMARY.md · PROVENANCE.txt
 ```
-Reproduzir: `bash scripts/run_experiments.sh` (A-FLIP+C-FLIP) · `bash scripts/run_c2.sh` (C2) ·
-`bash scripts/run_raw.sh` (A-RAW+C-RAW) · `bash scripts/run_bd.sh` (B-FULL+D-GEOM/OCCL/FULL).
+Reproduzir: `bash scripts/training/run_experiments.sh` (A-FLIP+C-FLIP) · `bash scripts/training/run_c2.sh` (C2) ·
+`bash scripts/training/run_raw.sh` (A-RAW+C-RAW) · `bash scripts/training/run_bd.sh` (B-FULL+D-GEOM/OCCL/FULL).
 Transforms custom em `src/football_orient_pose/finetuning/transforms.py`. Ver
 `docs/finetuning/epico-1/guia.md`. Detalhe de cada metade: `epic2-relatorio-a-c.md` e
 `epic2-relatorio-bd.md`.

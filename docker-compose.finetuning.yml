@@ -24,5 +24,5 @@ services:
             - driver: nvidia
               count: 1
               capabilities: [gpu]
-    # Override at runtime: docker compose run --rm train python scripts/train.py --cenario C
-    command: python scripts/train.py --cenario A
+    # Override at runtime: docker compose run --rm train python scripts/training/train.py --cenario C
+    command: python scripts/training/train.py --cenario A
