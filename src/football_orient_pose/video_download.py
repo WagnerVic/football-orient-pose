@@ -53,9 +53,13 @@ def download_video(
 
     outtmpl = str(out_dir / (f"{name}.%(ext)s" if name else "%(title)s.%(ext)s"))
     options = {
-        # stream progressivo (sem precisar de ffmpeg p/ merge), até max_height
+        # vídeo-only H.264 (avc1) até max_height: o OpenCV decodifica H.264, mas
+        # NÃO decodifica AV1 (codec padrão do YouTube). Preferir avc1 evita um mp4
+        # ilegível. Sem áudio → não precisa de ffmpeg.
         "format": (
-            f"best[ext=mp4][height<={max_height}]"
+            f"bv*[height<={max_height}][vcodec^=avc1]"
+            f"/bv*[height<={max_height}][ext=mp4]"
+            f"/best[height<={max_height}][ext=mp4]"
             f"/best[height<={max_height}]/best"
         ),
         "outtmpl": outtmpl,
