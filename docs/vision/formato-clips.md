@@ -73,11 +73,14 @@ notes = chute a gol
 ## Regras
 
 - **≥ 5 clips** distintos no diretório de saída.
-- **20 frames** por clip (configurável via `--n`, default 20). Se o intervalo render mais que N,
-  amostra N uniformemente; se render menos, é **erro** (intervalo curto demais).
+- **Nº de frames livre por clip** (escolhido na geração via `--n`, default 20; cada fonte pode ter o
+  seu — ex.: examples=20, brazil=10). O valor real fica registrado em `num_frames` no `info.ini`.
+  Se o intervalo render menos que `--n`, é **erro** (intervalo curto demais).
+- **Consistência:** `len(img/) == num_frames` e `img/` **contíguo** `001..N` (1-indexed `{:03d}`) —
+  o validador checa isso contra o próprio `info.ini` (pega "apaguei frames sem renumerar").
 - **Resolução ≥ 720p** (altura ≥ 720).
 - **Um momento de finalização** por clip (chute/cabeçada a gol).
-- `img/` 1-indexed `{:03d}`; `info.ini` com todos os campos obrigatórios.
+- `info.ini` com todos os campos obrigatórios.
 
 ## Ferramentas
 
