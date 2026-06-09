@@ -125,9 +125,14 @@ Tudo idêntico entre cenários — **só mudam W₀, a estratégia de descongela
 | blur | `SimpleMotionBlur` (custom) | kernel 3–9px, direcional, p 0,5 | após a geométrica |
 
 > **Notas técnicas.** (1) Params geométricos **conservadores** de propósito (crops apertados de
-> jogadores ~verticais; ±80° do default RTMPose viraria pose irreal). (2) `Albu` e `RandomErasing`
-> do mmpose **não estão registrados** no container → implementamos equivalentes (`SimpleMotionBlur`
-> via cv2, `SimpleRandomErasing` via numpy) em `football_orient_pose.finetuning.transforms`.
+> jogadores ~verticais; ±80° do default RTMPose viraria pose irreal). (2) O código original do
+> Épico 1 referenciava `type='Albu'` e `type='RandomErasing'` — dois bugs de referência combinados:
+> o nome registrado do wrapper é `type='Albumentation'` (não `Albu`), e `RandomErasing` não existe
+> no mmpose nem no Albumentations (o equivalente seria `CoarseDropout`). Adicionalmente, o pacote
+> `albumentations` não estava instalado na imagem, então mesmo com nomes corretos o wrapper quebraria.
+> Como os cenários B/D nunca rodaram no Épico 1, isso ficou latente. Solução: implementamos
+> `SimpleMotionBlur` (cv2, blur direcional) e `SimpleRandomErasing` (numpy, patch uniforme) em
+> `football_orient_pose.finetuning.transforms` — sem dependência externa, portáveis no container.
 > (3) Estes runs incorporam os **fixes do code review (#92)**: scheduler proporcional (A1), gating
 > por PCK estrito (A2), seleção por PCK estrito (M4) e seleção do melhor checkpoint entre fases.
 
