@@ -35,6 +35,9 @@ dev = [
 inference = [
     "rtmlib",
 ]
+download = [
+    "yt-dlp>=2024.1",
+]
 finetuning = [
     "mmengine>=0.10.0",
     "mmcv>=2.1.0",

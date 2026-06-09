@@ -52,8 +52,9 @@ def cut_clip(
     if end_ms <= start_ms:
         raise ValueError(f"intervalo inválido: end_ms ({end_ms}) <= start_ms ({start_ms})")
 
-    frames = extract_frames(video_path)
-    selected = [f for f in frames if start_ms <= f.timestamp_ms <= end_ms]
+    # janela por tempo: só decodifica/guarda o trecho [start_ms, end_ms] — sem
+    # carregar o vídeo inteiro na RAM (essencial para vídeos longos).
+    selected = extract_frames(video_path, start_ms=start_ms, end_ms=end_ms)
     if len(selected) < n:
         raise ValueError(
             f"intervalo curto: {len(selected)} frames em [{start_ms}, {end_ms}] ms < n={n}"

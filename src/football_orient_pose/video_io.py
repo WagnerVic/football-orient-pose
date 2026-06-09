@@ -37,11 +37,18 @@ def extract_frames(
     video_path: str | Path,
     every_n: int | None = None,
     target_fps: float | None = None,
+    start_ms: float | None = None,
+    end_ms: float | None = None,
 ) -> list[Frame]:
     """Extrai frames de um vídeo MP4 a uma taxa configurável.
 
     Use ``every_n`` (pega 1 a cada N frames) **ou** ``target_fps`` (reamostra
     para uma taxa-alvo) — não os dois. Sem nenhum, devolve todos os frames.
+
+    A janela ``[start_ms, end_ms]`` limita a extração a um trecho do vídeo:
+    frames antes de ``start_ms`` são descartados (não ficam em memória) e a
+    leitura **para** assim que passa de ``end_ms``. Essencial para vídeos longos
+    — sem a janela, todos os frames do vídeo iriam para a RAM.
 
     Parameters
     ----------
@@ -51,11 +58,13 @@ def extract_frames(
         Passo de amostragem por frames. ``every_n=5`` → frames 0, 5, 10, ...
     target_fps : float | None
         Taxa-alvo em quadros por segundo. O passo é ``round(fps_vídeo / target_fps)``.
+    start_ms, end_ms : float | None
+        Limites temporais (ms, inclusivos) do trecho a extrair. ``None`` = sem limite.
 
     Returns
     -------
     list[Frame]
-        Frames amostrados, em ordem crescente de ``index``.
+        Frames amostrados (dentro da janela), em ordem crescente de ``index``.
 
     Raises
     ------
@@ -97,9 +106,17 @@ def extract_frames(
             ok, image = cap.read()
             if not ok:
                 break
-            if index % step == 0:
+            # timestamp por índice/fps é robusto; CAP_PROP_POS_MSEC é 0/incorreto
+            # em vários streams (ex.: vídeo-only do YouTube).
+            if src_fps > 0:
+                timestamp_ms = index / src_fps * 1000.0
+            else:
                 timestamp_ms = float(cap.get(cv2.CAP_PROP_POS_MSEC))
-                frames.append(Frame(image=image, index=index, timestamp_ms=timestamp_ms))
+            if end_ms is not None and timestamp_ms > end_ms:
+                break  # passou da janela — para de decodifar o resto
+            if start_ms is None or timestamp_ms >= start_ms:
+                if index % step == 0:
+                    frames.append(Frame(image=image, index=index, timestamp_ms=timestamp_ms))
             index += 1
     finally:
         cap.release()  # nunca vazar o handle do VideoCapture

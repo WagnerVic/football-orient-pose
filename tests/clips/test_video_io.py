@@ -44,3 +44,11 @@ def test_extract_frames_rejects_both_modes() -> None:
 def test_extract_frames_rejects_non_positive(kwargs: dict) -> None:
     with pytest.raises(ValueError):
         extract_frames(EXAMPLE, **kwargs)
+
+
+def test_extract_frames_window_limits_to_interval() -> None:
+    todos = extract_frames(EXAMPLE)
+    # janela cobrindo só o início do clip de ~1s → subconjunto, dentro do limite
+    janela = extract_frames(EXAMPLE, start_ms=0, end_ms=400)
+    assert 0 < len(janela) < len(todos)
+    assert all(f.timestamp_ms <= 400 for f in janela)

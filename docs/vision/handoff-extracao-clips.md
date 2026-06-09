@@ -10,8 +10,8 @@
 
 - ✅ **Já pronto:** ler vídeo → cortar em clips de 20 frames → gravar no formato do 3DSP → validar.
 - 🚫 **NÃO recrie:** leitura de vídeo, corte, escrita de `img/`+`info.ini`, validação. Está feito.
-- 👉 **Dev dos clips do Brasil:** você **não precisa programar nada**. Põe o vídeo numa pasta,
-  escreve um JSON com os intervalos e roda **2 comandos** (gerar + validar). Pronto.
+- 👉 **Dev dos clips do Brasil:** você **não precisa programar nada**. Roda **3 comandos**
+  (baixar o vídeo → gerar clips → validar) com a URL e um JSON de intervalos. Pronto.
 - 👉 **Dev da anotação (Épico 9):** os clips já vêm **versionados** no repo, no formato certo.
   Você anota em cima deles — não precisa gerar nada.
 
@@ -23,6 +23,7 @@ Uma cadeia **vídeo bruto → clips estruturados**, reutilizável por detecção
 
 | Camada | Arquivo | O que faz |
 |---|---|---|
+| Módulo | `src/football_orient_pose/video_download.py` | `download_video(url)` → baixa p/ `data/raw/videos/` (yt-dlp) |
 | Módulo | `src/football_orient_pose/video_io.py` | `extract_frames(video)` → lista de frames |
 | Módulo | `src/football_orient_pose/clip_extractor.py` | `cut_clip` (corta 20 frames) + `write_clip` (grava `img/`+`info.ini`) |
 | Script | `scripts/clips/cut_clips.py` | CLI: vídeo + intervalos → `data/clips/<fonte>/<id>/` |
@@ -47,10 +48,13 @@ data/clips/<fonte>/<clip_id>/        # fonte = examples | brazil
 
 Seu trabalho é **só fornecer o material e rodar a ferramenta**. Não escreva código novo.
 
-**1. Ponha o vídeo do jogo numa pasta**
+**1. Baixe o vídeo do jogo** (script de download):
+```bash
+python scripts/clips/download_video.py \
+  --url "https://www.youtube.com/watch?v=..." --name brasil_x_adversario
 ```
-data/raw/brasil_x_adversario.mp4      # baixado do YouTube, ≥720p
-```
+→ salva em `data/raw/videos/brasil_x_adversario.mp4` (≥720p). Requer `pip install -e '.[download]'`.
+(Alternativa: baixe manualmente e ponha o `.mp4` em `data/raw/videos/`.)
 
 **2. Marque os 5 momentos de finalização** num arquivo JSON (tempos em **milissegundos**):
 ```json
@@ -66,7 +70,7 @@ Salve como `intervals_brazil.json`. (Cada intervalo ~1s rende os 20 frames.)
 
 **3. Gere os clips** (na pasta da fonte `brazil`):
 ```bash
-python scripts/clips/cut_clips.py --video data/raw/brasil_x_adversario.mp4 \
+python scripts/clips/cut_clips.py --video data/raw/videos/brasil_x_adversario.mp4 \
   --intervals intervals_brazil.json --root data/clips/brazil
 ```
 → cria `data/clips/brazil/brazil_01..05/` (cada um com `img/001..020.jpg` + `info.ini`).
@@ -124,8 +128,10 @@ Detalhe completo em [`docs/vision/formato-clips.md`](formato-clips.md).
 ## Onde está cada coisa
 
 ```
+src/football_orient_pose/video_download.py   # baixar vídeo (yt-dlp)
 src/football_orient_pose/video_io.py         # ler vídeo
 src/football_orient_pose/clip_extractor.py   # cortar + gravar clip
+scripts/clips/download_video.py                    # CLI baixar
 scripts/clips/cut_clips.py                         # CLI gerar
 scripts/clips/validate_clips.py                    # CLI validar
 docs/vision/formato-clips.md                 # spec do formato
