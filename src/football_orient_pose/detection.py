@@ -1,4 +1,4 @@
-"""Interface de detecção de pessoas + implementações Faster R-CNN e Cascade R-CNN."""
+"""Interface de detecção de pessoas: Detector ABC + YOLO26, RetinaNet, Faster R-CNN e Cascade R-CNN."""
 
 from __future__ import annotations
 

@@ -66,3 +66,4 @@ pythonpath = ["src"]
 markers = [
     "integration: testes que requerem modelos reais e/ou GPU (rodar com -m integration)",
 ]
+addopts = "-m 'not integration'"

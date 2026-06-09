@@ -76,7 +76,7 @@ def test_cascade_rcnn_requires_mmdet(monkeypatch) -> None:
     real_import = builtins.__import__
 
     def mock_import(name, *args, **kwargs):
-        if name == "mmdet":
+        if name.startswith("mmdet"):
             raise ImportError("mmdet not available")
         return real_import(name, *args, **kwargs)
 
