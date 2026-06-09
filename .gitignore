@@ -254,4 +254,9 @@ docs/**/*.html
 !.task-context/input/.gitkeep
 !.task-context/input/referencias/
 .task-context/input/referencias/*
-!.task-context/input/referencias/.gitkeep
+!.task-context/input/referencias/.gitkeep# data/raw: vídeos broadcast brutos NÃO versionados — mantém só o README
+!data/raw/
+data/raw/*
+!data/raw/README.md
+# data/crops: crops derivados (estágio com crop)
+!data/crops/
