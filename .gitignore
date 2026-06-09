@@ -254,9 +254,14 @@ docs/**/*.html
 !.task-context/input/.gitkeep
 !.task-context/input/referencias/
 .task-context/input/referencias/*
-!.task-context/input/referencias/.gitkeep# data/raw: vídeos broadcast brutos NÃO versionados — mantém só o README
+!.task-context/input/referencias/.gitkeep
+
+# data/raw: vídeos broadcast brutos NÃO versionados — mantém só o README
 !data/raw/
 data/raw/*
 !data/raw/README.md
 # data/crops: crops derivados (estágio com crop)
 !data/crops/
+
+# Inputs de corte de clips (por execução; provenance fica no info.ini de cada clip)
+intervals_*.json
