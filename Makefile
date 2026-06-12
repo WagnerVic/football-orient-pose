@@ -17,7 +17,7 @@ CONFIG  ?= configs/cenario_$(shell echo $(CENARIO) | tr A-Z a-z).py
         finetuning-env finetuning-checkpoint finetuning-smoke \
         train-a train-b train-c train-d evaluate \
         docker-build docker-train \
-        docker-eval-detector docker-detectors-table
+        docker-eval-detector docker-eval-cascade docker-detectors-table
 
 ## Descompacta todos os .zip para data/
 setup: $(MARKERS)
@@ -106,6 +106,16 @@ docker-eval-detector:
 		$(IMAGE):latest python scripts/evaluation/eval_detectors.py \
 			--detector $(DET) --device cuda --save-predictions --viz 3 \
 			$(if $(WEIGHTS),--weights $(WEIGHTS))
+
+## Cascade R-CNN no container (GPU): baixa config+checkpoint do mmdet e avalia (#113).
+## O 4º detector (two-stage) — fecha os "2 one-stage + 2 two-stage". Precisa da imagem buildada.
+docker-eval-cascade:
+	@docker run --rm --gpus all \
+		-v $(DATA_HOST):/workspace/data:ro \
+		-v $(RESULTS_HOST):/workspace/results \
+		-v $(CURDIR)/src:/workspace/src:ro \
+		-v $(CURDIR)/scripts:/workspace/scripts:ro \
+		$(IMAGE):latest bash scripts/evaluation/eval_cascade.sh
 
 ## Gera a tabela comparativa dos detectores (markdown + LaTeX) a partir dos JSONs.
 docker-detectors-table:
