@@ -39,6 +39,11 @@ torch.hub.download_url_to_file( \
     '/workspace/checkpoints/rtmpose-x_coco.pth', \
     progress=True)"
 
+# Detecção (Épico #113): ultralytics (YOLO26) + pycocotools (COCOeval) para o benchmark.
+# Camada separada e tardia: o rebuild reaproveita o cache da stack mmpose/pesos acima.
+# numpy<2.0 re-pinado: o ABI do xtcocotools/mmdet quebra com numpy 2.x.
+RUN pip install --no-cache-dir ultralytics pycocotools "numpy<2.0"
+
 COPY . .
 
 # Sanidade: garante que a stack registra todos os módulos do mmpose no build.

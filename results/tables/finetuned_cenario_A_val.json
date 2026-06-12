@@ -1,0 +1,41 @@
+{
+  "checkpoint": "/workspace/results/checkpoints/cenario_A/best_PCK.pth",
+  "config": "configs/cenario_a.py",
+  "split": "val",
+  "n_clips": 40,
+  "n_frames": 800,
+  "pdj_05": 0.907353,
+  "pck_02": 0.470147,
+  "oks": 0.800906,
+  "oks_ap50": 0.96,
+  "oks_ap75": 0.73625,
+  "oks_map": 0.661625,
+  "mpjpe_2d_px": 5.3437,
+  "pdj_per_group": {
+    "head": 0.965,
+    "shoulder": 0.967083,
+    "elbow": 0.8625,
+    "wrist": 0.7525,
+    "hip": 0.975833,
+    "knee": 0.8975,
+    "ankle": 0.82625
+  },
+  "pck_per_group": {
+    "head": 0.75,
+    "shoulder": 0.618333,
+    "elbow": 0.326875,
+    "wrist": 0.229375,
+    "hip": 0.509583,
+    "knee": 0.376875,
+    "ankle": 0.36125
+  },
+  "mpjpe_per_group": {
+    "head": 2.7315,
+    "shoulder": 3.2646,
+    "elbow": 6.985,
+    "wrist": 10.2502,
+    "hip": 3.5375,
+    "knee": 5.6794,
+    "ankle": 8.1235
+  }
+}
