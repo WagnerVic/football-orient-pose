@@ -95,13 +95,15 @@ docker-train:
 
 ## Benchmark de UM detector no container (GPU) — Épico #113.
 ## Ex.: make docker-eval-detector DET=yolo26   (DET=faster-rcnn|retinanet|yolo26)
+## YOLO maior (mais justo vs ResNet50): make docker-eval-detector DET=yolo26 WEIGHTS=yolo26x.pt
 ## Salva results/tables/detector_<DET>.json + cache de predições.
 docker-eval-detector:
 	@docker run --rm --gpus all \
 		-v $(DATA_HOST):/workspace/data:ro \
 		-v $(RESULTS_HOST):/workspace/results \
 		$(IMAGE):latest python scripts/evaluation/eval_detectors.py \
-			--detector $(DET) --device cuda --save-predictions --viz 3
+			--detector $(DET) --device cuda --save-predictions --viz 3 \
+			$(if $(WEIGHTS),--weights $(WEIGHTS))
 
 ## Gera a tabela comparativa dos detectores (markdown + LaTeX) a partir dos JSONs.
 docker-detectors-table:

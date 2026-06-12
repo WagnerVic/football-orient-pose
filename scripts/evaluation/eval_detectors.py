@@ -56,7 +56,7 @@ Predictions = dict[str, dict[int, tuple[np.ndarray, np.ndarray]]]
 
 def _build_detector(name: str, conf: float, device: str | None, args) -> Detector:
     if name == "yolo26":
-        return YOLO26Detector(conf_threshold=conf, device=device)
+        return YOLO26Detector(weights=args.weights, conf_threshold=conf, device=device)
     if name == "faster-rcnn":
         return FasterRCNNDetector(conf_threshold=conf, device=device)
     if name == "retinanet":
@@ -205,6 +205,10 @@ def _parse_args() -> argparse.Namespace:
     p.add_argument("--gt-root", type=Path, default=Path("data/annotations/examples_bbox"))
     p.add_argument("--device", default=None, help="cpu|cuda|cuda:0 (default: auto)")
     p.add_argument("--conf", type=float, default=0.3, help="confidence threshold")
+    p.add_argument(
+        "--weights", default="yolo26n.pt",
+        help="só yolo26: variante do peso (yolo26n/s/m/l/x.pt). Maior = mais justo vs ResNet50.",
+    )
     p.add_argument("--out", type=Path, default=Path("results/tables"))
     p.add_argument("--save-predictions", action="store_true")
     p.add_argument("--from-predictions", type=Path, default=None, help="recomputa do cache")
@@ -231,6 +235,8 @@ def main() -> None:
             print(f"Predições salvas em {pred_path}")
 
     result = evaluate_detector(args.detector, preds, gt, args.conf)
+    if args.detector == "yolo26":
+        result["weights"] = args.weights  # registra a variante (nano/x/...) no JSON
     _print_table(result)
 
     args.out.mkdir(parents=True, exist_ok=True)
