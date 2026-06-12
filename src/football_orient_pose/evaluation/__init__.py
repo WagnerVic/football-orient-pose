@@ -1,5 +1,12 @@
 """Subpacote de avaliação: métricas e comparação com baseline."""
 
+from football_orient_pose.evaluation.detection_metrics import (
+    build_coco_dt,
+    build_coco_gt,
+    cocoeval_stats,
+    iou_matrix,
+    precision_recall_f1,
+)
 from football_orient_pose.evaluation.metrics import (
     DSP_CROP_AREA,
     H3WB_SIGMAS,
@@ -42,4 +49,9 @@ __all__ = [
     "joint_detection_report",
     "pdj_auc",
     "pdj_curve",
+    "iou_matrix",
+    "precision_recall_f1",
+    "build_coco_gt",
+    "build_coco_dt",
+    "cocoeval_stats",
 ]

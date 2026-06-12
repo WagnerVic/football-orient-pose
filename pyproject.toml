@@ -17,6 +17,7 @@ dependencies = [
     "torchvision",
     "ultralytics",
     "opencv-python>=4.8",
+    "pycocotools>=2.0.7",
     "numpy",
     "matplotlib",
     "scipy",
