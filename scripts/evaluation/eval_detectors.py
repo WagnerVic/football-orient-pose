@@ -170,6 +170,11 @@ def _save_viz(name: str, data_root: Path, gt, preds: Predictions, n: int, out_di
             saved += 1
 
 
+def _ar(value: float) -> str:
+    """Formata AR: COCOeval devolve -1 quando não há objetos daquele tamanho → 'n/a'."""
+    return f"{value * 100:>8.2f}%" if value >= 0 else f"{'n/a':>9}"
+
+
 def _print_table(r: dict) -> None:
     w = 52
     print(f"\n{'=' * w}")
@@ -183,9 +188,9 @@ def _print_table(r: dict) -> None:
     print(f"  AP50         {r['AP50'] * 100:>8.2f}%")
     print(f"  AP75         {r['AP75'] * 100:>8.2f}%")
     print(f"{'-' * w}")
-    print(f"  AR small     {r['AR_small'] * 100:>8.2f}%   (jogador distante)")
-    print(f"  AR medium    {r['AR_medium'] * 100:>8.2f}%")
-    print(f"  AR large     {r['AR_large'] * 100:>8.2f}%   (jogador perto)")
+    print(f"  AR small     {_ar(r['AR_small'])}   (jogador distante)")
+    print(f"  AR medium    {_ar(r['AR_medium'])}")
+    print(f"  AR large     {_ar(r['AR_large'])}   (jogador perto)")
     print(f"{'-' * w}")
     print(f"  Precision    {r['precision'] * 100:>8.2f}%  (conf>={r['conf_threshold']}, IoU>=.5)")
     print(f"  Recall       {r['recall'] * 100:>8.2f}%")
