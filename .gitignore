@@ -243,7 +243,7 @@ checkpoints/*.pth
 checkpoints/cenario_*/
 
 # Outputs gerados (reproduzíveis) — exceto tabelas de benchmark (pequenas, necessárias para o artigo)
-results/
+results/*
 !results/tables/
 !results/tables/*.json
 !results/tables/*.tex
