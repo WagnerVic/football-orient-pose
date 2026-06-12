@@ -237,6 +237,9 @@ data/annotations/**/*.png
 
 # Pesos dos modelos (binários grandes, não versionar)
 models/weights/
+# Pesos baixados na raiz pelo ultralytics (ex.: yolo26x.pt) e quaisquer .pt/.pth
+*.pt
+*.pth
 
 # Checkpoints de fine-tuning (gerados pelo train.py, não versionar)
 checkpoints/*.pth
