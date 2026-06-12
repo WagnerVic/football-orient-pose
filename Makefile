@@ -16,7 +16,8 @@ CONFIG  ?= configs/cenario_$(shell echo $(CENARIO) | tr A-Z a-z).py
 .PHONY: setup clean-data help \
         finetuning-env finetuning-checkpoint finetuning-smoke \
         train-a train-b train-c train-d evaluate \
-        docker-build docker-train
+        docker-build docker-train \
+        docker-eval-detector docker-detectors-table
 
 ## Descompacta todos os .zip para data/
 setup: $(MARKERS)
@@ -92,6 +93,22 @@ docker-train:
 		-v $(RESULTS_HOST):/workspace/results \
 		$(IMAGE):latest python scripts/training/train.py --cenario $(CENARIO)
 
+## Benchmark de UM detector no container (GPU) — Épico #113.
+## Ex.: make docker-eval-detector DET=yolo26   (DET=faster-rcnn|retinanet|yolo26)
+## Salva results/tables/detector_<DET>.json + cache de predições.
+docker-eval-detector:
+	@docker run --rm --gpus all \
+		-v $(DATA_HOST):/workspace/data:ro \
+		-v $(RESULTS_HOST):/workspace/results \
+		$(IMAGE):latest python scripts/evaluation/eval_detectors.py \
+			--detector $(DET) --device cuda --save-predictions --viz 3
+
+## Gera a tabela comparativa dos detectores (markdown + LaTeX) a partir dos JSONs.
+docker-detectors-table:
+	@docker run --rm \
+		-v $(RESULTS_HOST):/workspace/results \
+		$(IMAGE):latest python scripts/evaluation/detectors_table.py
+
 ## Mostra os comandos disponíveis
 help:
 	@echo ""
@@ -109,4 +126,8 @@ help:
 	@echo "    make evaluate CKPT=.. CONFIG=..  → Avalia um checkpoint no val"
 	@echo "    make docker-build         → Constrói a imagem de fine-tuning"
 	@echo "    make docker-train CENARIO=C → Roda um cenário no container (GPU)"
+	@echo ""
+	@echo "  Detecção (Épico 113 — benchmark dos detectores):"
+	@echo "    make docker-eval-detector DET=yolo26 → Avalia um detector (GPU)"
+	@echo "    make docker-detectors-table         → Tabela comparativa (md+LaTeX)"
 	@echo ""
