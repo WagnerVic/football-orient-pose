@@ -1,4 +1,4 @@
-"""Interface de detecção de pessoas: Detector ABC + YOLO26, RetinaNet, Faster R-CNN e Cascade R-CNN."""
+"""Detecção de pessoas: ABC Detector + wrappers YOLO26, RetinaNet, Faster R-CNN, Cascade R-CNN."""
 
 from __future__ import annotations
 
@@ -9,6 +9,31 @@ import numpy as np
 Detection = tuple[np.ndarray, float]  # (xyxy float32 shape (4,), conf)
 
 COCO_PERSON_LABEL = 1  # torchvision/COCO: label==1 é person
+
+
+def _auto_device(device: str | None) -> str:
+    """Resolve o device: respeita o explícito; senão usa CUDA quando disponível, senão CPU.
+
+    Evita o crash de instanciar um detector com ``device="cuda"`` numa máquina sem GPU.
+    """
+    if device is not None:
+        return device
+    import torch
+
+    return "cuda" if torch.cuda.is_available() else "cpu"
+
+
+def detections_to_arrays(detections: list[Detection]) -> tuple[np.ndarray, np.ndarray]:
+    """Converte ``list[(xyxy, conf)]`` em ``(boxes (N,4) float32, scores (N,) float32)``.
+
+    Ponte entre a saída dos detectores e o GT ``(N,4)`` do ``roboflow_io`` — o benchmark
+    (Épico #113) compara os dois em forma de array, sem repetir ``zip``/``stack``.
+    """
+    if not detections:
+        return np.empty((0, 4), dtype=np.float32), np.empty((0,), dtype=np.float32)
+    boxes = np.stack([b for b, _ in detections]).astype(np.float32)
+    scores = np.asarray([s for _, s in detections], dtype=np.float32)
+    return boxes, scores
 
 
 class Detector(ABC):
@@ -44,14 +69,16 @@ class Detector(ABC):
 class _TorchvisionDetector(Detector):
     """Base reutilizável para detectores torchvision pré-treinados COCO."""
 
-    def __init__(self, build_fn, weights, conf_threshold: float = 0.3, device: str = "cuda") -> None:
+    def __init__(
+        self, build_fn, weights, conf_threshold: float = 0.3, device: str | None = None
+    ) -> None:
         import torch
 
-        self._model = build_fn(weights=weights).eval().to(device)
+        self._torch = torch
+        self._device = _auto_device(device)
+        self._model = build_fn(weights=weights).eval().to(self._device)
         self._tf = weights.transforms()
         self.conf_threshold = conf_threshold
-        self._device = device
-        self._torch = torch
 
     def detect(self, image: np.ndarray) -> list[Detection]:
         torch = self._torch
@@ -71,7 +98,7 @@ class FasterRCNNDetector(_TorchvisionDetector):
 
     name = "faster-rcnn"
 
-    def __init__(self, conf_threshold: float = 0.3, device: str = "cuda") -> None:
+    def __init__(self, conf_threshold: float = 0.3, device: str | None = None) -> None:
         from torchvision.models.detection import (
             FasterRCNN_ResNet50_FPN_Weights,
             fasterrcnn_resnet50_fpn,
@@ -91,11 +118,13 @@ class YOLO26Detector(Detector):
     Ultralytics usa ``cls==0`` para person (diferente do torchvision).
     """
 
+    name = "yolo26"
+
     def __init__(
         self,
         weights: str = "yolo26n.pt",
         conf_threshold: float = 0.3,
-        device: str = "cuda",
+        device: str | None = None,
     ) -> None:
         try:
             from ultralytics import YOLO
@@ -105,11 +134,7 @@ class YOLO26Detector(Detector):
             ) from exc
         self._model = YOLO(weights)
         self.conf_threshold = conf_threshold
-        self._device = device
-
-    @property
-    def name(self) -> str:
-        return "yolo26"
+        self._device = _auto_device(device)
 
     def detect(self, image: np.ndarray) -> list[Detection]:
         res = self._model.predict(
@@ -130,7 +155,7 @@ class RetinaNetDetector(_TorchvisionDetector):
 
     name = "retinanet"
 
-    def __init__(self, conf_threshold: float = 0.3, device: str = "cuda") -> None:
+    def __init__(self, conf_threshold: float = 0.3, device: str | None = None) -> None:
         from torchvision.models.detection import (
             RetinaNet_ResNet50_FPN_Weights,
             retinanet_resnet50_fpn,
@@ -151,12 +176,14 @@ class CascadeRCNNDetector(Detector):
     Person = ``labels==0`` no mmdet (diferente do torchvision que usa 1).
     """
 
+    name = "cascade-rcnn"
+
     def __init__(
         self,
         config: str,
         checkpoint: str,
         conf_threshold: float = 0.3,
-        device: str = "cuda",
+        device: str | None = None,
     ) -> None:
         try:
             from mmdet.apis import init_detector
@@ -164,12 +191,9 @@ class CascadeRCNNDetector(Detector):
             raise ImportError(
                 "CascadeRCNNDetector requer mmdet (mim install mmdet)"
             ) from exc
-        self._model = init_detector(config, checkpoint, device=device)
+        self._device = _auto_device(device)
+        self._model = init_detector(config, checkpoint, device=self._device)
         self.conf_threshold = conf_threshold
-
-    @property
-    def name(self) -> str:
-        return "cascade-rcnn"
 
     def detect(self, image: np.ndarray) -> list[Detection]:
         from mmdet.apis import inference_detector
