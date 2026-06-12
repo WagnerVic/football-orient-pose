@@ -101,6 +101,8 @@ docker-eval-detector:
 	@docker run --rm --gpus all \
 		-v $(DATA_HOST):/workspace/data:ro \
 		-v $(RESULTS_HOST):/workspace/results \
+		-v $(CURDIR)/src:/workspace/src:ro \
+		-v $(CURDIR)/scripts:/workspace/scripts:ro \
 		$(IMAGE):latest python scripts/evaluation/eval_detectors.py \
 			--detector $(DET) --device cuda --save-predictions --viz 3 \
 			$(if $(WEIGHTS),--weights $(WEIGHTS))
@@ -109,6 +111,8 @@ docker-eval-detector:
 docker-detectors-table:
 	@docker run --rm \
 		-v $(RESULTS_HOST):/workspace/results \
+		-v $(CURDIR)/src:/workspace/src:ro \
+		-v $(CURDIR)/scripts:/workspace/scripts:ro \
 		$(IMAGE):latest python scripts/evaluation/detectors_table.py
 
 ## Mostra os comandos disponíveis
