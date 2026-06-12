@@ -19,6 +19,9 @@ métricas do projeto (PDJ@0.5, PCK@0.2, OKS, MPJPE-2D).
 - **A/B** (`from scratch`): `load_from=None`, `frozen_stages=0`, LR uniforme, fase única.
 - **C/D** (`transfer learning`): pesos COCO + *progressive unfreezing* em 3 fases
   (`frozen_stages` 4 → 2 → 1), com a fase 3 condicionada a `Δ PCK(fase2−fase1) > 5pp`.
+  *Progressive unfreezing* = *gradual unfreezing* + *discriminative fine-tuning* (Howard & Ruder,
+  2018 — ULMFiT); fundamentação em Yosinski et al. (2014), Kumar et al. (2022, LP-FT) e Lee et al.
+  (2023, *surgical fine-tuning*). PDFs em `.task-context/input/referencias/.refs/RNP/artigos/`.
 - **A/C** sem augmentation · **B/D** com MotionBlur + RandomErasing (RandomFlip em todos).
 
 ## Componentes (e como mapeiam para as issues)

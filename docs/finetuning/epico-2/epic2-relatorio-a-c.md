@@ -1,5 +1,9 @@
 # Relatório do Épico 2 — Execução da Matriz de Experimentos
 
+> ⚠️ **DOCUMENTO HISTÓRICO/PARCIAL.** O documento canônico do Épico 2 é
+> [`epic2-relatorio-final.md`](epic2-relatorio-final.md) — funde este (A/C/RAW/C2) com o B/D. Em caso
+> de divergência (nomenclatura de cenários, convenção das células da matriz), **vale o `final`**.
+
 **Projeto:** Football Orient Pose — Transfer Learning (RNP)
 **Runs:** `20260607_033902/` (A-FLIP, C-FLIP) · `20260607_051809_c2/` (C2) · `20260607_195315_raw/` (A-RAW, C-RAW)
 **GPU:** RTX 4090 (Docker) · **Data:** 07/06/2026

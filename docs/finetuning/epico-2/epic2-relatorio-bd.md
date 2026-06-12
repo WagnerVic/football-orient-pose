@@ -1,5 +1,11 @@
 # Relatório B/D do Épico 2 — Augmentation (fecha a matriz e as perguntas abertas)
 
+> ⚠️ **DOCUMENTO HISTÓRICO/PARCIAL.** O documento canônico do Épico 2 é
+> [`epic2-relatorio-final.md`](epic2-relatorio-final.md). Em caso de divergência, vale o `final`.
+> **Convenção das células da matriz:** este relatório usa, na §8, as células **+flip (baixo) × full
+> (alto)** (interação ≈ −2,9pp); o `final` adota a convenção canônica **RAW (sem aug) × full**
+> (interação ≈ −5,65pp). Para citar a matriz 2×2 (artigo/apresentação), **use a convenção do `final`**.
+
 **Projeto:** Football Orient Pose — Transfer Learning (RNP)
 **Run:** `results/runs/20260608_014649_bd/` (commit `5cb9d48`)
 **GPU:** RTX 4090 (Docker) · **Data:** 08/06/2026

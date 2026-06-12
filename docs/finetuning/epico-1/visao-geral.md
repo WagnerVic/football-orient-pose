@@ -242,6 +242,11 @@ Review completo: [`.refs/RNP/CODE-REVIEW-PR92.md`](../../.refs/RNP/CODE-REVIEW-P
 - **RTMPose-X / SimCC:** modelo de pose top-down; SimCC prevê cada keypoint como 2 classificações (eixos X e Y).
 - **H3WB-17:** formato de 17 keypoints do 3DSP; 4 deles ([0,7,8,9]) são médias calculadas.
 - **From scratch vs Transfer Learning:** pesos iniciais aleatórios vs. pesos COCO.
-- **Progressive unfreezing:** descongelar o backbone em fases, do topo para a base.
+- **Progressive unfreezing:** descongelar o backbone em fases, do topo para a base. Técnica de
+  Howard & Ruder (2018, ULMFiT) — *gradual unfreezing* + *discriminative fine-tuning* (LR por camada).
+  Fundamentação: Yosinski et al. (2014) (camadas baixas gerais), Kumar et al. (2022, LP-FT) (treinar a
+  cabeça primeiro evita distorcer features), Lee et al. (2023, *surgical fine-tuning*) (tunar subconjunto
+  > tunar tudo sob *distribution shift* — justifica a fase 3 condicional). PDFs em
+  `.task-context/input/referencias/.refs/RNP/artigos/`.
 - **Letterboxing:** redimensionar mantendo proporção, preenchendo o resto com padding (sem esticar).
 - **PCK/PDJ/OKS/MPJPE:** precisão / detecção / similaridade-COCO / erro em pixels.
