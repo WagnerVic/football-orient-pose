@@ -19,8 +19,12 @@ humano** e escolhe o melhor para alimentar o crop do finalizador (Épicos #119 e
   | Detector | Tipo | Backbone / peso | Tamanho |
   |---|---|---|---|
   | YOLO26x | one-stage anchor-free | `yolo26x.pt` (ultralytics) | grande |
-  | Faster R-CNN | two-stage | ResNet50-FPN (torchvision, COCO_V1) | ~160 MB |
   | RetinaNet | one-stage | ResNet50-FPN (torchvision, COCO_V1) | ~130 MB |
+  | Faster R-CNN | two-stage | ResNet50-FPN (torchvision, COCO_V1) | ~160 MB |
+  | Cascade R-CNN | two-stage (cascata de IoU) | ResNet50-FPN (mmdet, 1x_coco) | ~265 MB |
+
+  Conjunto **completo do desafio: 2 one-stage (YOLO26x, RetinaNet) + 2 two-stage
+  (Faster R-CNN, Cascade R-CNN)**.
 - **Reprodução:** `python scripts/evaluation/eval_detectors.py --detector <nome> --device cuda`
   (`--weights yolo26x.pt` para a variante grande do YOLO); tabela via
   `scripts/evaluation/detectors_table.py`. Rodado numa RTX 4050 (6 GB) — é inferência leve.
@@ -41,6 +45,7 @@ ruído e `AR_large` é N/A.
 | Detector | mAP | AP50 | AP75 | AR_med | Precision | Recall | F1 | nº predições |
 |---|---|---|---|---|---|---|---|---|
 | **YOLO26x** | **84,4** | **95,0** | **91,6** | **87,5** | **98,7** | **95,4** | **97,0** | 715 |
+| Cascade R-CNN | 68,3 | 90,7 | 77,5 | 73,8 | 54,5 | 93,4 | 68,9 | 1267 |
 | Faster R-CNN | 65,1 | 91,9 | 74,7 | 70,3 | 47,8 | 94,7 | 63,6 | 1466 |
 | RetinaNet | 61,9 | 91,1 | 70,3 | 68,2 | 57,3 | 93,7 | 71,1 | 1210 |
 
@@ -60,9 +65,15 @@ reais, não anotadas como jogador, contadas como falso-positivo). O AP75 (74,7) 
 YOLO26x → caixas mais frouxas. Os falsos-positivos seriam filtráveis na seleção do finalizador, mas
 ainda assim fica atrás em localização.
 
-**RetinaNet — equilibrado, porém atrás.** Perfil parecido com o Faster (one-stage com o mesmo
-backbone): recall alto (93,7%), precision intermediária (57,3%), mAP 61,9. Não lidera em nenhuma
-métrica.
+**Cascade R-CNN — o melhor dos two-stage.** mAP 68,3 (o maior entre os two-stage) e, em especial,
+**AP75 de 77,5%** — superior ao Faster (74,7) e ao RetinaNet (70,3). Isso confirma o efeito da
+**cascata de IoU crescente**: refinando a caixa em estágios, ele **localiza mais justo** que os
+demais two-stage. Ainda assim sofre do mesmo mal: cuspiu **1267 caixas** (torcida) → precision 54,5%.
+Conclusão: melhora a localização entre os two-stage, mas continua **muito atrás do YOLO26x** em todas
+as frentes.
+
+**RetinaNet — equilibrado, porém atrás.** Perfil parecido com o Faster (mesmo backbone): recall alto
+(93,7%), precision intermediária (57,3%), mAP 61,9. Não lidera em nenhuma métrica.
 
 ## 4. A jornada metodológica: por que quase escolhemos errado
 
@@ -94,16 +105,19 @@ relevante para o artigo.
 - **AP75 importa para o downstream** (caixa justa → crop justo → melhor pose). YOLO26x lidera com
   folga (91,6 vs 74,7).
 - **One-stage moderno × two-stage:** um one-stage anchor-free de capacidade adequada (YOLO26x)
-  supera os two-stage clássicos em **velocidade e qualidade** simultaneamente.
+  supera os **dois** two-stage clássicos em **velocidade e qualidade** simultaneamente.
+- **Entre os two-stage, o Cascade lidera** (mAP 68,3, AP75 77,5): a cascata de IoU melhora a
+  localização vs Faster/RetinaNet — mas não o suficiente para ameaçar o YOLO26x.
 
 ## 6. Decisão (US #117 / #118)
 
 > ## ✅ Vencedor: **YOLO26x**
 >
-> Escolhido por **dominar todas as métricas** — mAP (84,4), AP50 (95,0), AP75 (91,6), AR_medium
-> (87,5), precision (98,7), recall (95,4) e F1 (97,0). Em especial: **maior recall** (não perde o
-> finalizador) + **maior AP75** (caixa justa → melhor crop) + **maior precision** (quase sem
-> falso-positivo de torcida). Não é vitória "em um critério": é vitória **em todos**.
+> Escolhido por **dominar todas as métricas**, contra **os 4 detectores** (2 one-stage + 2
+> two-stage) — mAP (84,4), AP50 (95,0), AP75 (91,6), AR_medium (87,5), precision (98,7), recall
+> (95,4) e F1 (97,0). Em especial: **maior recall** (não perde o finalizador) + **maior AP75** (caixa
+> justa → melhor crop) + **maior precision** (quase sem falso-positivo de torcida). Não é vitória "em
+> um critério": é vitória **em todos**, sobre **todos**.
 
 Esse detector gera os crops do finalizador nos **examples** (Exp. de crop, Épico #119) e nos clips
 do **Brasil** (pipeline ponta-a-ponta, Épico #126), destravando a anotação de keypoints (US #109).
@@ -112,11 +126,10 @@ do **Brasil** (pipeline ponta-a-ponta, Épico #126), destravando a anotação de
 
 - **AR_small** é ruído (apenas 5 caixas pequenas no GT). Para medir bem o recall em jogadores muito
   distantes seria preciso anotar mais frames com jogadas de campo aberto.
-- **Cascade R-CNN** (4º detector planejado, two-stage com mmdet) ainda não foi avaliado — exige
-  config + checkpoint do model zoo. Dado o domínio do YOLO26x, é baixa prioridade; fica como
-  validação adicional.
 - A precision dos two-stage poderia ser "corrigida" com **filtro de região do campo** (ignorar
   detecções fora do gramado), mas isso não altera a conclusão (o YOLO26x já vence sem isso).
+- O Cascade R-CNN rodou via Docker (`make docker-eval-cascade`) — `mmdet` só existe na imagem do
+  finetuning, não no venv local. Os 3 demais rodam direto (torchvision/ultralytics auto-baixam pesos).
 
 ## 8. Figuras
 
@@ -126,7 +139,7 @@ Geradas com `--viz 3` (GT em verde × predição em vermelho), em `results/detec
 
 ## 9. Arquivos
 
-- Resultados por detector: `results/tables/detector_{yolo26,faster-rcnn,retinanet}.json`
+- Resultados por detector: `results/tables/detector_{yolo26,cascade-rcnn,faster-rcnn,retinanet}.json`
 - Tabela LaTeX (artigo): `results/tables/detectores.tex`
 - Código: `scripts/evaluation/eval_detectors.py`, `scripts/evaluation/detectors_table.py`,
-  `src/football_orient_pose/evaluation/detection_metrics.py`
+  `scripts/evaluation/eval_cascade.sh`, `src/football_orient_pose/evaluation/detection_metrics.py`
