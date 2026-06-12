@@ -229,6 +229,11 @@ data/*
 !data/examples/
 # Clips reais extraídos (Épico 13): versionados — a anotação (Épico 9) ocorre sobre eles
 !data/clips/
+# Anotações Roboflow (Épico 9): versiona o GT COCO (.json); ignora imagens (cópias de data/clips)
+!data/annotations/
+data/annotations/**/*.jpg
+data/annotations/**/*.jpeg
+data/annotations/**/*.png
 
 # Pesos dos modelos (binários grandes, não versionar)
 models/weights/
