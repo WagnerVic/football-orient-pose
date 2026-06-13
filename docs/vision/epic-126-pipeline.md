@@ -182,7 +182,7 @@ frouxo": é falso.
 Após as correções, validado de ponta a ponta na 4050 e no SSH:
 
 - **Zero-shot + crop justo (4050):** esqueletos coerentes no finalizador, no frame e no crop.
-- **Fine-tunado D-OCCL + crops do 3DSP (`make docker-pose-3dsp`):** coerente (distribuição de treino).
+- **Fine-tunado D-OCCL + crops do 3DSP:** coerente (distribuição de treino).
 - **Fine-tunado D-OCCL + nosso crop justo (`make docker-pipeline-finetuned`):** **coerente** — o
   showcase definitivo: **YOLO26x → crop justo → melhor pose**, no frame real do broadcast.
 
@@ -241,12 +241,6 @@ make docker-pipeline-finetuned \
   CKPT=results/runs/20260608_014649_bd/checkpoints/cenario_D-OCCL/best_PCK.pth
 ```
 
-**Fine-tunado, só inferência nos crops do 3DSP (Docker/SSH):**
-```bash
-make docker-pose-3dsp \
-  CKPT=results/runs/20260608_014649_bd/checkpoints/cenario_D-OCCL/best_PCK.pth
-```
-
 **Showcase "todos os jogadores" — Brasil (§8):**
 ```bash
 # zero-shot, local (4050) — também serve p/ examples: ROOT=data/clips/examples
@@ -298,10 +292,9 @@ montado); o zero-shot baixa o ONNX na 1ª vez. O 3DSP test é auto-resolvido (`d
 **Núcleo:** `pipeline.py` (run_pipeline, crop_and_pose, select_finisher, track_finisher, **pose_all**),
 `crops_io.py`, `utils/viz.py:draw_skeleton`, `utils/data_io.py:load_finisher_boxes`,
 `estimators/rtmpose.py` (fix dos centros).
-**Scripts:** `scripts/pipeline/demo_examples.py`, `scripts/pipeline/pose_on_crops.py`,
+**Scripts:** `scripts/pipeline/demo_examples.py`,
 `scripts/pipeline/pose_all_players.py` (showcase "todos").
-**Docker/Make:** `docker-pipeline-finetuned`, `docker-pose-3dsp`, `pose-all-brazil`,
-`docker-pose-all-brazil`.
+**Docker/Make:** `docker-pipeline-finetuned`, `pose-all-brazil`, `docker-pose-all-brazil`.
 **Docs:** `docs/vision/formato-crops.md`, este relatório.
 **Reúso:** `detection.py`, `crop.py`, `pose.py`/`estimators`, `utils/skeleton.py`,
 `utils/keypoint_mapping.py`, `evaluation/detection_metrics.py:iou_matrix`.
