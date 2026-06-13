@@ -3,7 +3,12 @@ from __future__ import annotations
 import numpy as np
 
 from football_orient_pose.detection import Detection, Detector
-from football_orient_pose.pipeline import PipelineResult, run_pipeline, select_finisher
+from football_orient_pose.pipeline import (
+    PipelineResult,
+    run_pipeline,
+    select_finisher,
+    track_finisher,
+)
 from football_orient_pose.pose import BasePoseEstimator
 
 
@@ -69,3 +74,26 @@ def test_run_pipeline_reprojection_matches_crop_to_frame() -> None:
     res = run_pipeline(_frame(), _TwoBoxDetector(), _CenterPose())
     expected = crop_to_frame(res.keypoints_crop, res.crop_params)
     np.testing.assert_allclose(res.keypoints_frame, expected, atol=1e-6)
+
+
+def test_track_finisher_follows_anchor_through_cluster() -> None:
+    # alvo A (idx 0) + vizinho B (idx 1). ref forte só no frame 0; no frame 2 B chega perto de A.
+    boxes = [
+        np.array([[100, 100, 140, 200], [500, 100, 540, 200]], np.float32),
+        np.array([[110, 100, 150, 200], [480, 100, 520, 200]], np.float32),
+        np.array([[120, 100, 160, 200], [150, 100, 190, 200]], np.float32),
+    ]
+    ref = [np.array([100, 100, 140, 200], np.float32), None, None]
+    # rastreia A por continuidade (não re-casa com ref a cada frame)
+    assert track_finisher(boxes, ref) == [0, 0, 0]
+
+
+def test_track_finisher_no_ref_uses_largest_area() -> None:
+    boxes = [np.array([[0, 0, 10, 10], [0, 0, 100, 100]], np.float32)]
+    assert track_finisher(boxes, [None]) == [1]
+
+
+def test_track_finisher_handles_empty_frame() -> None:
+    boxes = [np.array([[0, 0, 40, 80]], np.float32), np.empty((0, 4), np.float32)]
+    ref = [np.array([0, 0, 40, 80], np.float32), None]
+    assert track_finisher(boxes, ref) == [0, None]

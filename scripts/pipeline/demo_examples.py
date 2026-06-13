@@ -26,8 +26,8 @@ import cv2
 sys.path.insert(0, str(Path(__file__).parents[2] / "src"))
 
 from football_orient_pose.crops_io import write_crop_clip
-from football_orient_pose.detection import YOLO26Detector
-from football_orient_pose.pipeline import run_pipeline
+from football_orient_pose.detection import YOLO26Detector, detections_to_arrays
+from football_orient_pose.pipeline import crop_and_pose, track_finisher
 from football_orient_pose.utils.data_io import load_clip_info, load_finisher_boxes
 from football_orient_pose.utils.viz import draw_boxes, draw_skeleton
 
@@ -71,18 +71,22 @@ def process_clip(
     viz_dir = out_dir / clip_id
     viz_dir.mkdir(parents=True, exist_ok=True)
 
-    crops, params, bboxes = [], [], []
-    frames = sorted((clip_dir / "img").glob("*.jpg"))
-    for fp in frames:
-        idx = int(fp.stem)
-        frame = cv2.imread(str(fp))
-        try:
-            res = run_pipeline(frame, detector, pose, ref_box=finisher.get(idx))
-        except ValueError as exc:  # nenhuma pessoa detectada
-            print(f"  [{clip_id}] frame {idx:03d}: {exc} (pulado)")
-            continue
+    frame_paths = sorted((clip_dir / "img").glob("*.jpg"))
+    # passada 1: detecta tudo e rastreia o finalizador ao longo do clip
+    frames = [cv2.imread(str(fp)) for fp in frame_paths]
+    boxes_per_frame = [detections_to_arrays(detector.detect(f))[0] for f in frames]
+    ref_boxes = [finisher.get(int(fp.stem)) for fp in frame_paths]
+    picks = track_finisher(boxes_per_frame, ref_boxes)
 
-        # showcase: frame com todas as caixas (cinza), finalizador (vermelho) + esqueleto
+    # passada 2: crop + pose + viz no finalizador rastreado
+    crops, params, bboxes = [], [], []
+    for fp, frame, boxes, pick in zip(frame_paths, frames, boxes_per_frame, picks):
+        idx = int(fp.stem)
+        if pick is None:
+            print(f"  [{clip_id}] frame {idx:03d}: sem detecção (pulado)")
+            continue
+        res = crop_and_pose(frame, boxes[pick], pose, all_boxes=boxes)
+
         vis = draw_boxes(frame, res.all_boxes, color=(160, 160, 160), thickness=1)
         vis = draw_boxes(vis, res.finisher_box.reshape(1, 4), color=(0, 0, 255), thickness=2)
         vis = draw_skeleton(vis, res.keypoints_frame)
