@@ -118,6 +118,33 @@ def crop_and_pose(
     )
 
 
+def pose_all(
+    frame: np.ndarray,
+    boxes: np.ndarray,
+    pose_estimator: BasePoseEstimator,
+    crop_mode: str = "tight",
+    min_box_height: float = 0.0,
+) -> list[PipelineResult]:
+    """Estima a pose de **todos** os jogadores detectados (replica o baseline Reis et al.).
+
+    Para cada caixa em ``boxes`` (N,4 xyxy), recorta justo, estima a pose e reprojeta os keypoints
+    para o frame — um ``PipelineResult`` por jogador. Diferente do caminho do finalizador, aqui não
+    há seleção/rastreamento: poseia todo mundo (mesma ideia da Fig. 5 do Reis, que re-cola todos os
+    esqueletos no frame).
+
+    ``min_box_height`` descarta caixas mais baixas que esse limiar (jogador distante → crop ruim →
+    esqueleto embolado). Os ``crop`` ficam nos resultados em memória; cabe ao chamador descartá-los
+    (não são persistidos no showcase).
+    """
+    boxes = np.asarray(boxes, dtype=np.float32).reshape(-1, 4)
+    heights = boxes[:, 3] - boxes[:, 1]
+    kept = boxes[heights >= min_box_height]
+    return [
+        crop_and_pose(frame, box, pose_estimator, all_boxes=boxes, crop_mode=crop_mode)
+        for box in kept
+    ]
+
+
 def run_pipeline(
     frame: np.ndarray,
     detector: Detector,

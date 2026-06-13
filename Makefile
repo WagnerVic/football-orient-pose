@@ -18,7 +18,8 @@ CONFIG  ?= configs/cenario_$(shell echo $(CENARIO) | tr A-Z a-z).py
         train-a train-b train-c train-d evaluate \
         docker-build docker-train \
         docker-eval-detector docker-eval-cascade docker-detectors-table \
-        docker-pipeline-finetuned docker-pose-3dsp
+        docker-pipeline-finetuned docker-pose-3dsp \
+        pose-all-brazil docker-pose-all-brazil
 
 ## Descompacta todos os .zip para data/
 setup: $(MARKERS)
@@ -146,6 +147,26 @@ docker-pose-3dsp:
 			--crops-root data/3dsp/test --clips 00001 00004 00006 \
 			--pose finetuned --checkpoint $(CKPT) --device cuda
 
+## Showcase "pose em TODOS os jogadores" no Brasil (replica o baseline Reis) — Épico #126.
+## Roda LOCAL (zero-shot rtmpose, sem Docker): YOLO26x detecta todos → pose em cada um → esqueletos no
+## frame. Saída: results/pose_all/<clip>/frame_NNN.png (gitignored; nada de crop por jogador salvo).
+## Ex.: make pose-all-brazil   |   outra fonte: make pose-all-brazil ROOT=data/clips/examples
+ROOT ?= data/clips/brazil
+pose-all-brazil:
+	@PYTHONPATH=src .venv/bin/python scripts/pipeline/pose_all_players.py \
+		--data-root $(ROOT) --pose rtmpose --device cuda
+
+## Mesmo showcase, mas com a pose FINE-TUNADA (GPU/Docker, tem MMPose) — Épico #126.
+## Ex.: make docker-pose-all-brazil CKPT=results/runs/.../cenario_D-OCCL/best_PCK.pth
+docker-pose-all-brazil:
+	@docker run --rm --gpus all \
+		-v $(DATA_HOST):/workspace/data:ro \
+		-v $(RESULTS_HOST):/workspace/results \
+		-v $(CURDIR)/src:/workspace/src:ro \
+		-v $(CURDIR)/scripts:/workspace/scripts:ro \
+		$(IMAGE):latest python scripts/pipeline/pose_all_players.py \
+			--data-root data/clips/brazil --pose finetuned --checkpoint $(CKPT) --device cuda
+
 ## Gera a tabela comparativa dos detectores (markdown + LaTeX) a partir dos JSONs.
 docker-detectors-table:
 	@docker run --rm \
@@ -175,4 +196,8 @@ help:
 	@echo "  Detecção (Épico 113 — benchmark dos detectores):"
 	@echo "    make docker-eval-detector DET=yolo26 → Avalia um detector (GPU)"
 	@echo "    make docker-detectors-table         → Tabela comparativa (md+LaTeX)"
+	@echo ""
+	@echo "  Pipeline (Épico 126 — showcase):"
+	@echo "    make pose-all-brazil       → Pose em TODOS os jogadores no Brasil (local, zero-shot)"
+	@echo "    make docker-pose-all-brazil CKPT=.. → Idem com pose fine-tunada (Docker)"
 	@echo ""

@@ -1,24 +1,40 @@
 # Épico #126 — Pipeline ponta-a-ponta (detecção → crop → pose)
 
 Relatório completo do pipeline que costura todas as peças do diferencial numa única passagem: do
-frame bruto do broadcast até a **pose do finalizador desenhada no frame real**. É a vitrine
-qualitativa do trabalho — o detector vencedor, o crop otimizado e o melhor modelo de pose, juntos.
+frame bruto do broadcast até a **pose desenhada no frame real**. É a vitrine qualitativa do trabalho —
+o detector vencedor, o crop otimizado e o melhor modelo de pose, juntos.
 
 ---
 
 ## 1. Objetivo e contexto
 
-O baseline (Reis et al., 2023) fazia `YOLOv3 → crop → OpenPose` sem métrica e sem mostrar o resultado
-final. Nosso diferencial junta as três peças que construímos em epicos anteriores:
+O baseline (**Reis et al., 2023**) faz `YOLOv3 → crop → OpenPose` para estimar a pose de **TODOS os
+jogadores** do campo (recorta cada caixa, roda OpenPose em cada uma e re-cola todos os esqueletos no
+frame — Fig. 5 do paper), **sem métrica** e validado só visualmente. **Não existe "finalizador" no
+Reis** — esse conceito vem da outra referência (AutoSoccerPose / dataset 3DSP, sobre *soccer shots*),
+onde o *shooter* é o único jogador com keypoint GT.
+
+Isso define **duas vistas** do mesmo pipeline (mesmas peças, alvos diferentes):
+
+| Vista | Quem é poseado | Para quê | Anotação |
+|---|---|---|---|
+| **Showcase "todos"** (replica o Reis) | **todos** os jogadores | vitrine qualitativa | ❌ automático |
+| **Vista do finalizador** | só o *shooter* | base da **métrica** (PDJ/PCK/OKS) | ✅ (3DSP / US #109) |
+
+O **finalizador não é o foco conceitual** — é um **artefato de métrica** (único com GT). Por isso o
+**Brasil**, que não tem anotação de finalizador, roda **100% automático** na vista "todos".
+
+Nosso diferencial junta as três peças que construímos em épicos anteriores:
 
 - **Detector vencedor** — YOLO26x (Épico #113, ver `epic-113-detectores.md`).
 - **Crop justo** — `crop.py` (US #101), letterbox sem distorção.
 - **Pose** — RTMPose-X, zero-shot **ou** o fine-tunado do Épico 2.
 
-E entrega **dois produtos**:
-1. **Showcase visual** — o esqueleto do finalizador sobre o frame real (figura-chave da apresentação).
-2. **Estágio formal `data/crops/`** — os crops justos do finalizador + parâmetros de reprojeção,
-   que são o insumo da futura anotação de keypoints (US #109).
+E entrega **três produtos**:
+1. **Showcase "todos os jogadores"** — esqueletos de todos sobre o frame real (replica o Reis; §8).
+2. **Vista do finalizador** — o esqueleto do *shooter* sobre o frame (figura-chave da métrica).
+3. **Estágio formal `data/crops/`** — os crops justos do finalizador + parâmetros de reprojeção,
+   insumo da futura anotação de keypoints (US #109).
 
 Importante: o pipeline é **qualitativo** (não calcula PDJ/PCK/OKS). A métrica do crop justo×frouxo
 depende de keypoint GT, que está no backlog (`docs/backlog/crop-justo-vs-dataset-3dsp.md`).
@@ -176,7 +192,43 @@ futuro.
 
 ---
 
-## 8. Como rodar
+## 8. Showcase "pose em todos os jogadores" (replica o Reis) — Brasil
+
+A vista do finalizador depende de uma caixa de referência (3DSP) que **não existe no Brasil**. A
+solução — e que **replica fielmente o baseline Reis** — é posear **todos** os jogadores detectados, sem
+seleção. Assim o Brasil ganha um showcase **100% automático**, sem a marcação manual do finalizador
+(#110 deixa de bloquear).
+
+### 8.1 Como funciona
+Por frame: `YOLO26x` detecta todas as pessoas → para **cada** caixa, `make_crop` (justo) → `predict_h3wb`
+→ `crop_to_frame` (reprojeta) → `draw_skeleton` no frame. Todos os esqueletos são re-colados no frame
+original (mesma ideia da Fig. 5 do Reis). O núcleo é `pipeline.pose_all(frame, boxes, pose,
+min_box_height)`, que reusa `crop_and_pose` num loop sobre as caixas.
+
+Decisões:
+- **Estilo único, sem destacar ninguém** — fiel ao Reis (a vista do finalizador, com destaque, é a
+  *vista da métrica*, separada).
+- **Filtro `min_box_height` (40px)** — descarta jogador distante (crop minúsculo → esqueleto embolado;
+  o próprio Reis nota que jogadores muito pequenos falham).
+- **Crops não são persistidos** — são intermediários em memória (recorta → pose → desenha → descarta).
+  O único produto salvo é **1 PNG compositado por frame** em `results/pose_all/<clip>/` (gitignored).
+  Isso evita ~1300 imagenzinhas por jogador; nada disso vai pro git.
+- **`data/crops/` (versionado) não é tocado** — continua só do finalizador (insumo da anotação).
+
+### 8.2 Resultado
+Validado de ponta a ponta nos 5 clips do Brasil (10 frames cada):
+- **Zero-shot (local, 4050):** esqueletos coerentes em todos os jogadores no frame real.
+- **Fine-tunado D-OCCL (Docker/SSH):** **também coerente** — e este é um **achado relevante**: a
+  D-OCCL foi treinada nos crops do **3DSP** (outro time, outro broadcast, outro ângulo), e ainda assim
+  **generalizou para o Brasil**. Mostra que o fine-tuning **não superajustou** à distribuição do 3DSP.
+
+### 8.3 Fora de escopo (depois)
+- **GIF/animação** juntando os frames de um clip (ex. o frame inicial com as detecções) — backlog.
+- **Métrica no Brasil** — impossível (sem keypoint GT); a métrica fica no finalizador (3DSP/US #109).
+
+---
+
+## 9. Como rodar
 
 **Zero-shot (local, 4050):**
 ```bash
@@ -195,13 +247,23 @@ make docker-pose-3dsp \
   CKPT=results/runs/20260608_014649_bd/checkpoints/cenario_D-OCCL/best_PCK.pth
 ```
 
+**Showcase "todos os jogadores" — Brasil (§8):**
+```bash
+# zero-shot, local (4050) — também serve p/ examples: ROOT=data/clips/examples
+make pose-all-brazil
+
+# fine-tunado D-OCCL, Docker/SSH
+make docker-pose-all-brazil \
+  CKPT=results/runs/20260608_014649_bd/checkpoints/cenario_D-OCCL/best_PCK.pth
+```
+
 Observações: o fine-tunado exige a imagem do finetuning (MMPose) e o checkpoint (vive em `results/`,
 montado); o zero-shot baixa o ONNX na 1ª vez. O 3DSP test é auto-resolvido (`data/test` ou
 `data/3dsp/test`).
 
 ---
 
-## 9. Achados e lições
+## 10. Achados e lições
 
 - **O crop não era o problema do fine-tunado** — eram os centros derivados não recalculados. O modelo
   é robusto ao enquadramento.
@@ -210,30 +272,38 @@ montado); o zero-shot baixa o ONNX na 1ª vez. O 3DSP test é auto-resolvido (`d
   o estimador (zero-shot ↔ fine-tunado) sem tocar no resto.
 - O **transfer learning** (fine-tunado) parte do **mesmo** modelo do zero-shot (RTMPose-X body7); a
   diferença é o treino no 3DSP, que rendeu +25pp de PCK.
+- O **fine-tunado generaliza para o Brasil** (domínio diferente do 3DSP) na vista "todos" — não ficou
+  preso à distribuição de treino.
+- **Reis = pose de todos; finalizador = artefato de métrica.** Confundir os dois leva a "focar no
+  finalizador" como se fosse o objetivo — não é. A vista "todos" é a replicação fiel do baseline.
 
 ---
 
-## 10. Estado: feito vs backlog
+## 11. Estado: feito vs backlog
 
 | Item | Status |
 |---|---|
 | Pipeline detect→crop→pose | ✅ feito, funcionando (zero-shot e fine-tunado) |
 | Estágio `data/crops/` formal | ✅ feito (3 examples gerados) |
-| Showcase visual (frame + esqueleto) | ✅ feito |
+| Vista do finalizador (frame + esqueleto) | ✅ feito |
+| Showcase "todos os jogadores" (replica o Reis) | ✅ feito |
+| Pipeline no **Brasil** (#130) — showcase "todos" | ✅ feito (zero-shot e fine-tunado, automático) |
 | Métrica do crop justo×frouxo (#119) | ⬜ backlog (precisa keypoint GT — US #109) |
-| Pipeline no **Brasil** (#130) | ⬜ falta (precisa marcar o finalizador à mão, #110) |
+| GIF/animação dos frames | ⬜ backlog |
 
 ---
 
-## 11. Arquivos e issues
+## 12. Arquivos e issues
 
-**Núcleo:** `pipeline.py` (run_pipeline, crop_and_pose, select_finisher, track_finisher),
+**Núcleo:** `pipeline.py` (run_pipeline, crop_and_pose, select_finisher, track_finisher, **pose_all**),
 `crops_io.py`, `utils/viz.py:draw_skeleton`, `utils/data_io.py:load_finisher_boxes`,
 `estimators/rtmpose.py` (fix dos centros).
-**Scripts:** `scripts/pipeline/demo_examples.py`, `scripts/pipeline/pose_on_crops.py`.
-**Docker/Make:** `docker-pipeline-finetuned`, `docker-pose-3dsp`.
+**Scripts:** `scripts/pipeline/demo_examples.py`, `scripts/pipeline/pose_on_crops.py`,
+`scripts/pipeline/pose_all_players.py` (showcase "todos").
+**Docker/Make:** `docker-pipeline-finetuned`, `docker-pose-3dsp`, `pose-all-brazil`,
+`docker-pose-all-brazil`.
 **Docs:** `docs/vision/formato-crops.md`, este relatório.
 **Reúso:** `detection.py`, `crop.py`, `pose.py`/`estimators`, `utils/skeleton.py`,
 `utils/keypoint_mapping.py`, `evaluation/detection_metrics.py:iou_matrix`.
 
-**Issues:** Épico #126 (US #127 / task #128). Gera o insumo da US #109. Brasil = #130.
+**Issues:** Épico #126 (US #127 / task #128). Gera o insumo da US #109. Brasil = #130 (showcase feito).
