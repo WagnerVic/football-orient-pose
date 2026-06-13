@@ -186,8 +186,14 @@ Após as correções, validado de ponta a ponta na 4050 e no SSH:
 - **Fine-tunado D-OCCL + nosso crop justo (`make docker-pipeline-finetuned`):** **coerente** — o
   showcase definitivo: **YOLO26x → crop justo → melhor pose**, no frame real do broadcast.
 
-As imagens ficam em `results/showcase/finisher/<clip>/` (gitignored — geradas, pesadas; reproduzíveis
-rodando os comandos). Figuras-chave curadas vão para `results/showcase/figures/` (a versionar).
+As imagens ficam em `results/showcase/finisher/<clip>/` (PNGs gitignored, geradas/pesadas). Para uma
+vista **leve e versionada**, os frames viram **GIFs animados** (`make gifs` →
+`results/showcase/gifs/`, estes sim versionados):
+
+**Finalizador — `example_01`** (esqueleto reprojetado no frame real, e o crop justo com a pose):
+
+![finisher example_01 — frame](../../results/showcase/gifs/finisher/example_01_frame.gif)
+![finisher example_01 — crop](../../results/showcase/gifs/finisher/example_01_crop.gif)
 
 ---
 
@@ -220,6 +226,10 @@ Validado de ponta a ponta nos 5 clips do Brasil (10 frames cada):
 - **Fine-tunado D-OCCL (Docker/SSH):** **também coerente** — e este é um **achado relevante**: a
   D-OCCL foi treinada nos crops do **3DSP** (outro time, outro broadcast, outro ângulo), e ainda assim
   **generalizou para o Brasil**. Mostra que o fine-tuning **não superajustou** à distribuição do 3DSP.
+
+**Showcase "todos os jogadores" — `brazil_01`** (GIF; `make gifs`):
+
+![all players — brazil_01](../../results/showcase/gifs/all_players/brazil_01.gif)
 
 ### 8.3 Fora de escopo (depois)
 - **GIF/animação** juntando os frames de um clip (ex. o frame inicial com as detecções) — backlog.
@@ -292,8 +302,9 @@ montado); o zero-shot baixa o ONNX na 1ª vez. O 3DSP test é auto-resolvido (`d
 `crops_io.py`, `utils/viz.py:draw_skeleton`, `utils/data_io.py:load_finisher_boxes`,
 `estimators/rtmpose.py` (fix dos centros).
 **Scripts:** `scripts/pipeline/demo_examples.py`,
-`scripts/pipeline/pose_all_players.py` (showcase "todos").
-**Docker/Make:** `docker-pipeline-finetuned`, `pose-all-brazil`, `docker-pose-all-brazil`.
+`scripts/pipeline/pose_all_players.py` (showcase "todos"), `scripts/pipeline/make_gifs.py` (GIFs).
+**Viz:** `utils/viz.py:frames_to_gif` (PNGs → GIF animado otimizado).
+**Docker/Make:** `docker-pipeline-finetuned`, `pose-all-brazil`, `docker-pose-all-brazil`, `gifs`.
 **Docs:** `docs/vision/formato-crops.md`, este relatório.
 **Reúso:** `detection.py`, `crop.py`, `pose.py`/`estimators`, `utils/skeleton.py`,
 `utils/keypoint_mapping.py`, `evaluation/detection_metrics.py:iou_matrix`.

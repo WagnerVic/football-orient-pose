@@ -19,7 +19,7 @@ CONFIG  ?= configs/cenario_$(shell echo $(CENARIO) | tr A-Z a-z).py
         docker-build docker-train \
         docker-eval-detector docker-eval-cascade docker-detectors-table \
         docker-pipeline-finetuned \
-        pose-all-brazil docker-pose-all-brazil
+        pose-all-brazil docker-pose-all-brazil gifs
 
 ## Descompacta todos os .zip para data/
 setup: $(MARKERS)
@@ -138,6 +138,12 @@ docker-pipeline-finetuned:
 ## Roda LOCAL (zero-shot rtmpose, sem Docker): YOLO26x detecta todos → pose em cada um → esqueletos no
 ## frame. Saída: results/showcase/all_players/<clip>/frame_NNN.png (gitignored; sem crop por jogador).
 ## Ex.: make pose-all-brazil   |   outra fonte: make pose-all-brazil ROOT=data/clips/examples
+## Gera GIFs animados a partir das PNGs do showcase (local, sem GPU) — Épico #126.
+## Pós-processa results/showcase/{finisher,all_players}/ → results/showcase/gifs/. Leve e visual.
+## Ex.: make gifs   |   só um: make gifs ARGS="--src all_players --clips brazil_01"
+gifs:
+	@PYTHONPATH=src .venv/bin/python scripts/pipeline/make_gifs.py $(ARGS)
+
 ROOT ?= data/clips/brazil
 pose-all-brazil:
 	@PYTHONPATH=src .venv/bin/python scripts/pipeline/pose_all_players.py \
