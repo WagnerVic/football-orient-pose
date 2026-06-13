@@ -32,11 +32,15 @@ from football_orient_pose.utils.data_io import load_clip_info, load_finisher_box
 from football_orient_pose.utils.viz import draw_boxes, draw_skeleton
 
 
-def _build_pose(name: str, device: str):
-    if name == "rtmpose":
-        from football_orient_pose.estimators.rtmpose import RTMPoseEstimator
+def _build_pose(name: str, device: str, checkpoint: str | None = None, config: str | None = None):
+    from football_orient_pose.estimators.rtmpose import RTMPoseEstimator
 
-        return RTMPoseEstimator(device=device)
+    if name == "rtmpose":
+        return RTMPoseEstimator(device=device)  # zero-shot (rtmlib/ONNX, local)
+    if name == "finetuned":  # melhor do Épico 2 (D-FULL), via MMPose — requer Docker
+        if not checkpoint:
+            raise SystemExit("--pose finetuned exige --checkpoint <.pth do Épico 2>")
+        return RTMPoseEstimator.from_checkpoint(checkpoint, config_path=config, device=device)
     if name == "hrnet":
         from football_orient_pose.estimators.hrnet import HRNetEstimator
 
@@ -60,7 +64,8 @@ def _test_clip_dir(examples_clip: Path, test_root: Path) -> Path | None:
 
 
 def process_clip(
-    clip_dir: Path, detector, pose, test_root: Path, out_dir: Path, crops_root: Path
+    clip_dir: Path, detector, pose, test_root: Path, out_dir: Path, crops_root: Path,
+    write_crops: bool = True,
 ) -> int:
     clip_id = clip_dir.name
     test_clip = _test_clip_dir(clip_dir, test_root)
@@ -98,19 +103,23 @@ def process_clip(
         params.append(res.crop_params)
         bboxes.append(res.finisher_box)
 
-    if crops:
+    if crops and write_crops:
         write_crop_clip(
             crops_root, clip_id, crops, params, bboxes,
             meta={"fonte": "examples", "source_clip": str(clip_dir),
                   "crop_mode": "tight", "detector": detector.name, "pose": pose.name},
         )
-    print(f"  [{clip_id}] {len(crops)} frames → {viz_dir} + {crops_root / clip_id}")
+    dest = viz_dir if not write_crops else f"{viz_dir} + {crops_root / clip_id}"
+    print(f"  [{clip_id}] {len(crops)} frames → {dest}")
     return len(crops)
 
 
 def _parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Pipeline ponta-a-ponta nos examples (#126)")
-    p.add_argument("--pose", default="rtmpose", choices=["rtmpose", "hrnet", "openpose"])
+    p.add_argument("--pose", default="rtmpose",
+                   choices=["rtmpose", "finetuned", "hrnet", "openpose"])
+    p.add_argument("--checkpoint", default=None, help="--pose finetuned: .pth do Épico 2 (D-FULL)")
+    p.add_argument("--config", default=None, help="--pose finetuned: config MMPose (auto)")
     p.add_argument("--data-root", type=Path, default=Path("data/clips/examples"))
     p.add_argument("--test-root", type=Path, default=Path("data/test"))
     p.add_argument("--out", type=Path, default=Path("results/pipeline"))
@@ -118,13 +127,15 @@ def _parse_args() -> argparse.Namespace:
     p.add_argument("--clips", nargs="*", default=None, help="ids específicos (default: todos)")
     p.add_argument("--weights", default="yolo26x.pt", help="peso do YOLO (vencedor: yolo26x.pt)")
     p.add_argument("--device", default="cuda", help="cpu|cuda")
+    p.add_argument("--no-crops", action="store_true",
+                   help="só showcase (não reescreve data/crops; os crops independem da pose)")
     return p.parse_args()
 
 
 def main() -> None:
     args = _parse_args()
     detector = YOLO26Detector(weights=args.weights, device=args.device)
-    pose = _build_pose(args.pose, args.device)
+    pose = _build_pose(args.pose, args.device, checkpoint=args.checkpoint, config=args.config)
     print(f"Detector: {detector.name} ({args.weights}) | Pose: {pose.name} | device: {args.device}")
 
     clips = sorted(p for p in args.data_root.iterdir() if (p / "img").is_dir())
@@ -133,7 +144,10 @@ def main() -> None:
 
     total = 0
     for clip_dir in clips:
-        total += process_clip(clip_dir, detector, pose, args.test_root, args.out, args.crops_root)
+        total += process_clip(
+            clip_dir, detector, pose, args.test_root, args.out, args.crops_root,
+            write_crops=not args.no_crops,
+        )
     print(f"\nConcluído: {len(clips)} clip(s), {total} frames processados.")
 
 
