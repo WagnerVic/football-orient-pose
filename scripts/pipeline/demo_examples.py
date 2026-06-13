@@ -52,6 +52,14 @@ def _build_pose(name: str, device: str, checkpoint: str | None = None, config: s
     raise ValueError(f"estimador desconhecido: {name}")
 
 
+def _resolve_test_root(given: Path) -> Path:
+    """Acha o root do 3DSP test — layouts variam por máquina (data/test vs data/3dsp/test)."""
+    for cand in (given, Path("data/3dsp/test"), Path("data/test")):
+        if cand.exists():
+            return cand
+    return given
+
+
 def _test_clip_dir(examples_clip: Path, test_root: Path) -> Path | None:
     """Resolve o clip do 3DSP test correspondente via info.ini (source_video = test_0000X.mp4)."""
     try:
@@ -137,6 +145,9 @@ def main() -> None:
     detector = YOLO26Detector(weights=args.weights, device=args.device)
     pose = _build_pose(args.pose, args.device, checkpoint=args.checkpoint, config=args.config)
     print(f"Detector: {detector.name} ({args.weights}) | Pose: {pose.name} | device: {args.device}")
+
+    args.test_root = _resolve_test_root(args.test_root)
+    print(f"3DSP test root: {args.test_root} ({'ok' if args.test_root.exists() else 'AUSENTE'})")
 
     clips = sorted(p for p in args.data_root.iterdir() if (p / "img").is_dir())
     if args.clips:
