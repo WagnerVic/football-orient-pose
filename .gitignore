@@ -271,6 +271,8 @@ data/raw/*
 !data/raw/README.md
 # data/crops: crops derivados (estágio com crop)
 !data/crops/
+# previews de sanity do crop.py (visíveis localmente, não versionar)
+data/crops/_preview_*
 
 # Inputs de corte de clips (por execução; provenance fica no info.ini de cada clip)
 intervals_*.json
