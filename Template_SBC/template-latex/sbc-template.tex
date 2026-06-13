@@ -11,7 +11,7 @@
 
 \sloppy
 
-\title{Um Pipeline Quantitativo para Estimação de Pose de Jogadores de Futebol em Vídeo de Transmissão:\\ Seleção de Detector, Benchmark de Estimadores e Adaptação ao Domínio}
+\title{Um Pipeline Quantitativo para Estimação de Pose de Jogadores de Futebol em Vídeo de Transmissão: Seleção de Detector, Benchmark de Estimadores e Adaptação ao Domínio}
 
 \author{Wagner Victor A. Menezes\inst{1}, Raphael A. L. Soares\inst{1}, \\ Victor Gabriel R. Jácome\inst{1}, André Guilherme A. Carmo\inst{1} }
 
@@ -152,7 +152,7 @@ O diagnóstico de cada cenário de fine-tuning usa o \textbf{framework dos três
 
 \section{Resultados}
 
-\subsection{O detector selecionado é o YOLO26x}
+\subsection{Detector selecionado: YOLO26x}
 
 O YOLO26x domina \textbf{todas} as métricas (Tabela~\ref{tab:detector}). Destaca-se por ser o único simultaneamente alto em \emph{recall} e precisão (95,4\% / 98,7\%): prevê $\approx$715 caixas para 740 do \emph{ground truth}, isto é, encontra os jogadores e ignora a torcida, sem necessidade de pós-filtro. O AP75 de 91,6\% indica caixas justas --- o que se traduz diretamente em recortes melhores para a estimação de pose. Os \emph{two-stage}, embora com recall alto, têm precisão baixa (47--57\%) por detectarem pessoas na arquibancada (falsos-positivos artificiais, pois o GT marca apenas jogadores em campo).
 
@@ -174,7 +174,7 @@ RetinaNet & 61,9 & 91,1 & 70,3 & 68,2 & 57,3 & 93,7 & 71,1 \\
 
 Um achado metodológico: a primeira rodada, com a variante \emph{nano} ($\sim$5 MB), colocava o YOLO \textbf{atrás} dos \emph{two-stage} (mAP 51,0). Ao equiparar a capacidade (variante \emph{x}), o quadro se inverteu por completo (mAP 84,4). A capacidade dos modelos precisa ser comparável para a comparação ser válida.
 
-\subsection{O estimador selecionado é o RTMPose-X}
+\subsection{Estimador selecionado: RTMPose-X}
 \label{sec:estimador}
 
 Entre os três estimadores \emph{zero-shot}, o RTMPose-X vence em todas as métricas (Tabela~\ref{tab:zeroshot}). A diferença vem da cabeça SimCC, que prediz coordenadas diretamente, sem o erro de quantização do \emph{heatmap} do HRNet --- daí o MPJPE menor (4,81 vs.\ 6,04 px). Como verificação de reprodutibilidade, nosso RTMPose \emph{zero-shot} atinge PDJ 93,6\%, acima do 89,5\% reportado por~\cite{yeung2024}, validando a implementação.
