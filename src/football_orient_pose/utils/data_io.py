@@ -143,6 +143,26 @@ def load_clip_gt(clip_dir: str | Path) -> np.ndarray:
     return np.loadtxt(str(gt_path), delimiter=",")
 
 
+def load_finisher_boxes(clip_dir: str | Path) -> dict[int, np.ndarray]:
+    """Caixas do finalizador por frame, a partir do ``gt.txt`` (MOT20) + ``shooter_tracklet_id``.
+
+    Lê a tracklet do finalizador (campo ``shooter_tracklet_id`` do ``info.ini``), filtra suas linhas
+    no ``gt.txt`` e devolve ``{frame_idx (1-based): xyxy float32}`` (converte ``xywh``→``xyxy``).
+    Usada como caixa de referência para selecionar o finalizador entre as detecções (pipeline).
+    """
+    info = load_clip_info(clip_dir)
+    shooter_id = int(info["shooter_tracklet_id"])
+    gt = np.atleast_2d(load_clip_gt(clip_dir))  # (N, 10) [frame, track, x, y, w, h, ...]
+
+    boxes: dict[int, np.ndarray] = {}
+    for row in gt:
+        frame_id, track_id, x, y, w, h = row[:6]
+        if int(track_id) != shooter_id:
+            continue
+        boxes[int(frame_id)] = np.array([x, y, x + w, y + h], dtype=np.float32)
+    return boxes
+
+
 def load_full_clip(
     clip_dir: str | Path,
     num_frames: int = 20,
