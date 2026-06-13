@@ -1,0 +1,19 @@
+{
+  "crop_params": {
+    "x0": 460,
+    "y0": 329,
+    "scale": 0.9009009009009009,
+    "pad_top": 0,
+    "pad_left": 19,
+    "size": 100
+  },
+  "finisher_bbox_xyxy": [
+    466.4832763671875,
+    339.78515625,
+    522.3832397460938,
+    428.8230895996094
+  ],
+  "source_frame": 4,
+  "crop_mode": "tight",
+  "detector": "yolo26"
+}

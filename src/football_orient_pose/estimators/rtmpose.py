@@ -12,6 +12,7 @@ from typing import Any
 import numpy as np
 
 from football_orient_pose.pose import BasePoseEstimator
+from football_orient_pose.utils.keypoint_mapping import derive_h3wb_centers
 
 RTMPOSE_X_ONNX_URL = (
     "https://download.openmmlab.com/mmpose/v1/projects/rtmposev1/onnx_sdk/"
@@ -247,14 +248,19 @@ class RTMPoseFinetunedEstimator:
         return np.column_stack([kps, scores]).astype(np.float32)  # (17, 3)
 
     def predict_h3wb(self, image: np.ndarray) -> np.ndarray:
-        """Retorna keypoints H3WB-17 sem a coluna de confiança.
+        """Retorna keypoints H3WB-17 (x, y), com os centros recalculados.
+
+        Os IDs ``0, 7, 8, 9`` (Center of Hips/Body/Shoulder, Neck) são **derivados** (médias) e
+        **não foram supervisionados no treino** — o modelo prediz lixo neles. Recalculamos das
+        juntas reais (igual ao ``evaluate.py`` e ao ``coco17_to_h3wb17`` do zero-shot), senão o
+        esqueleto embola (muitos ossos passam por esses centros).
 
         Returns
         -------
         np.ndarray
             Array ``(17, 2)`` com x, y no espaço do crop.
         """
-        return self.predict(image)[:, :2]
+        return derive_h3wb_centers(self.predict(image)[:, :2])
 
     def predict_batch(self, images: list[np.ndarray]) -> np.ndarray:
         if not images:

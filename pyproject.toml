@@ -22,6 +22,7 @@ dependencies = [
     "matplotlib",
     "scipy",
     "onnxruntime-gpu",
+    "rtmlib",
     "python-dotenv>=1.2.2",
     "gdown>=6.0.0",
 ]

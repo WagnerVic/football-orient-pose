@@ -17,7 +17,8 @@ CONFIG  ?= configs/cenario_$(shell echo $(CENARIO) | tr A-Z a-z).py
         finetuning-env finetuning-checkpoint finetuning-smoke \
         train-a train-b train-c train-d evaluate \
         docker-build docker-train \
-        docker-eval-detector docker-eval-cascade docker-detectors-table
+        docker-eval-detector docker-eval-cascade docker-detectors-table \
+        docker-pipeline-finetuned docker-pose-3dsp
 
 ## Descompacta todos os .zip para data/
 setup: $(MARKERS)
@@ -116,6 +117,34 @@ docker-eval-cascade:
 		-v $(CURDIR)/src:/workspace/src:ro \
 		-v $(CURDIR)/scripts:/workspace/scripts:ro \
 		$(IMAGE):latest bash scripts/evaluation/eval_cascade.sh
+
+## Pipeline ponta-a-ponta nos examples com a pose FINE-TUNADA do Épico 2 (GPU) — Épico #126.
+## Roda na imagem do finetuning (tem MMPose). O checkpoint vive em results/ (montado); o config
+## MMPose é inferido do path do checkpoint (cenario_D -> configs/cenario_d.py).
+## Ex.: make docker-pipeline-finetuned \
+##        CKPT=results/runs/20260608_014649_bd/checkpoints/cenario_D/best_PCK.pth
+## Showcase em results/pipeline/ (não reescreve data/crops).
+docker-pipeline-finetuned:
+	@docker run --rm --gpus all \
+		-v $(DATA_HOST):/workspace/data:ro \
+		-v $(RESULTS_HOST):/workspace/results \
+		-v $(CURDIR)/src:/workspace/src:ro \
+		-v $(CURDIR)/scripts:/workspace/scripts:ro \
+		$(IMAGE):latest python scripts/pipeline/demo_examples.py \
+			--pose finetuned --checkpoint $(CKPT) --device cuda --no-crops
+
+## Pose fine-tunada nos crops FROUXOS do 3DSP test (GPU) — fidelidade máxima (Épico #126).
+## Os crops do dataset são a própria distribuição de treino do modelo → pose coerente (só inferência).
+## Ex.: make docker-pose-3dsp CKPT=results/runs/20260608_014649_bd/checkpoints/cenario_D-OCCL/best_PCK.pth
+docker-pose-3dsp:
+	@docker run --rm --gpus all \
+		-v $(DATA_HOST):/workspace/data:ro \
+		-v $(RESULTS_HOST):/workspace/results \
+		-v $(CURDIR)/src:/workspace/src:ro \
+		-v $(CURDIR)/scripts:/workspace/scripts:ro \
+		$(IMAGE):latest python scripts/pipeline/pose_on_crops.py \
+			--crops-root data/3dsp/test --clips 00001 00004 00006 \
+			--pose finetuned --checkpoint $(CKPT) --device cuda
 
 ## Gera a tabela comparativa dos detectores (markdown + LaTeX) a partir dos JSONs.
 docker-detectors-table:
