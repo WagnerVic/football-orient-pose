@@ -250,6 +250,11 @@ results/*
 !results/tables/
 !results/tables/*.json
 !results/tables/*.tex
+# GIFs do showcase (leves, visuais — embutidos no relatório); as PNGs-fonte continuam ignoradas
+!results/showcase/
+results/showcase/*
+!results/showcase/gifs/
+!results/showcase/gifs/**
 
 # Relatórios em formatos gerados (versionar só o .md fonte; PDF/HTML são gerados sob demanda)
 docs/**/*.pdf
