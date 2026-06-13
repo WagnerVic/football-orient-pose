@@ -5,6 +5,7 @@ import numpy as np
 from football_orient_pose.detection import Detection, Detector
 from football_orient_pose.pipeline import (
     PipelineResult,
+    pose_all,
     run_pipeline,
     select_finisher,
     track_finisher,
@@ -97,3 +98,27 @@ def test_track_finisher_handles_empty_frame() -> None:
     boxes = [np.array([[0, 0, 40, 80]], np.float32), np.empty((0, 4), np.float32)]
     ref = [np.array([0, 0, 40, 80], np.float32), None]
     assert track_finisher(boxes, ref) == [0, None]
+
+
+def test_pose_all_poses_every_box() -> None:
+    boxes = np.array([[100, 100, 140, 200], [500, 300, 560, 400]], np.float32)
+    results = pose_all(_frame(), boxes, _CenterPose())
+    assert len(results) == 2
+    for res in results:
+        assert isinstance(res, PipelineResult)
+        assert res.keypoints_frame.shape == (17, 2)
+        assert res.crop.shape == (100, 100, 3)
+
+
+def test_pose_all_filters_short_boxes() -> None:
+    # caixa alta (h=100) + caixa baixa (h=20); min_box_height=50 mantém só a alta
+    boxes = np.array([[100, 100, 140, 200], [500, 300, 560, 320]], np.float32)
+    results = pose_all(_frame(), boxes, _CenterPose(), min_box_height=50.0)
+    assert len(results) == 1
+    cx, cy = results[0].keypoints_frame[0]
+    assert 100 <= cx <= 140 and 100 <= cy <= 200  # reprojetou na caixa alta
+
+
+def test_pose_all_empty_when_nothing_passes_filter() -> None:
+    boxes = np.array([[0, 0, 40, 80]], np.float32)  # h=80
+    assert pose_all(_frame(), boxes, _CenterPose(), min_box_height=200.0) == []
