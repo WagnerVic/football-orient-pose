@@ -1,5 +1,19 @@
 # football-orient-pose
-Football player pose estimation and body orientation analysis from broadcast video using YOLO11 + HRNet
+
+Estimação de **pose** de jogadores de futebol a partir de vídeo de broadcast. Reproduz e **supera** o
+baseline de **Reis et al. (2023)** — que fazia `YOLOv3 → crop → OpenPose`, validado só visualmente —
+com um pipeline benchmarkado e **quantitativo**:
+
+> **YOLO26x** (detector vencedor — Épico #113) → **crop justo** → **RTMPose-X fine-tunado no 3DSP**
+> (PCK@0.2 **41,8% → 67,5%** — Épico 2) → esqueleto reprojetado no frame real.
+
+Como o baseline, poseia **todos** os jogadores do campo (showcase automático). Diferente dele, tem
+**métrica de keypoint** (PDJ/PCK/OKS/MPJPE) onde existe ground truth.
+
+![Showcase — pose de todos os jogadores (Brasil)](results/showcase/gifs/all_players/brazil_01.gif)
+
+> 📊 Relatório completo do pipeline (com mais GIFs): [docs/vision/epic-126-pipeline.md](docs/vision/epic-126-pipeline.md) ·
+> 🗺️ Mapa da documentação: [docs/README.md](docs/README.md)
 
 ## Setup
 
@@ -65,64 +79,40 @@ O que o script faz por modelo:
 ```
 football-orient-pose/
 │
-├── configs/
-│   └── split.json                  # Split oficial train/val (seed=42, 160/40 clips)
+├── configs/                  # Configs MMPose dos cenários de fine-tuning (cenario_*.py) + split.json
 │
-├── data/                           # Dataset 3DSP — ignorado pelo Git
-│   └── train/
-│       └── 00001/
-│           ├── img/                # Frames do jogador (100×100 px, BGR)
-│           └── posture/            # Anotações H3WB-17 por frame (JSON)
+├── data/                     # Datasets — ignorado pelo Git (extraído dos .zip)
+│   ├── 3dsp/                 # Dataset 3DSP (train/test): crops 100×100 + posture/ (H3WB-17)
+│   ├── clips/                # Frames inteiros do broadcast: examples/ (3) + brazil/ (5)
+│   └── crops/                # Crops justos do finalizador (insumo da anotação)
 │
-├── docs/                           # Documentação por projeto (ver docs/README.md)
-│   ├── vision/                     # Projeto de visão (estimadores, baseline)
-│   └── finetuning/                 # Projeto Transfer Learning / RNP
+├── docs/                     # Documentação (ver docs/README.md)
+│   ├── vision/               # Diferencial de visão: detector → crop → pipeline → showcase
+│   └── finetuning/           # Fine-tuning RTMPose (Épicos 1–2, projeto RNP)
 │
-├── models/
-│   └── weights/                    # Pesos dos modelos — ignorado pelo Git
-│       ├── hrnet_w48_coco_256x192.onnx        # ONNX para inferência
-│       └── hrnet_w48_coco_256x192.onnx.data   # Pesos externos do ONNX
-│
-├── notebooks/
-│   ├── 01_rtmpose_validation.ipynb # Validação RTMPose — PDJ 93.62%
-│   └── 02_hrnet_validation.ipynb   # Validação HRNet   — PDJ 88.90%
-│
-├── results/
-│   ├── figures/                    # Gráficos gerados (ignorado pelo Git)
-│   └── tables/                     # Métricas JSON por modelo/split
+├── results/                  # Saídas — ignorado, exceto tables/ e showcase/gifs/
+│   ├── showcase/gifs/        # GIFs do pipeline (versionados, embutidos nos docs)
+│   ├── tables/               # Métricas JSON do benchmark
+│   ├── training_runs/        # Logs e tabelas dos treinos de fine-tuning
+│   └── checkpoints/          # Pesos .pth
 │
 ├── scripts/
-│   └── download_models.sh          # Baixa pesos do Google Drive e descompacta
+│   ├── pipeline/             # demo_examples, pose_all_players, make_gifs
+│   ├── evaluation/           # eval_detectors, evaluate, detectors_table
+│   ├── clips/                # Extração de clips (cut/download/validate)
+│   └── training/  setup/     # Fine-tuning (train.py) + setup do ambiente/pesos
 │
 ├── src/football_orient_pose/
-│   ├── pose.py                     # BasePoseEstimator (ABC — interface unificada)
-│   │
-│   ├── estimators/
-│   │   ├── rtmpose.py              # RTMPoseEstimator  — PDJ 93.62% (val)
-│   │   ├── hrnet.py                # HRNetEstimator    — PDJ 88.90% (val)
-│   │   └── openpose.py             # OpenPoseEstimator — pendente pesos
-│   │
-│   ├── evaluation/
-│   │   ├── metrics.py              # PDJ, PCK, OKS, MPJPE-2D, F1
-│   │   ├── evaluate.py             # CLI: --model rtmpose|hrnet|openpose
-│   │   └── baseline.py             # Baseline de orientação corporal
-│   │
-│   └── utils/
-│       ├── keypoint_mapping.py     # coco17_to_h3wb17()
-│       ├── data_io.py              # load_clip_image(), load_keypoints_2d()
-│       ├── dataset.py              # DSPDataset (PyTorch DataLoader)
-│       └── skeleton.py             # H3WB_SWAP_PAIRS
+│   ├── detection.py          # YOLO26Detector + interface unificada de detectores
+│   ├── crop.py               # Crop justo (letterbox) + reprojeção frame↔crop
+│   ├── pipeline.py           # Encadeamento detect→crop→pose (run_pipeline, pose_all)
+│   ├── pose.py               # BasePoseEstimator (ABC — interface dos estimadores)
+│   ├── estimators/           # rtmpose (zero-shot + fine-tunado), hrnet, openpose
+│   ├── evaluation/           # Métricas de pose (PDJ/PCK/OKS/MPJPE) e de detecção
+│   └── utils/                # viz (esqueleto/GIF), keypoint_mapping, skeleton, data_io, ...
 │
-├── tests/                          # 53 testes unitários
-│   ├── test_pose.py
-│   ├── test_rtmpose_estimator.py
-│   ├── test_hrnet_estimator.py
-│   ├── test_openpose_estimator.py
-│   ├── test_metrics.py
-│   ├── test_dataset.py
-│   └── test_data_split.py
-│
-├── .env.example                    # Template de variáveis de ambiente
+├── tests/                    # 139 testes unitários
+├── Makefile                  # Comandos do projeto (make help)
 └── pyproject.toml
 ```
 
@@ -259,12 +249,10 @@ done
 Checkpoints salvos em `results/checkpoints/cenario_{A,B,C,D}/best_PCK.pth`.
 Métricas salvas em `results/tables/finetuned_cenario_{A,B,C,D}_val.json`.
 
-### Resultados preliminares (Cenários A e C)
+### Resultados (Épico 2 — fine-tuning RTMPose-X)
 
-| Modelo | PDJ@0.5 | PCK@0.2 | OKS | MPJPE-2D |
-|---|---|---|---|---|
-| RTMPose-X zero-shot | 93,6% | 41,8% | 81,8% | 4,81 px |
-| **Cenário A** (from scratch, val) | 90,7% | 47,0% | 80,1% | 5,34 px |
-| **Cenário C** (TL fase 2, val) | **95,2%** | **61,5%** | **87,3%** | **3,63 px** |
+O fine-tuning no 3DSP elevou o **PCK@0.2 de 41,8% (zero-shot) para 67,5%** — receita campeã: Transfer
+Learning + augmentation (geométrica + oclusão), com as extremidades (punhos/tornozelos) resolvidas. A
+tabela completa (PDJ/PCK/OKS/MPJPE dos 10 modelos da matriz 2×2) está no relatório final:
 
-Relatório completo: [docs/finetuning/epic1-relatorio-preliminar.md](docs/finetuning/epic1-relatorio-preliminar.md)
+[docs/finetuning/epico-2/epic2-relatorio-final.md](docs/finetuning/epico-2/epic2-relatorio-final.md)

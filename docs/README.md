@@ -3,14 +3,26 @@
 A documentação é organizada **por projeto** (há dois projetos no mesmo repositório).
 
 ## `vision/` — Projeto de Visão (Football Orient Pose)
-Pipeline base de estimação de pose: estimadores zero-shot e métricas.
+O diferencial de visão: do frame bruto à pose desenhada, benchmarkado e com métrica.
+
+**Pipeline ponta-a-ponta (comece por aqui):**
 
 | Arquivo | O que é |
 |---|---|
-| [`vision/baseline-rtmpose-zero-shot.md`](vision/baseline-rtmpose-zero-shot.md) | Resultados do baseline zero-shot RTMPose-X no 3DSP (fonte canônica: PDJ 93,6% / PCK 41,8%) |
+| [`vision/epic-126-pipeline.md`](vision/epic-126-pipeline.md) | ⭐ **Relatório do pipeline** detect→crop→pose, showcase "todos os jogadores" (replica o Reis) + GIFs do Brasil |
+| [`vision/epic-113-detectores.md`](vision/epic-113-detectores.md) | Benchmark de 4 detectores (mAP/AP via pycocotools) — **YOLO26x vence** |
+| [`vision/formato-clips.md`](vision/formato-clips.md) · [`vision/formato-crops.md`](vision/formato-crops.md) | Specs dos estágios `data/clips/` (frames inteiros) e `data/crops/` (crop justo) |
+| [`vision/handoff-extracao-clips.md`](vision/handoff-extracao-clips.md) | Handoff da extração de clips reais (examples + Brasil) |
+
+**Estimadores e baseline (Épico 2):**
+
+| Arquivo | O que é |
+|---|---|
+| [`vision/baseline-rtmpose-zero-shot.md`](vision/baseline-rtmpose-zero-shot.md) | Baseline zero-shot RTMPose-X no 3DSP (fonte canônica: PDJ 93,6% / PCK 41,8%) |
 | [`vision/epic2-entrega-final.md`](vision/epic2-entrega-final.md) | Entrega final do Épico 2 (estimadores, 3 modelos) |
 | [`vision/epic2-retrospectiva.md`](vision/epic2-retrospectiva.md) | Retrospectiva técnica do Épico 2 |
-| [`vision/_planning/`](vision/_planning/) | Artefatos de processo (plans/specs do workflow Superpowers) — histórico |
+| [`backlog/`](backlog/) | Trabalho adiado (ex.: experimento crop justo×frouxo — depende de keypoint GT) |
+| [`vision/_planning/`](vision/_planning/) | Artefatos de processo (plans/specs) — histórico |
 
 ## `finetuning/` — Projeto Transfer Learning (RNP)
 Fine-tuning do RTMPose-X na matriz experimental 2×2 (Épico 1 do projeto RNP).
