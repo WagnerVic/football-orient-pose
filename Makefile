@@ -18,7 +18,7 @@ CONFIG  ?= configs/cenario_$(shell echo $(CENARIO) | tr A-Z a-z).py
         train-a train-b train-c train-d evaluate \
         docker-build docker-train \
         docker-eval-detector docker-eval-cascade docker-detectors-table \
-        docker-pipeline-finetuned docker-pose-3dsp \
+        docker-pipeline-finetuned \
         pose-all-brazil docker-pose-all-brazil
 
 ## Descompacta todos os .zip para data/
@@ -133,19 +133,6 @@ docker-pipeline-finetuned:
 		-v $(CURDIR)/scripts:/workspace/scripts:ro \
 		$(IMAGE):latest python scripts/pipeline/demo_examples.py \
 			--pose finetuned --checkpoint $(CKPT) --device cuda --no-crops
-
-## Pose fine-tunada nos crops FROUXOS do 3DSP test (GPU) — fidelidade máxima (Épico #126).
-## Os crops do dataset são a própria distribuição de treino do modelo → pose coerente (só inferência).
-## Ex.: make docker-pose-3dsp CKPT=results/runs/20260608_014649_bd/checkpoints/cenario_D-OCCL/best_PCK.pth
-docker-pose-3dsp:
-	@docker run --rm --gpus all \
-		-v $(DATA_HOST):/workspace/data:ro \
-		-v $(RESULTS_HOST):/workspace/results \
-		-v $(CURDIR)/src:/workspace/src:ro \
-		-v $(CURDIR)/scripts:/workspace/scripts:ro \
-		$(IMAGE):latest python scripts/pipeline/pose_on_crops.py \
-			--crops-root data/3dsp/test --clips 00001 00004 00006 \
-			--pose finetuned --checkpoint $(CKPT) --device cuda
 
 ## Showcase "pose em TODOS os jogadores" no Brasil (replica o baseline Reis) — Épico #126.
 ## Roda LOCAL (zero-shot rtmpose, sem Docker): YOLO26x detecta todos → pose em cada um → esqueletos no
