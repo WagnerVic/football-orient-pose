@@ -133,7 +133,7 @@ do **Brasil** (pipeline ponta-a-ponta, Épico #126), destravando a anotação de
 
 ## 8. Figuras
 
-Geradas com `--viz 3` (GT em verde × predição em vermelho), em `results/detections/`:
+Geradas com `--viz 3` (GT em verde × predição em vermelho), em `results/detection_viz/`:
 - `yolo26_<clip>_<frame>.png` — caixas justas, coladas nos jogadores, sem torcida.
 - `faster-rcnn_<clip>_<frame>.png` — recall alto, porém com caixas na arquibancada (falso-positivo).
 

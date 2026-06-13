@@ -5,8 +5,8 @@ Para cada frame, o YOLO26x detecta todos os jogadores, recorta cada caixa, estim
 todos os esqueletos no frame (mesma ideia da Fig. 5 do Reis). Não há finalizador/seleção: poseia
 todo mundo. É o showcase **100% automático** do Brasil, que não tem anotação de finalizador.
 
-Saída: 1 PNG compositado por frame em ``results/pose_all/<clip>/frame_NNN.png`` (results/ é
-gitignored; nada de crop por jogador é salvo — eles são intermediários em memória).
+Saída: 1 PNG compositado por frame em ``results/showcase/all_players/<clip>/frame_NNN.png``
+(results/ é gitignored; nada de crop por jogador é salvo — são intermediários em memória).
 
 Uso:
     python scripts/pipeline/pose_all_players.py --data-root data/clips/brazil --pose rtmpose
@@ -64,7 +64,7 @@ def _parse_args() -> argparse.Namespace:
     p.add_argument("--checkpoint", default=None, help="--pose finetuned: .pth do Épico 2")
     p.add_argument("--config", default=None, help="--pose finetuned: config MMPose (auto)")
     p.add_argument("--weights", default="yolo26x.pt", help="peso do YOLO (vencedor: yolo26x.pt)")
-    p.add_argument("--out", type=Path, default=Path("results/pose_all"))
+    p.add_argument("--out", type=Path, default=Path("results/showcase/all_players"))
     p.add_argument("--min-box-height", type=float, default=40.0,
                    help="descarta caixas mais baixas que isto (px); jogador distante = crop ruim")
     p.add_argument("--device", default="cuda", help="cpu|cuda")

@@ -124,7 +124,7 @@ docker-eval-cascade:
 ## MMPose é inferido do path do checkpoint (cenario_D -> configs/cenario_d.py).
 ## Ex.: make docker-pipeline-finetuned \
 ##        CKPT=results/runs/20260608_014649_bd/checkpoints/cenario_D/best_PCK.pth
-## Showcase em results/pipeline/ (não reescreve data/crops).
+## Showcase em results/showcase/finisher/ (não reescreve data/crops).
 docker-pipeline-finetuned:
 	@docker run --rm --gpus all \
 		-v $(DATA_HOST):/workspace/data:ro \
@@ -136,7 +136,7 @@ docker-pipeline-finetuned:
 
 ## Showcase "pose em TODOS os jogadores" no Brasil (replica o baseline Reis) — Épico #126.
 ## Roda LOCAL (zero-shot rtmpose, sem Docker): YOLO26x detecta todos → pose em cada um → esqueletos no
-## frame. Saída: results/pose_all/<clip>/frame_NNN.png (gitignored; nada de crop por jogador salvo).
+## frame. Saída: results/showcase/all_players/<clip>/frame_NNN.png (gitignored; sem crop por jogador).
 ## Ex.: make pose-all-brazil   |   outra fonte: make pose-all-brazil ROOT=data/clips/examples
 ROOT ?= data/clips/brazil
 pose-all-brazil:

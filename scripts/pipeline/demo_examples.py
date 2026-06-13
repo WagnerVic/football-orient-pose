@@ -3,7 +3,7 @@
 
 Para cada clip de `data/clips/examples`, roda o pipeline em cada frame inteiro usando o YOLO26x
 (detector vencedor) + um estimador de pose, e produz DOIS resultados:
-- **showcase** em `results/pipeline/<clip>/` (frame + caixa + esqueleto; e o crop + esqueleto);
+- **showcase** em `results/showcase/finisher/<clip>/` (frame + caixa + esqueleto + crop);
 - **estágio formal** em `data/crops/examples/<clip>/` (crops justos + crop_params + info.ini),
   insumo da anotação de keypoints (US #109).
 
@@ -130,7 +130,7 @@ def _parse_args() -> argparse.Namespace:
     p.add_argument("--config", default=None, help="--pose finetuned: config MMPose (auto)")
     p.add_argument("--data-root", type=Path, default=Path("data/clips/examples"))
     p.add_argument("--test-root", type=Path, default=Path("data/test"))
-    p.add_argument("--out", type=Path, default=Path("results/pipeline"))
+    p.add_argument("--out", type=Path, default=Path("results/showcase/finisher"))
     p.add_argument("--crops-root", type=Path, default=Path("data/crops/examples"))
     p.add_argument("--clips", nargs="*", default=None, help="ids específicos (default: todos)")
     p.add_argument("--weights", default="yolo26x.pt", help="peso do YOLO (vencedor: yolo26x.pt)")

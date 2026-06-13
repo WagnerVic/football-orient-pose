@@ -186,9 +186,8 @@ Após as correções, validado de ponta a ponta na 4050 e no SSH:
 - **Fine-tunado D-OCCL + nosso crop justo (`make docker-pipeline-finetuned`):** **coerente** — o
   showcase definitivo: **YOLO26x → crop justo → melhor pose**, no frame real do broadcast.
 
-As imagens ficam em `results/pipeline/<clip>/` e `results/pose_crops/<id>/` (gitignored — geradas,
-pesadas; reproduzíveis rodando os comandos). Algumas figuras-chave podem ser versionadas em docs no
-futuro.
+As imagens ficam em `results/showcase/finisher/<clip>/` (gitignored — geradas, pesadas; reproduzíveis
+rodando os comandos). Figuras-chave curadas vão para `results/showcase/figures/` (a versionar).
 
 ---
 
@@ -211,7 +210,7 @@ Decisões:
 - **Filtro `min_box_height` (40px)** — descarta jogador distante (crop minúsculo → esqueleto embolado;
   o próprio Reis nota que jogadores muito pequenos falham).
 - **Crops não são persistidos** — são intermediários em memória (recorta → pose → desenha → descarta).
-  O único produto salvo é **1 PNG compositado por frame** em `results/pose_all/<clip>/` (gitignored).
+  O único produto salvo é **1 PNG compositado por frame** em `results/showcase/all_players/<clip>/`.
   Isso evita ~1300 imagenzinhas por jogador; nada disso vai pro git.
 - **`data/crops/` (versionado) não é tocado** — continua só do finalizador (insumo da anotação).
 

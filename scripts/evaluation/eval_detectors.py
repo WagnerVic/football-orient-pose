@@ -7,14 +7,14 @@ mAP@[.5:.95], AP50/AP75, AP/AR por tamanho (small/medium/large) + precision/reca
 operação. Salva um JSON por detector em ``results/tables/detector_<nome>.json``.
 
 O estágio caro (rodar o modelo) é separado do barato (métricas): use ``--save-predictions`` para
-cachear as caixas em ``results/detections/`` e ``--from-predictions`` para recomputar métricas sem
-GPU.
+cachear as caixas em ``results/detection_viz/`` e ``--from-predictions`` para recomputar métricas
+sem GPU.
 
 Uso:
     python scripts/evaluation/eval_detectors.py --detector yolo26 --device cuda
     python scripts/evaluation/eval_detectors.py --detector faster-rcnn --save-predictions
     python scripts/evaluation/eval_detectors.py --detector yolo26 \\
-        --from-predictions results/detections/yolo26_examples.json
+        --from-predictions results/detection_viz/yolo26_examples.json
     python scripts/evaluation/eval_detectors.py --detector cascade-rcnn \\
         --config <cfg.py> --checkpoint <ckpt.pth>
 """
@@ -230,7 +230,7 @@ def main() -> None:
         print(f"Rodando {detector.name} em {sum(len(v) for v in gt.values())} frames...")
         preds = predict_clips(detector, args.data_root, gt)
         if args.save_predictions:
-            pred_path = Path("results/detections") / f"{args.detector}_examples.json"
+            pred_path = Path("results/detection_viz") / f"{args.detector}_examples.json"
             save_predictions(preds, pred_path)
             print(f"Predições salvas em {pred_path}")
 
@@ -245,8 +245,8 @@ def main() -> None:
     print(f"Resultados salvos em {out_file}")
 
     if args.viz:
-        _save_viz(args.detector, args.data_root, gt, preds, args.viz, Path("results/detections"))
-        print(f"Viz salvas em results/detections/ ({args.viz} frame(s))")
+        _save_viz(args.detector, args.data_root, gt, preds, args.viz, Path("results/detection_viz"))
+        print(f"Viz salvas em results/detection_viz/ ({args.viz} frame(s))")
 
 
 if __name__ == "__main__":
