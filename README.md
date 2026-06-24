@@ -1,270 +1,225 @@
-# football-orient-pose
-Football player pose estimation and body orientation analysis from broadcast video using YOLO11 + HRNet
+# Fine-tuning de Estimação de Pose ao Domínio de Futebol — Transfer Learning × Data Augmentation
 
-## Setup
+> **Trabalho Final de Redes Neurais Profundas.** Fine-tuning do estimador de pose **RTMPose-X** para
+> jogadores de futebol *broadcast*, maximizando a precisão de localização dos keypoints
+> (**PCK@0.2: 41,8% → 67,5%**) via uma **matriz 2×2** (Transfer Learning × Data Augmentation).
 
-### 1. Dataset
-
-Os datasets estão compactados em `.zip` para versionamento no Git. Após clonar o repositório:
-
-**Linux / macOS**
-```bash
-make setup        # Descompacta os .zip para data/
-make clean-data   # Remove data/ para re-extrair do zero
-make help         # Lista os comandos disponíveis
-```
-
-**Windows (PowerShell)**
-```powershell
-.\setup_data.ps1          # Descompacta os .zip para data/
-.\setup_data.ps1 -Clean   # Remove data/ para re-extrair do zero
-```
-
-> Se o PowerShell bloquear a execução, rode antes: `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`
-
-Estrutura após extração:
-```
-data/
-└── 3dsp/
-    └── train/
-        └── 00001/
-            ├── img/       # Imagens dos jogadores (100×100 px)
-            └── posture/   # Anotações de pose (JSON, formato H3WB-17)
-```
-
-### 2. Variáveis de ambiente
-
-```bash
-cp .env.example .env
-# edite DATA_DIR se o dataset estiver em outro caminho
-```
-
-### 3. Pesos dos modelos
-
-Os pesos não são versionados no Git (`models/weights/` está no `.gitignore`).
-Execute o script abaixo para baixar todos os modelos:
-
-```bash
-bash scripts/setup/download_models.sh
-```
-
-O que o script faz por modelo:
-
-| Modelo | Ação |
-|--------|------|
-| **RTMPose** | Nada — o `rtmlib` baixa automaticamente na 1ª inferência |
-| **HRNet-W48** | Baixa `.zip` do Google Drive e descompacta o ONNX (~450 MB) |
-| **OpenPose** | Pendente — upload no Drive em andamento |
-
-> **Dependência:** o script usa `gdown` para baixar do Google Drive. Já incluído nas dependências do projeto (`uv sync` instala automaticamente).
+**Grupo:** Wagner Victor Alves de Menezes · Raphael Alves de Lima Soares · Victor Gabriel ·
+João Victor Fernandes · Júlia Junior
+Bacharelado em Inteligência Artificial — Instituto de Informática, **Universidade Federal de Goiás (UFG)**
+Disciplina: **Redes Neurais Profundas**
 
 ---
 
-## Estrutura do projeto
+## 📌 Para o professor — por onde começar
+
+1. **O artigo** → [docs/artigo/artigo-rnp.md](docs/artigo/artigo-rnp.md) — **a entrega escrita**
+   (Pergunta · Metodologia · Resultados · Conclusão).
+2. **Este README** — o **mapa do código**: a estrutura do repositório, o que cada arquivo implementa
+   e como reproduzir os experimentos.
+
+> A avaliação tem duas frentes: a **escrita do artigo** e os **códigos usados**. Este README cobre a
+> segunda — os mapas abaixo apontam exatamente onde está cada coisa.
+
+---
+
+## 🎯 Resultados principais
+
+Matriz 2×2 no val split do 3DSP (800 frames):
+
+| Cenário | Inicialização | Augmentation | **PCK@0.2** | gap treino→val |
+|---|---|---|---:|---:|
+| Zero-shot (baseline) | COCO | — | 41,8% | — |
+| **A** | from scratch | RAW | 37,8% | 🔴 alto |
+| **B** | from scratch | full | 58,1% | 37,1 pp |
+| **C** | transfer learning | RAW | 52,9% | 12,2 pp |
+| **D-FULL** ⭐ | transfer learning | full | **67,5%** | **1,1 pp** |
+
+> A receita campeã (**D-FULL**: transfer learning + augmentation geométrica) atinge **PCK@0.2 = 67,5%
+> (+25,8 pp sobre o zero-shot)** com quase nenhum overfitting (gap 1,1 pp). Nem o transfer learning
+> sozinho, nem a augmentation sozinha bastam — é a combinação que resolve, inclusive recuperando as
+> extremidades. Detalhamento no artigo (§3–4).
+
+---
+
+## 🗂️ Estrutura do repositório
+
+| Pasta / arquivo | O que é |
+|---|---|
+| [`src/football_orient_pose/finetuning/`](src/football_orient_pose/finetuning/) | núcleo do fine-tuning: dataset adapter, métrica de seleção, augmentations custom |
+| [`src/football_orient_pose/evaluation/`](src/football_orient_pose/evaluation/) | métricas (PCK · PDJ · OKS · MPJPE) e a avaliação |
+| [`src/football_orient_pose/estimators/`](src/football_orient_pose/estimators/) | wrappers dos estimadores (`rtmpose.py` com `from_checkpoint`) |
+| [`src/football_orient_pose/utils/`](src/football_orient_pose/utils/) | `keypoint_mapping.py`, `data_io.py`, `skeleton.py` |
+| [`configs/`](configs/) | `cenario_*.py` (os cenários da matriz/escada) + `split.json` (split 80/20 por clip, seed 42) |
+| [`scripts/training/`](scripts/training/) | `train.py` (orquestrador) + `run_*.sh` (experimentos) + smoke test |
+| [`scripts/evaluation/`](scripts/evaluation/) | `evaluate.py` (avalia checkpoint nas 4 métricas) |
+| [`scripts/setup/`](scripts/setup/) | setup do ambiente MMPose + download dos pesos |
+| [`results/tables/`](results/tables/) | métricas geradas (`finetuned_cenario_*`, `finetuned_fase*`) |
+| `results/checkpoints/` | `best_PCK.pth` por cenário |
+| [`tests/`](tests/) | suíte `pytest` (metrics, dataset, estimators) |
+| [`Dockerfile.finetuning`](Dockerfile.finetuning) · [`Makefile`](Makefile) | infra (stack MMPose + pesos COCO) e atalhos |
+| [`docs/artigo/artigo-rnp.md`](docs/artigo/artigo-rnp.md) | o artigo |
+
+---
+
+## 🗺️ Mapa do código — o que cada arquivo implementa
+
+Fluxo do fine-tuning e o arquivo de cada etapa:
 
 ```
-football-orient-pose/
-│
-├── configs/
-│   └── split.json                  # Split oficial train/val (seed=42, 160/40 clips)
-│
-├── data/                           # Dataset 3DSP — ignorado pelo Git
-│   └── train/
-│       └── 00001/
-│           ├── img/                # Frames do jogador (100×100 px, BGR)
-│           └── posture/            # Anotações H3WB-17 por frame (JSON)
-│
-├── docs/                           # Documentação por projeto (ver docs/README.md)
-│   ├── vision/                     # Projeto de visão (estimadores, baseline)
-│   └── finetuning/                 # Projeto Transfer Learning / RNP
-│
-├── models/
-│   └── weights/                    # Pesos dos modelos — ignorado pelo Git
-│       ├── hrnet_w48_coco_256x192.onnx        # ONNX para inferência
-│       └── hrnet_w48_coco_256x192.onnx.data   # Pesos externos do ONNX
-│
-├── notebooks/
-│   ├── 01_rtmpose_validation.ipynb # Validação RTMPose — PDJ 93.62%
-│   └── 02_hrnet_validation.ipynb   # Validação HRNet   — PDJ 88.90%
-│
-├── results/
-│   ├── figures/                    # Gráficos gerados (ignorado pelo Git)
-│   └── tables/                     # Métricas JSON por modelo/split
-│
-├── scripts/
-│   └── download_models.sh          # Baixa pesos do Google Drive e descompacta
-│
-├── src/football_orient_pose/
-│   ├── pose.py                     # BasePoseEstimator (ABC — interface unificada)
-│   │
-│   ├── estimators/
-│   │   ├── rtmpose.py              # RTMPoseEstimator  — PDJ 93.62% (val)
-│   │   ├── hrnet.py                # HRNetEstimator    — PDJ 88.90% (val)
-│   │   └── openpose.py             # OpenPoseEstimator — pendente pesos
-│   │
-│   ├── evaluation/
-│   │   ├── metrics.py              # PDJ, PCK, OKS, MPJPE-2D, F1
-│   │   ├── evaluate.py             # CLI: --model rtmpose|hrnet|openpose
-│   │   └── baseline.py             # Baseline de orientação corporal
-│   │
-│   └── utils/
-│       ├── keypoint_mapping.py     # coco17_to_h3wb17()
-│       ├── data_io.py              # load_clip_image(), load_keypoints_2d()
-│       ├── dataset.py              # DSPDataset (PyTorch DataLoader)
-│       └── skeleton.py             # H3WB_SWAP_PAIRS
-│
-├── tests/                          # 53 testes unitários
-│   ├── test_pose.py
-│   ├── test_rtmpose_estimator.py
-│   ├── test_hrnet_estimator.py
-│   ├── test_openpose_estimator.py
-│   ├── test_metrics.py
-│   ├── test_dataset.py
-│   └── test_data_split.py
-│
-├── .env.example                    # Template de variáveis de ambiente
-└── pyproject.toml
+3DSP (JSON + JPG 100×100)
+  └─ DSP3Dataset ──(letterbox 288×384)── RTMPose-X (CSPNeXt-X + SimCC)
+        └─ train.py: progressive unfreezing + LR discriminativo + gating
+              └─ evaluate.py: PCK@0.2 · PDJ@0.5 · OKS · MPJPE   (vs baseline zero-shot)
+```
+
+### A) Adaptação do dataset e do treino (o núcleo do trabalho)
+
+| Funcionalidade | Arquivo | O que faz |
+|---|---|---|
+| **Adapter 3DSP → MMPose** | [`finetuning/dataset.py`](src/football_orient_pose/finetuning/dataset.py) | `DSP3Dataset`: lê os clips do split; `visibility=0` nos 4 keypoints derivados [0,7,8,9] (excluídos da loss); `flip_indices` H3WB; `bbox=[0,0,100,100]` (o crop inteiro é a ROI) |
+| **Augmentations custom** | [`finetuning/transforms.py`](src/football_orient_pose/finetuning/transforms.py) | `SimpleMotionBlur` (cv2, blur direcional) e `SimpleRandomErasing` (numpy, oclusão) — reimplementados por não estarem registrados no container |
+| **Métrica de seleção** | [`finetuning/metric.py`](src/football_orient_pose/finetuning/metric.py) | `StrictPCKMetric`: PCK@0.2 **estrito** no loop de validação do MMPose (`save_best='PCK'`) — alinha a seleção do checkpoint à métrica-alvo |
+
+### B) Configs da matriz e da escada de augmentation
+
+| Arquivo | Cenário |
+|---|---|
+| [`cenario_a.py`](configs/cenario_a.py) · [`cenario_a-raw.py`](configs/cenario_a-raw.py) | **A** — from scratch (RAW / +flip) |
+| [`cenario_b.py`](configs/cenario_b.py) | **B** — from scratch + augmentation completa |
+| [`cenario_c.py`](configs/cenario_c.py) · [`cenario_c-raw.py`](configs/cenario_c-raw.py) · [`cenario_c2.py`](configs/cenario_c2.py) | **C** — transfer learning (RAW / +flip / fase única) |
+| [`cenario_d.py`](configs/cenario_d.py) · [`d-geom.py`](configs/cenario_d-geom.py) · [`d-occl.py`](configs/cenario_d-occl.py) | **D** — TL + augmentation (escada: geom → +ocl → full) |
+| [`split.json`](configs/split.json) | split oficial 80/20 **por clip** (seed 42) |
+
+### C) Treino — orquestração
+
+| Arquivo | O que faz |
+|---|---|
+| [`scripts/training/train.py`](scripts/training/train.py) | **Orquestrador** `--cenario A/B/C/D`: fase única (scratch) ou **3 fases de progressive unfreezing** (TL, `frozen_stages` 4→2→1); **LR discriminativo** (cabeça > backbone); **gating** da fase 3 por Δ PCK; seleção do **melhor checkpoint** entre fases |
+| [`run_experiments.sh`](scripts/training/run_experiments.sh) · [`run_raw.sh`](scripts/training/run_raw.sh) · [`run_bd.sh`](scripts/training/run_bd.sh) · [`run_c2.sh`](scripts/training/run_c2.sh) | rodam os experimentos *fire-and-forget* (A/C · RAW · B/D · ablação C2) |
+| [`smoke_cenario_a.py`](scripts/training/smoke_cenario_a.py) | smoke test rápido — valida o pipeline ponta-a-ponta |
+
+### D) Avaliação — as 4 métricas
+
+| Arquivo | O que faz |
+|---|---|
+| [`scripts/evaluation/evaluate.py`](scripts/evaluation/evaluate.py) | avalia um checkpoint no val → **PCK@0.2 · PDJ@0.5 · OKS · MPJPE-2D** |
+| [`evaluation/metrics.py`](src/football_orient_pose/evaluation/metrics.py) | `compute_pck` · `compute_pdj` · `compute_oks` · `compute_mpjpe_2d` |
+| [`estimators/rtmpose.py`](src/football_orient_pose/estimators/rtmpose.py) | `RTMPoseEstimator.from_checkpoint()` — carrega o `.pth` fine-tunado |
+| [`utils/keypoint_mapping.py`](src/football_orient_pose/utils/keypoint_mapping.py) | `coco17_to_h3wb17()` e `derive_h3wb_centers()` (deriva [0,7,8,9]) |
+
+### E) Infraestrutura (reprodutibilidade)
+
+| Arquivo | O que faz |
+|---|---|
+| [`Dockerfile.finetuning`](Dockerfile.finetuning) | stack MMPose pinada (torch 2.4 / mmcv 2.2 / mmpose 1.3 / mmdet 3.3) **+ pesos COCO baked** |
+| [`docker-compose.finetuning.yml`](docker-compose.finetuning.yml) | serviço de treino (GPU) |
+| [`scripts/setup/setup_mmpose_env.sh`](scripts/setup/setup_mmpose_env.sh) | ambiente `.venv-mmpose` em user-space (sem sudo) |
+| [`Makefile`](Makefile) | atalhos: `train-a/b/c/d`, `evaluate`, `finetuning-{env,checkpoint,smoke}`, `docker-*` |
+
+---
+
+## ▶️ Como reproduzir
+
+```bash
+# 1. ambiente + dados + pesos COCO
+make setup
+make finetuning-env            # .venv-mmpose (user-space, sem sudo)
+make finetuning-checkpoint     # pesos COCO p/ transfer learning
+make finetuning-smoke          # smoke test do pipeline
+# Alternativa em container:  docker compose -f docker-compose.finetuning.yml build
+
+# 2. treinar a matriz 2×2
+make train-a   # from scratch, sem augmentation
+make train-b   # from scratch, com augmentation
+make train-c   # transfer learning, sem augmentation
+make train-d   # transfer learning, com augmentation   ← campeão (67,5%)
+
+# 3. avaliar um checkpoint (4 métricas no val)
+make evaluate CKPT=results/checkpoints/cenario_D/best_PCK.pth CONFIG=configs/cenario_d.py
+
+# 4. testes do código
+uv run pytest tests/metrics tests/dataset tests/estimators
 ```
 
 ---
 
-## Avaliação
+## 🔭 Escopo & decisões
 
-```bash
-# Avaliar um modelo no split de validação
-uv run python -m football_orient_pose.evaluation.evaluate \
-  --model rtmpose \
-  --split val \
-  --device cuda \
-  --data-dir data \
-  --split-config configs/split.json \
-  --output-dir results/tables
-```
-
-| Modelo | PDJ@0.5 | Referência (paper) |
-|--------|---------|-------------------|
-| RTMPose-X | **93.62%** | 89.51% |
-| HRNet-W48 | **88.90%** | ~56.08% |
-| OpenPose  | — | inédito |
+- **Foco desta entrega:** o **estudo de fine-tuning** (adaptação de domínio do RTMPose-X). A detecção
+  de jogadores e o pipeline ponta-a-ponta pertencem ao trabalho de **Visão Computacional** e estão
+  fora do escopo aqui.
+- **"Sem augmentation" = RAW:** o baseline honesto é a imagem crua (sem flip); o flip é o 1º degrau da
+  escada de augmentation (ablação no artigo, §3.3).
+- **Seleção de checkpoint:** sempre pelo **PCK@0.2 estrito** (`StrictPCKMetric`), a métrica-alvo — e
+  não pelo PCK leniente do MMPose.
+- **Test-Time Augmentation:** sugerido como extensão, **não realizado** nesta entrega.
+- **Limitação dominante:** dataset pequeno (~160 cenas distintas) — origem do overfitting e do teto de
+  desempenho absoluto; mais dados é a direção de melhoria mais clara.
+- **Artigo:** também submetido na plataforma da disciplina (Atividade A2).
 
 ---
 
-## Fine-tuning (Épico 1)
+## 🧩 Snippets dos códigos principais *(complemento)*
 
-Infraestrutura para treinar o RTMPose-X nos 4 cenários da matriz experimental 2×2
-(From Scratch vs Transfer Learning × Com vs Sem augmentation) e avaliar checkpoints
-com PDJ@0.5, PCK@0.2, OKS e MPJPE-2D.
+Trechos-chave de cada peça do mapa acima, para leitura rápida.
 
-### Setup — Build da imagem Docker
-
-Requer Docker + NVIDIA Container Toolkit (GPU). Os pesos COCO para Transfer Learning
-são baixados automaticamente durante o build.
-
-```bash
-docker compose -f docker-compose.finetuning.yml build
+**Adapter 3DSP → MMPose** — `finetuning/dataset.py`
+```python
+_DERIVED_KEYPOINT_IDS = {0, 7, 8, 9}            # keypoints calculados (médias)
+visibility = np.ones(17, dtype=np.float32)
+for kid in _DERIVED_KEYPOINT_IDS:
+    visibility[kid] = 0.0                       # excluídos da SimCC loss
+bbox = np.array([[0.0, 0.0, w, h]], dtype=np.float32)   # ROI = crop inteiro (100×100)
 ```
 
-Ou pull da imagem pré-buildada:
-
-```bash
-docker pull phael777/football-finetuning:latest
+**Métrica de seleção** — `finetuning/metric.py`
+```python
+@METRICS.register_module()
+class StrictPCKMetric(BaseMetric):
+    def compute_metrics(self, results):
+        preds = derive_h3wb_centers(np.stack([p for p, _ in results]))  # deriva [0,7,8,9]
+        gts   = np.stack([g for _, g in results])
+        pck = compute_pck(preds, gts, threshold=self.pck_thr)           # PCK@0.2 estrito
+        return {"PCK": float(pck.global_score), ...}
 ```
 
-### Treino — Cenários individuais
+**Progressive unfreezing — LR discriminativo + gating** — `scripts/training/train.py`
+```python
+def _build_tl_optim_override(phase):
+    if phase == 1:                               # backbone congelado: só a cabeça, LR alto
+        return dict(optimizer=dict(type="AdamW", lr=1e-3, weight_decay=0.05))
+    if phase == 2:                               # destrava o topo: cabeça 1e-4, backbone ×0.1
+        return dict(optimizer=dict(type="AdamW", lr=1e-4, weight_decay=0.05),
+                    paramwise_cfg=dict(custom_keys={"backbone": dict(lr_mult=0.1)}))
+    ...                                          # phase 3: backbone ×0.01
 
-```bash
-# Cenário A — From Scratch, sem augmentation (baseline)
-docker compose -f docker-compose.finetuning.yml run --rm train \
-    python scripts/training/train.py --cenario A --epochs 50
-
-# Cenário B — From Scratch, com augmentation
-docker compose -f docker-compose.finetuning.yml run --rm train \
-    python scripts/training/train.py --cenario B --epochs 50
-
-# Cenário C — Transfer Learning, sem augmentation [ALTA PRIORIDADE]
-docker compose -f docker-compose.finetuning.yml run --rm train \
-    python scripts/training/train.py --cenario C \
-    --epochs-fase1 15 --epochs-fase2 20 --epochs-fase3 15
-
-# Cenário D — Transfer Learning, com augmentation
-docker compose -f docker-compose.finetuning.yml run --rm train \
-    python scripts/training/train.py --cenario D \
-    --epochs-fase1 15 --epochs-fase2 20 --epochs-fase3 15
+delta = pck_f2 - pck_f1
+if delta > delta_pck:                            # fase 3 só roda se valer a pena
+    final_ckpt = ckpt_f3 if pck_f3 > pck_f2 else ckpt_f2   # mantém o melhor
+else:
+    final_ckpt = ckpt_f2                          # fase 3 pulada
 ```
 
-### Treino — Todos os cenários em sequência
-
-```bash
-for CENARIO in A B C D; do
-  docker compose -f docker-compose.finetuning.yml run --rm train \
-    python scripts/training/train.py --cenario $CENARIO
-done
+**Escada de augmentation no pipeline** — `configs/cenario_d.py`
+```python
+train_pipeline = [
+    dict(type="RandomFlip", direction="horizontal"),                                  # flip
+    dict(type="RandomBBoxTransform", scale_factor=(0.75, 1.25),
+         rotate_factor=30.0, shift_factor=0.1),                                        # geométrica
+    dict(type="SimpleMotionBlur", blur_limit=(3, 9), p=0.5),                           # blur
+    dict(type="TopdownAffine", input_size=(288, 384), use_udp=True),                   # letterbox
+    dict(type="SimpleRandomErasing", n_patches=(1, 1), ratio=(0.02, 0.10), prob=0.3),  # oclusão
+    dict(type="GenerateTarget", encoder=codec), dict(type="PackPoseInputs"),
+]
+load_from = "checkpoints/rtmpose-x_coco.pth"     # Transfer Learning (Cenários C/D)
 ```
 
-### Treino orquestrado A + C (fire-and-forget) — usado nos experimentos
-
-`scripts/training/run_experiments.sh` roda os Cenários A e C de ponta a ponta
-(treino → avaliação train/val de cada um → resumo consolidado) num container
-**destacado** (`-d`), que sobrevive à queda da sessão SSH. Foi este o comando usado
-para gerar os resultados abaixo (RTX 4090, GPU via CDI — `--gpus all`, sem sudo):
-
-```bash
-cd ~/football-orient-pose && git pull   # garante o código atualizado no host
-
-docker run -d --name exp --gpus all --shm-size=16g \
-  -v ~/football-orient-pose/data:/workspace/data:ro \
-  -v ~/football-orient-pose/results:/workspace/results \
-  -v ~/football-orient-pose/scripts:/workspace/scripts:ro \
-  -v ~/football-orient-pose/configs:/workspace/configs:ro \
-  -v ~/football-orient-pose/src:/workspace/src:ro \
-  -e EPOCHS_A=200 -e F1=60 -e F2=80 -e F3=60 \
-  football-finetuning:latest bash scripts/training/run_experiments.sh
+**Avaliação — as 4 métricas** — `scripts/evaluation/evaluate.py`
+```python
+pred  = derive_h3wb_centers(pred)             # mesma derivação do GT
+pdj   = compute_pdj(pred, gt, threshold=0.5)
+pck   = compute_pck(pred, gt, threshold=0.2)  # métrica principal
+oks   = compute_oks(pred, gt)
+mpjpe = compute_mpjpe_2d(pred, gt)
 ```
-
-Parâmetros (via `-e`): `EPOCHS_A` (épocas do A), `F1/F2/F3` (épocas das 3 fases do C),
-`BATCH` (default 32). Sem `-e`, usa os defaults `EPOCHS_A=150`, `F1/F2/F3=45/60/45`.
-
-Acompanhar o progresso e ver os resultados:
-
-```bash
-docker logs -f exp                            # log ao vivo (Ctrl+C só para de seguir; o treino continua)
-docker ps -a | grep exp                       # status: "Up" = rodando | "Exited (0)" = terminou ok
-
-cat results/logs/exp_*/SUMMARY.md             # tabela consolidada A vs C (val + diagnóstico train/val)
-ls  results/logs/exp_*/                        # logs por etapa: train_A.log, eval_A_val.log, ...
-ls  results/tables/finetuned_cenario_*.json    # as 4 métricas por cenário e split (train/val)
-```
-
-Os checkpoints (`results/checkpoints/`) e os logs/JSONs (`results/`) ficam no host
-mesmo após remover o container (`docker rm exp`).
-
-### Avaliação de checkpoint
-
-```bash
-# Avaliar um checkpoint no val split
-docker compose -f docker-compose.finetuning.yml run --rm train \
-    python scripts/evaluation/evaluate.py \
-    --checkpoint results/checkpoints/cenario_C/best_PCK.pth \
-    --split val
-
-# Avaliar todos os cenários treinados
-for CENARIO in A B C D; do
-  docker compose -f docker-compose.finetuning.yml run --rm train \
-    python scripts/evaluation/evaluate.py \
-    --checkpoint results/checkpoints/cenario_${CENARIO}/best_PCK.pth \
-    --split val
-done
-```
-
-Checkpoints salvos em `results/checkpoints/cenario_{A,B,C,D}/best_PCK.pth`.
-Métricas salvas em `results/tables/finetuned_cenario_{A,B,C,D}_val.json`.
-
-### Resultados preliminares (Cenários A e C)
-
-| Modelo | PDJ@0.5 | PCK@0.2 | OKS | MPJPE-2D |
-|---|---|---|---|---|
-| RTMPose-X zero-shot | 93,6% | 41,8% | 81,8% | 4,81 px |
-| **Cenário A** (from scratch, val) | 90,7% | 47,0% | 80,1% | 5,34 px |
-| **Cenário C** (TL fase 2, val) | **95,2%** | **61,5%** | **87,3%** | **3,63 px** |
-
-Relatório completo: [docs/finetuning/epic1-relatorio-preliminar.md](docs/finetuning/epic1-relatorio-preliminar.md)
