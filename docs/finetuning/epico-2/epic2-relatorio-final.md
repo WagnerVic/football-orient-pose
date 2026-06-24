@@ -138,6 +138,66 @@ Tudo idêntico entre cenários — **só mudam W₀, a estratégia de descongela
 
 ---
 
+## Fundamentação teórica do método
+
+O pipeline de transfer learning (Cenários C/D) não é uma escolha ad-hoc: cada decisão é uma técnica
+consolidada da literatura. Esta seção ancora o método; o detalhe didático de cada artigo está em
+[`docs/finetuning/fundamentacao/`](../fundamentacao/).
+
+| Decisão do pipeline | Fundamento na literatura | Referência |
+|---|---|---|
+| **Progressive unfreezing** (descongelar topo→base, em fases) + **LR discriminativo** (maior na cabeça, menor no backbone) | São, literalmente, *gradual unfreezing* e *discriminative fine-tuning* — técnicas propostas para adaptar sem *catastrophic forgetting* | **Howard & Ruder (2018)** — ULMFiT |
+| **Ordem topo→base** e **preservar as camadas baixas do COCO** (por que o TL agrega valor) | As camadas baixas aprendem features gerais/transferíveis; as altas, específicas da tarefa de origem | **Yosinski et al. (2014)** |
+| **Fase 1 = treinar só a cabeça** (= *linear probing*) **antes** de liberar o backbone | Fazer fine-tuning de tudo com a cabeça aleatória **distorce** as features pré-treinadas, sobretudo sob *distribution shift*; treinar a cabeça primeiro evita isso | **Kumar et al. (2022)** — LP-FT |
+| **Gating da fase 3** e **parar no ajuste parcial** (fase 2) | Sob *distribution shift* e com poucos dados, ajustar um **subconjunto** de camadas iguala/supera ajustar tudo; ajustar parâmetros demais com dataset pequeno causa esquecimento do pré-treino | **Lee et al. (2023)** — *surgical fine-tuning* |
+
+**O nosso caso é um *distribution shift* de domínio (COCO → futebol broadcast):** crops 100×100, baixa
+resolução, motion blur, poses atípicas de chute. É justamente o regime em que LP-FT e *surgical
+fine-tuning* preveem que **ajustar tudo de uma vez prejudica** — o que se confirma empiricamente na
+degradação da fase 3 (§8) e no overfitting do scratch (§6).
+
+---
+
+## Hiperparâmetros: default (biblioteca) vs empírico
+
+Seguindo a recomendação metodológica de **blindar com defaults** e justificar os desvios: a tabela
+separa o que é **padrão oficial do RTMPose-X/MMPose** (defesa: "é o default da biblioteca") do que foi
+**escolhido por nós** (defesa: justificativa abaixo). Os defaults foram conferidos contra a config
+oficial do RTMPose-X (`rtmpose-x ... body ... 384×288`, origem do `rtmpose-x_coco.pth`).
+
+### Default da biblioteca (blindados) ✅
+| Hiperparâmetro | Valor | 
+|---|---|
+| Arquitetura | CSPNeXt-X (P5, deepen 1.33, widen 1.25) + RTMCCHead |
+| Codec SimCC | input 288×384, **sigma (6.0, 6.93)**, split_ratio 2.0 |
+| Loss | `KLDiscretLoss`, **β=10**, label_softmax |
+| Otimizador | **AdamW**, **weight_decay = 0.05** |
+| Normalização | mean/std ImageNet, bgr_to_rgb |
+| Geometria de entrada | `GetBBoxCenterScale` (padding 1.25), `TopdownAffine(use_udp)` |
+| Flip | `RandomFlip` horizontal + `flip_test=True` |
+
+### Empíricos / escolhidos por nós (justificados) ⚠️
+| Hiperparâmetro | Nosso valor | Default oficial | Justificativa de defesa |
+|---|---|---|---|
+| **Progressive unfreezing** `frozen_stages` 4→2→1 | 3 fases | sem fases | Técnica fundamentada (ULMFiT/Yosinski/LP-FT/Surgical — ver seção acima) |
+| **LR discriminativo** (cabeça > backbone) | cabeça 1e-3/1e-4; backbone ×0.1/×0.01 | LR único | *Discriminative fine-tuning* (Howard & Ruder, 2018); **valores exatos** ajustados empiricamente |
+| **LR base** (scratch A/B) | **1e-3** | **4e-3** | Reduzido proporcionalmente ao batch menor (4e-3 é para batch 256; usamos 64) |
+| **Scheduler** | warmup ~10% épocas + cosseno → `eta_min=1e-6` | warmup 1000 iters + cosseno → `base_lr×0.05` | Adaptado para épocas (proporcional às fases do TL); *fix A1* do code review |
+| **Épocas** | scratch 150; TL 45/60/45 | 420–700 | Orçamento de GPU; convergência observada bem antes do teto (§7) |
+| **Batch** | 64 | 256 (8×256 oficial) | Limite de memória da RTX 4090 (1 GPU) |
+| **Augmentation geométrica** | rot **±30°**, escala **0,75–1,25**, shift 0,1 | rot **±80°**, escala **0,6–1,4** | **Conservadora de propósito**: crops apertados de jogadores ~verticais; ±80° geraria pose irreal (de cabeça pra baixo) |
+| **Oclusão / blur** | `SimpleRandomErasing` (2–10%, p0,3); `SimpleMotionBlur` (3–9px, p0,5) | `RandomErasing`/`Albu` | Reimplementados (não registrados no container); params alinhados ao espírito do default |
+| **Gating fase 3** `--delta-pck` | 0,05 | — | Puramente empírico; o próprio relatório recomenda revisar (§8/§12) |
+| **Métrica de seleção** | `StrictPCKMetric` (PCK@0.2 estrito) | `PCKAccuracy(norm=bbox)` | Alinhar a seleção à métrica-alvo do trabalho; *fix M4* do code review |
+
+> **Leitura para a defesa:** os hiperparâmetros de **arquitetura/codec/loss/otimizador** são todos
+> defaults (blindados). Os desvios concentram-se no **regime de treino** e são de dois tipos:
+> (i) **fundamentados em literatura** (progressive unfreezing, LR discriminativo, augmentação
+> conservadora) e (ii) **operacionais** (LR base, batch, épocas — ditados por hardware e orçamento).
+> Nenhum é arbitrário sem explicação.
+
+---
+
 ## 3. Resultados consolidados (val split)
 
 | Modelo | aug | PCK@0.2 ↑ | PCK train | gap | PDJ@0.5 ↑ | OKS ↑ | MPJPE-2D ↓ |
@@ -211,7 +271,9 @@ Ganho **marginal** de PCK@0.2 (val) ao subir cada degrau:
 | full | B-FULL 58,13 | D-FULL 67,54 | **+9,41pp** |
 
 - **O TL agrega valor em todos os níveis** — e, crucialmente, **C-RAW (TL sem aug nenhuma, 52,9%)
-  já supera o A-FLIP (scratch com flip, 46,1%)** por +6,8pp. O prior do COCO vale mais que o flip.
+  já supera o A-FLIP (scratch com flip, 46,1%)** por +6,8pp. O prior do COCO vale mais que o flip —
+  coerente com a generalidade e transferibilidade das camadas baixas demonstradas por Yosinski et al.
+  (2014).
 - O ganho do TL **diminui** conforme a aug sobe (15 → 12 → 9pp): aug e TL atacam parcialmente o
   **mesmo** problema (pouca diversidade), então sobra menos para o TL recuperar quando a aug já age.
 
@@ -278,7 +340,8 @@ augmentation geométrica corrige.
 
 ## 8. Progressive unfreezing e gating (4 cenários TL)
 
-O TL roda 3 fases (`frozen_stages` 4→2→1). PCK@0.2 (estrito, val) por fase:
+O TL roda 3 fases (`frozen_stages` 4→2→1) — *progressive (gradual) unfreezing* com LR discriminativo
+(Howard & Ruder, 2018). PCK@0.2 (estrito, val) por fase:
 
 | Cenário | Fase 1 (só cabeça) | Fase 2 (+topo) | Fase 3 (+baixo) | Gating Δ f2−f1 | Selecionado |
 |---|---:|---:|---:|---:|---|
@@ -289,12 +352,15 @@ O TL roda 3 fases (`frozen_stages` 4→2→1). PCK@0.2 (estrito, val) por fase:
 | **D-FULL** | 59,6% | **67,5%** | 63,1% (degradou) | 0,079 | fase 2 → 67,54% |
 
 **Achados (evidência forte por agregação):**
-- **A fase 2 é sempre onde o TL ganha;** já a **fase 1** (backbone 100% congelado) basta para passar
-  do C-FLIP inteiro nos cenários D (~59% > 58,4%). Adaptar a cabeça sobre features COCO > treinar
-  do zero.
+- **A fase 2 é sempre onde o TL ganha;** já a **fase 1** (backbone 100% congelado, treina só a cabeça
+  — equivalente a um *linear probing*) basta para passar do C-FLIP inteiro nos cenários D (~59% >
+  58,4%). Adaptar a cabeça sobre features COCO > treinar do zero — e treinar a cabeça **antes** de
+  liberar o backbone evita distorcer as features pré-treinadas (Kumar et al., 2022).
 - **A fase 3 degradou em 4 de 4 casos** em que foi ativada — destravar os stages baixos com 3.200
-  imagens causa overfitting de features de baixo nível. No C-RAW (ganho de fase 2 pequeno) o gating
-  **corretamente a pulou**.
+  imagens distorce/esquece as features de baixo nível do COCO. **Não é um artefato do nosso pipeline:**
+  é o efeito previsto pela literatura — distorção de features sob *distribution shift* (Kumar et al.,
+  2022) e esquecimento por ajustar parâmetros demais com dataset pequeno (Lee et al., 2023). No C-RAW
+  (ganho de fase 2 pequeno) o gating **corretamente a pulou**.
 - **O fix de seleção** (manter o melhor entre fase 2 e 3) **salvou +6,6 / +5,3 / +5,2 / +4,5pp**
   (C-FLIP/D-GEOM/D-OCCL/D-FULL) — sem ele, o pipeline entregaria a fase 3 pior nesses casos.
 
@@ -316,7 +382,8 @@ discriminativo (cabeça 1e-3, backbone 1e-5), 150 épocas, com flip.
 
 - **O progressive vale +3,6pp** e **generaliza muito melhor** (gap 11,7 vs 33,5pp). A diferença vem
   do **warmup da cabeça (fase 1)**: na fase única a cabeça começa crua com backbone destravado e LR
-  alta, memorizando mais. → **a complexidade do progressive se justifica.**
+  alta, memorizando mais — exatamente o cenário de distorção de features que o LP-FT descreve (Kumar
+  et al., 2022). → **a complexidade do progressive se justifica.**
 - **Mas o TL "simples" já é forte:** C2 supera A-FLIP em +8,8pp e o baseline em +13,1pp (~94% do
   C-FLIP) com receita bem mais simples. Onde o progressive mais ajuda (C-FLIP − C2 por grupo): ankle
   +7,7 · shoulder +4,3 · wrist +3,7 · elbow +3,4 — nos **joints difíceis**.
@@ -398,11 +465,14 @@ teste. Defensável no artigo.
 1. **Uma execução por cenário (sem barra de erro).** Diferenças pequenas — sobretudo os Δ de
    oclusão/blur (+0,7pp) e a ordem D-GEOM<D-OCCL<D-FULL — podem ter ruído de seed. Idealmente 2–3
    seeds para o artigo.
-2. **Fase 3 inútil nos dados atuais** — degradou em 4/4; recomendado cortar/endurecer o gating.
+2. **Fase 3 inútil nos dados atuais** — degradou em 4/4 (consistente com a distorção de features de
+   Kumar et al., 2022, e o esquecimento por excesso de parâmetros de Lee et al., 2023); recomendado
+   cortar/endurecer o gating.
 3. **Scratch ainda overfita** mesmo com aug (B-FULL gap 37,1pp) — o limite do scratch é a
    inicialização, não a augmentation.
-4. **Dataset pequeno** (~160 cenas distintas) — origem de toda a história de overfitting; os ganhos
-   podem não transferir igual para um dataset mais diverso.
+4. **Dataset pequeno** (~160 cenas distintas) — origem de toda a história de overfitting e do benefício
+   do ajuste parcial (Lee et al., 2023); os ganhos podem não transferir igual para um dataset mais
+   diverso.
 
 ---
 
@@ -460,3 +530,21 @@ Reproduzir: `bash scripts/training/run_experiments.sh` (A-FLIP+C-FLIP) · `bash 
 Transforms custom em `src/football_orient_pose/finetuning/transforms.py`. Ver
 `docs/finetuning/epico-1/guia.md`. Detalhe de cada metade: `epic2-relatorio-a-c.md` e
 `epic2-relatorio-bd.md`.
+
+---
+
+## Referências
+
+Fundamentação do método de fine-tuning (detalhe didático e mapa de defesa em
+[`docs/finetuning/fundamentacao/`](../fundamentacao/); PDFs em
+`.task-context/input/referencias/.refs/RNP/artigos/`):
+
+- **Howard, J.; Ruder, S. (2018).** Universal Language Model Fine-tuning for Text Classification (ULMFiT). *ACL.* arXiv:1801.06146. — *gradual unfreezing* + *discriminative fine-tuning*.
+- **Yosinski, J.; Clune, J.; Bengio, Y.; Lipson, H. (2014).** How transferable are features in deep neural networks? *NeurIPS.* arXiv:1411.1792. — camadas baixas gerais vs. altas específicas.
+- **Kumar, A.; Raghunathan, A.; Jones, R.; Ma, T.; Liang, P. (2022).** Fine-Tuning can Distort Pretrained Features and Underperform Out-of-Distribution (LP-FT). *ICLR.* arXiv:2202.10054. — fase 1 = linear probing; distorção de features (degradação da fase 3).
+- **Lee, Y.; Chen, A. S.; Tajwar, F.; Kumar, A.; Yao, H.; Liang, P.; Finn, C. (2023).** Surgical Fine-Tuning Improves Adaptation to Distribution Shifts. *ICLR.* arXiv:2210.11466. — ajuste parcial > tudo com poucos dados; gating da fase 3.
+
+Dataset e modelo:
+
+- **Yeung, C.; Ide, R.; Fujii, K. (2024).** AutoSoccerPose: Automated 3D Posture Analysis of Soccer Shot Movements (dataset 3DSP). *CVPR Workshops.*
+- **Jiang, T. et al. (2023).** RTMPose: Real-Time Multi-Person Pose Estimation (OpenMMLab). arXiv:2303.07399.
