@@ -19,7 +19,6 @@ Disciplina: **Visão Computacional** — Prof. Ricardo Augusto Pereira Franco
 
 | Entrega | Onde |
 |---|---|
-| **Artigo** (texto) | [docs/artigo/artigo-vc.md](docs/artigo/artigo-vc.md) + LaTeX em [Template_SBC/template-latex/](Template_SBC/template-latex/) |
 | **Código** | [src/football_orient_pose/](src/football_orient_pose/) (biblioteca) + [scripts/](scripts/) (CLIs) |
 | **Resultados e figuras** | [results/](results/) (tabelas, showcase, GIFs) + relatórios em [docs/](docs/README.md) |
 | **Documentação técnica** | [docs/README.md](docs/README.md) (índice de tudo) |
