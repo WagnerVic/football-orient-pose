@@ -130,19 +130,6 @@ uv run pytest           # suíte unitária em tests/
 
 ---
 
-## 🔭 Escopo e decisões
-
-- **Orientação corporal:** fora do escopo desta entrega — registrada como **trabalho futuro** no
-  artigo. O pipeline atual entrega a **pose 2D**, base necessária para a orientação.
-- **Anotação de keypoints em vídeo real:** em **backlog** (ver
-  [docs/backlog/README.md](docs/backlog/README.md)) — sem _ground truth_ anotado nos clips reais, as
-  métricas de pose ficam restritas ao dataset 3DSP; o showcase em vídeo real é, por ora, **qualitativo**.
-- **Relação com o fine-tuning (projeto RNP):** o fine-tuning do RTMPose-X é a **etapa de adaptação ao
-  domínio** deste mesmo pipeline — por isso integra a contribuição do artigo. Os relatórios completos
-  da matriz experimental estão em [docs/finetuning/](docs/finetuning/).
-
----
-
 ## 📚 Documentação completa
 
 Índice de todos os relatórios técnicos (visão, fine-tuning e backlog): **[docs/README.md](docs/README.md)**.
