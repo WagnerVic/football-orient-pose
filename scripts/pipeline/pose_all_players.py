@@ -61,7 +61,7 @@ def _parse_args() -> argparse.Namespace:
     p.add_argument("--clips", nargs="*", default=None, help="ids específicos (default: todos)")
     p.add_argument("--pose", default="rtmpose",
                    choices=["rtmpose", "finetuned", "hrnet", "openpose"])
-    p.add_argument("--checkpoint", default=None, help="--pose finetuned: .pth do Épico 2")
+    p.add_argument("--checkpoint", default=None, help="--pose finetuned: .pth (ex.: D-FULL)")
     p.add_argument("--config", default=None, help="--pose finetuned: config MMPose (auto)")
     p.add_argument("--weights", default="yolo26x.pt", help="peso do YOLO (vencedor: yolo26x.pt)")
     p.add_argument("--out", type=Path, default=Path("results/showcase/all_players"))

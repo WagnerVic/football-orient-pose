@@ -43,7 +43,7 @@ _DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 
 def _parse_args() -> argparse.Namespace:
-    p = argparse.ArgumentParser(description="Fine-tuning RTMPose-X — Épico 1")
+    p = argparse.ArgumentParser(description="Fine-tuning RTMPose-X — matriz 2×2")
     p.add_argument(
         "--cenario", required=True,
         choices=["A", "B", "C", "D", "C2", "A-RAW", "C-RAW", "D-GEOM", "D-OCCL"],

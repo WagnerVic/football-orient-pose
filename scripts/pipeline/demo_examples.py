@@ -37,9 +37,9 @@ def _build_pose(name: str, device: str, checkpoint: str | None = None, config: s
 
     if name == "rtmpose":
         return RTMPoseEstimator(device=device)  # zero-shot (rtmlib/ONNX, local)
-    if name == "finetuned":  # melhor do Épico 2 (D-FULL), via MMPose — requer Docker
+    if name == "finetuned":  # fine-tunado (ex.: D-FULL), via MMPose — requer o ambiente MMPose
         if not checkpoint:
-            raise SystemExit("--pose finetuned exige --checkpoint <.pth do Épico 2>")
+            raise SystemExit("--pose finetuned exige --checkpoint <.pth fine-tunado>")
         return RTMPoseEstimator.from_checkpoint(checkpoint, config_path=config, device=device)
     if name == "hrnet":
         from football_orient_pose.estimators.hrnet import HRNetEstimator
@@ -126,7 +126,7 @@ def _parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Pipeline ponta-a-ponta nos examples (#126)")
     p.add_argument("--pose", default="rtmpose",
                    choices=["rtmpose", "finetuned", "hrnet", "openpose"])
-    p.add_argument("--checkpoint", default=None, help="--pose finetuned: .pth do Épico 2 (D-FULL)")
+    p.add_argument("--checkpoint", default=None, help="--pose finetuned: .pth (ex.: D-FULL)")
     p.add_argument("--config", default=None, help="--pose finetuned: config MMPose (auto)")
     p.add_argument("--data-root", type=Path, default=Path("data/clips/examples"))
     p.add_argument("--test-root", type=Path, default=Path("data/test"))

@@ -1,6 +1,6 @@
 """Download de vídeo (YouTube etc.) para a pasta de fontes brutas.
 
-Usado para obter o vídeo do jogo do Brasil (Épico 13, #143) antes do corte em
+Usado para obter o vídeo do jogo do Brasil (#143) antes do corte em
 clips por ``scripts/clips/cut_clips.py``. Requer a dependência opcional
 ``yt-dlp`` (``pip install -e '.[download]'`` ou ``pip install yt-dlp``).
 """

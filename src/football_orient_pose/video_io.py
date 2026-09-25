@@ -2,7 +2,7 @@
 
 Este módulo é o primeiro elo do pipeline de visão — transforma um arquivo de
 vídeo numa lista de frames em memória. É reutilizado pela extração de clips
-(Épico 13), pela detecção (Épico 10) e pelo pipeline end-to-end (Épico 12).
+(#134), pela detecção (#113) e pelo pipeline end-to-end (#126).
 """
 
 from __future__ import annotations

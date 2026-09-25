@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """Baixa um vídeo (ex.: YouTube) para data/raw/videos/.
 
-Primeiro passo da geração de clips reais (Épico 13, #143): obter o vídeo do
+Primeiro passo da geração de clips reais (#143): obter o vídeo do
 jogo. Depois, corte em clips com scripts/clips/cut_clips.py.
 
 Uso:
