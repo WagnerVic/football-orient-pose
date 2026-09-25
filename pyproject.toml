@@ -1,7 +1,7 @@
 [project]
 name = "football-orient-pose"
 version = "0.1.0"
-description = "Pipeline de estimação de pose e orientação corporal de jogadores de futebol"
+description = "Quantitative pipeline for soccer player pose estimation in broadcast video (YOLO26 + RTMPose-X)"
 requires-python = ">=3.11"
 authors = [
     { name = "Wagner Victor Alves de Menezes" },
@@ -21,7 +21,9 @@ dependencies = [
     "numpy",
     "matplotlib",
     "scipy",
-    "onnxruntime-gpu",
+    # CUDA build only ships wheels for Linux x86_64 and Windows; the CPU build covers the rest.
+    "onnxruntime-gpu; (sys_platform == 'linux' and platform_machine == 'x86_64') or sys_platform == 'win32'",
+    "onnxruntime; sys_platform == 'darwin' or (sys_platform == 'linux' and platform_machine != 'x86_64')",
     "rtmlib",
     "python-dotenv>=1.2.2",
     "gdown>=6.0.0",
@@ -34,17 +36,8 @@ dev = [
     "ipykernel",
     "jupyterlab",
 ]
-inference = [
-    "rtmlib",
-]
 download = [
     "yt-dlp>=2024.1",
-]
-finetuning = [
-    "mmengine>=0.10.0",
-    "mmcv>=2.1.0",
-    "mmpose>=1.3.0",
-    "mmdet>=3.0.0",
 ]
 
 [build-system]
@@ -58,14 +51,21 @@ packages = ["src/football_orient_pose"]
 target-version = "py311"
 line-length = 100
 src = ["src"]
+extend-exclude = ["notebooks"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "W"]
+
+[tool.ruff.lint.per-file-ignores]
+# MMPose modules must be registered (and src/ put on sys.path) before the remaining imports.
+"scripts/training/*.py" = ["E402"]
+# Column-aligned H3WB keypoint/skeleton metadata tables.
+"src/football_orient_pose/finetuning/dataset.py" = ["E501"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
 markers = [
-    "integration: testes que requerem modelos reais e/ou GPU (rodar com -m integration)",
+    "integration: tests that need real model weights and/or a GPU (run with -m integration)",
 ]
 addopts = "-m 'not integration'"

@@ -5,7 +5,7 @@ Serve para medir o impacto isolado do flip: comparar A-raw vs A revela quanto o 
 sozinho contribui. Não é célula da matriz 2×2 — é uma ablação complementar.
 
 Uso via train.py (rota de fase única):
-    python scripts/train.py --cenario A-RAW [--epochs 150]
+    python scripts/training/train.py --cenario A-RAW [--epochs 150]
 """
 
 custom_imports = dict(

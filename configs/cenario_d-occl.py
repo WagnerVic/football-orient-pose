@@ -7,7 +7,8 @@ como causa do erro nas extremidades. Ainda SEM blur.
 A contribuição da oclusão é medida por: D-OCCL − D-GEOM.
 
 Uso via train.py:
-    python scripts/train.py --cenario D-OCCL [--epochs-fase1 45] [--epochs-fase2 60] [--epochs-fase3 45]
+    python scripts/training/train.py --cenario D-OCCL \
+        [--epochs-fase1 45] [--epochs-fase2 60] [--epochs-fase3 45]
 """
 
 custom_imports = dict(

@@ -6,7 +6,6 @@ import json
 from pathlib import Path
 
 import numpy as np
-
 from mmengine.dataset import BaseDataset
 from mmpose.registry import DATASETS
 

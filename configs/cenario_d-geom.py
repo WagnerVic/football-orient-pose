@@ -12,7 +12,8 @@ então rotação ±30° (não ±80° do default RTMPose, que viraria jogador de 
 pra baixo) e escala 0,75–1,25 para não cortar joints.
 
 Uso via train.py:
-    python scripts/train.py --cenario D-GEOM [--epochs-fase1 45] [--epochs-fase2 60] [--epochs-fase3 45]
+    python scripts/training/train.py --cenario D-GEOM \
+        [--epochs-fase1 45] [--epochs-fase2 60] [--epochs-fase3 45]
 """
 
 custom_imports = dict(

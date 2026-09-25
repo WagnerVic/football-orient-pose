@@ -84,7 +84,7 @@ def run_evaluation(
 
     Pode ser chamado pelo train.py para calcular Δ PCK entre fases.
     """
-    from mmpose.apis import init_model, inference_topdown
+    from mmpose.apis import inference_topdown, init_model
 
     print(f"\nCarregando modelo: {checkpoint_path}")
     model = init_model(config_path, checkpoint_path, device=device)
@@ -155,7 +155,6 @@ def run_evaluation(
     mpjpe_r = compute_mpjpe_2d(pred, gt)
 
     # Extrai cenário do checkpoint path para o filename de saída
-    checkpoint_stem = Path(checkpoint_path).stem
     ckpt_parent = Path(checkpoint_path).parent.name
 
     result = {

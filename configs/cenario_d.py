@@ -8,7 +8,8 @@ Junto com D-GEOM e D-OCCL forma o ladder fino que isola cada mecanismo:
     blur       = D-FULL − D-OCCL
 
 Uso via train.py:
-    python scripts/train.py --cenario D [--epochs-fase1 45] [--epochs-fase2 60] [--epochs-fase3 45]
+    python scripts/training/train.py --cenario D \
+        [--epochs-fase1 45] [--epochs-fase2 60] [--epochs-fase3 45]
 """
 
 custom_imports = dict(

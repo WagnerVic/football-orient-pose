@@ -8,8 +8,8 @@ Motivação: `RandomErasing` e `Albu` não estão disponíveis no mmpose do cont
 e cv2, que já estão presentes no ambiente.
 """
 
-import numpy as np
 import cv2
+import numpy as np
 from mmpose.registry import TRANSFORMS
 
 

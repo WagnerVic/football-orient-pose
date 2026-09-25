@@ -6,7 +6,7 @@ recipe completa do D-FULL, mas do zero. Testa se a augmentation regulariza o
 overfitting severo do from-scratch (A-FLIP: gap treino→val de 47,6pp).
 
 Uso via train.py:
-    python scripts/train.py --cenario B [--epochs 150]
+    python scripts/training/train.py --cenario B [--epochs 150]
 """
 
 custom_imports = dict(

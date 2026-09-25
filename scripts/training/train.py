@@ -22,6 +22,7 @@ Saída:
 from __future__ import annotations
 
 from mmpose.utils import register_all_modules
+
 register_all_modules()  # registra TopdownPoseEstimator, RTMCCHead, CSPNeXt, etc.
 import argparse
 import glob
@@ -54,7 +55,9 @@ def _parse_args() -> argparse.Namespace:
     p.add_argument("--epochs", type=int, default=50, help="Épocas totais (A/B)")
     # Épocas por fase para C/D
     p.add_argument("--epochs-fase1", type=int, default=15, help="Épocas fase 1 — head only (C/D)")
-    p.add_argument("--epochs-fase2", type=int, default=20, help="Épocas fase 2 — unfreeze top (C/D)")
+    p.add_argument(
+        "--epochs-fase2", type=int, default=20, help="Épocas fase 2 — unfreeze top (C/D)"
+    )
     p.add_argument("--epochs-fase3", type=int, default=15, help="Épocas fase 3 — condicional (C/D)")
     p.add_argument(
         "--delta-pck", type=float, default=0.05,
@@ -333,7 +336,8 @@ def _run_transfer_learning(
         print(f"\n[Fase 3] Best checkpoint: {ckpt_f3}  |  PCK@0.2 (estrito) = {pck_f3:.4f}")
         # fica com o melhor entre fase 2 e 3 (a fase 3 pode degradar)
         final_ckpt = ckpt_f3 if pck_f3 > pck_f2 else ckpt_f2
-        print(f"[Seleção] fase2={pck_f2:.4f} fase3={pck_f3:.4f} → {'fase3' if pck_f3 > pck_f2 else 'fase2'}")
+        chosen = "fase3" if pck_f3 > pck_f2 else "fase2"
+        print(f"[Seleção] fase2={pck_f2:.4f} fase3={pck_f3:.4f} → {chosen}")
     else:
         print(f"[Fase 3] PULADA (Δ PCK {delta:.4f} ≤ {delta_pck})")
 
