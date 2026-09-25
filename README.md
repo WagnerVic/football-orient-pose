@@ -1,270 +1,168 @@
-# football-orient-pose
-Football player pose estimation and body orientation analysis from broadcast video using YOLO11 + HRNet
+# Estimação de Pose de Jogadores de Futebol em Vídeo de Transmissão
 
-## Setup
+> **Um Pipeline Quantitativo para Estimação de Pose de Jogadores de Futebol em Vídeo de Transmissão:**
+> Seleção de Detector, Benchmark de Estimadores e Adaptação ao Domínio
 
-### 1. Dataset
+**Autores:** Wagner Victor Alves de Menezes (202403929) · Victor Gabriel Ribeiro Jacome (202403926) ·
+Raphael Alves de Lima Soares (202403922) · André Guilherme Alves do Carmo (202301423)
 
-Os datasets estão compactados em `.zip` para versionamento no Git. Após clonar o repositório:
+Bacharelado em Inteligência Artificial — Instituto de Informática, **Universidade Federal de Goiás (UFG)**
+Disciplina: **Visão Computacional** — Prof. Ricardo Augusto Pereira Franco
 
-**Linux / macOS**
-```bash
-make setup        # Descompacta os .zip para data/
-make clean-data   # Remove data/ para re-extrair do zero
-make help         # Lista os comandos disponíveis
-```
+![Pipeline em vídeo real — pose de todos os jogadores](results/showcase/gifs/all_players/brazil_01.gif)
 
-**Windows (PowerShell)**
-```powershell
-.\setup_data.ps1          # Descompacta os .zip para data/
-.\setup_data.ps1 -Clean   # Remove data/ para re-extrair do zero
-```
-
-> Se o PowerShell bloquear a execução, rode antes: `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`
-
-Estrutura após extração:
-```
-data/
-└── 3dsp/
-    └── train/
-        └── 00001/
-            ├── img/       # Imagens dos jogadores (100×100 px)
-            └── posture/   # Anotações de pose (JSON, formato H3WB-17)
-```
-
-### 2. Variáveis de ambiente
-
-```bash
-cp .env.example .env
-# edite DATA_DIR se o dataset estiver em outro caminho
-```
-
-### 3. Pesos dos modelos
-
-Os pesos não são versionados no Git (`models/weights/` está no `.gitignore`).
-Execute o script abaixo para baixar todos os modelos:
-
-```bash
-bash scripts/setup/download_models.sh
-```
-
-O que o script faz por modelo:
-
-| Modelo | Ação |
-|--------|------|
-| **RTMPose** | Nada — o `rtmlib` baixa automaticamente na 1ª inferência |
-| **HRNet-W48** | Baixa `.zip` do Google Drive e descompacta o ONNX (~450 MB) |
-| **OpenPose** | Pendente — upload no Drive em andamento |
-
-> **Dependência:** o script usa `gdown` para baixar do Google Drive. Já incluído nas dependências do projeto (`uv sync` instala automaticamente).
+> _O pipeline aplicado a uma transmissão real (Seleção Brasileira): detecção + estimação de pose de
+> todos os jogadores, frame a frame, de forma 100% automática._
 
 ---
 
-## Estrutura do projeto
+## 📌 Para o professor — guia de avaliação
+
+Este repositório contém **um trabalho de Visão Computacional completo**: um pipeline que, a partir de
+**vídeo de transmissão (broadcast)**, estima a **pose 2D** dos jogadores. A contribuição central é
+**metodológica e quantitativa** — cada estágio do pipeline (detector e estimador) é **escolhido por
+experimento**, e o estimador é **adaptado ao domínio por fine-tuning**, fornecendo a avaliação
+numérica que faltava a esse problema.
+
+### Por onde começar (ordem de leitura sugerida)
+
+1. **O artigo** → [docs/artigo/artigo-vc.md](docs/artigo/artigo-vc.md) — **a entrega principal**.
+   Contém problema, objetivos, metodologia, resultados e conclusão. _(Versão LaTeX/SBC em
+   [Template_SBC/template-latex/sbc-template.tex](Template_SBC/template-latex/sbc-template.tex).)_
+2. **Este README** — mapa do repositório: o que é cada pasta e como reproduzir os resultados.
+3. **Os relatórios técnicos** → [docs/](docs/README.md) — o detalhe por trás de cada número do artigo
+   (comparação de detectores, benchmark de estimadores, matriz de fine-tuning).
+
+### Onde está cada entrega
+
+| Entrega | Onde |
+|---|---|
+| **Artigo** (texto) | [docs/artigo/artigo-vc.md](docs/artigo/artigo-vc.md) + LaTeX em [Template_SBC/template-latex/](Template_SBC/template-latex/) |
+| **Código** | [src/football_orient_pose/](src/football_orient_pose/) (biblioteca) + [scripts/](scripts/) (CLIs) |
+| **Resultados e figuras** | [results/](results/) (tabelas, showcase, GIFs) + relatórios em [docs/](docs/README.md) |
+| **Documentação técnica** | [docs/README.md](docs/README.md) (índice de tudo) |
+
+---
+
+## 🎯 Resultados principais
+
+O trabalho decide cada estágio do pipeline por experimento. Os números-chave:
+
+**1. Seleção do detector** — 4 detectores comparados (2 one-stage, 2 two-stage) com anotação humana.
+[docs/vision/epic-113-detectores.md](docs/vision/epic-113-detectores.md)
+
+| Detector | mAP | Recall | Precision |
+|---|---|---|---|
+| **YOLO26x** (escolhido) | **84,4** | **95,4%** | **98,7%** |
+| Cascade R-CNN | 68,3 | 93,4% | 54,5% |
+| Faster R-CNN | 65,1 | 94,7% | 47,8% |
+| RetinaNet | 61,9 | 93,7% | 57,3% |
+
+**2. Benchmark de estimadores (zero-shot, dataset 3DSP)** — RTMPose-X vence OpenPose e HRNet-W48.
+[docs/vision/baseline-rtmpose-zero-shot.md](docs/vision/baseline-rtmpose-zero-shot.md)
+O diagnóstico que motiva o resto do trabalho: o estimador **detecta bem a região** (PDJ@0,5 ≈ 93%) mas
+**localiza mal o keypoint exato** (PCK@0,2 baixo) — gargalo de **precisão de localização**.
+
+**3. Adaptação ao domínio (fine-tuning, matriz 2×2)** — Transfer Learning × Augmentation.
+[docs/finetuning/epico-2/epic2-relatorio-final.md](docs/finetuning/epico-2/epic2-relatorio-final.md)
+
+> **PCK@0,2: 41,8% (zero-shot) → 67,5% (RTMPose-X fine-tunado)** — a receita campeã combina
+> _transfer learning_ + _augmentation geométrica_, com **quase nenhum overfitting** (gap treino→val
+> de 1,1 pp).
+
+**Conclusão central:** o gargalo do domínio é **adaptação ao domínio, não capacidade do modelo** — e
+o ganho é **barato** (fine-tuning leve sobre pesos COCO).
+
+---
+
+## 🧩 O pipeline em 5 estágios
 
 ```
-football-orient-pose/
-│
-├── configs/
-│   └── split.json                  # Split oficial train/val (seed=42, 160/40 clips)
-│
-├── data/                           # Dataset 3DSP — ignorado pelo Git
-│   └── train/
-│       └── 00001/
-│           ├── img/                # Frames do jogador (100×100 px, BGR)
-│           └── posture/            # Anotações H3WB-17 por frame (JSON)
-│
-├── docs/                           # Documentação por projeto (ver docs/README.md)
-│   ├── vision/                     # Projeto de visão (estimadores, baseline)
-│   └── finetuning/                 # Projeto Transfer Learning / RNP
-│
-├── models/
-│   └── weights/                    # Pesos dos modelos — ignorado pelo Git
-│       ├── hrnet_w48_coco_256x192.onnx        # ONNX para inferência
-│       └── hrnet_w48_coco_256x192.onnx.data   # Pesos externos do ONNX
-│
-├── notebooks/
-│   ├── 01_rtmpose_validation.ipynb # Validação RTMPose — PDJ 93.62%
-│   └── 02_hrnet_validation.ipynb   # Validação HRNet   — PDJ 88.90%
-│
-├── results/
-│   ├── figures/                    # Gráficos gerados (ignorado pelo Git)
-│   └── tables/                     # Métricas JSON por modelo/split
-│
-├── scripts/
-│   └── download_models.sh          # Baixa pesos do Google Drive e descompacta
-│
-├── src/football_orient_pose/
-│   ├── pose.py                     # BasePoseEstimator (ABC — interface unificada)
-│   │
-│   ├── estimators/
-│   │   ├── rtmpose.py              # RTMPoseEstimator  — PDJ 93.62% (val)
-│   │   ├── hrnet.py                # HRNetEstimator    — PDJ 88.90% (val)
-│   │   └── openpose.py             # OpenPoseEstimator — pendente pesos
-│   │
-│   ├── evaluation/
-│   │   ├── metrics.py              # PDJ, PCK, OKS, MPJPE-2D, F1
-│   │   ├── evaluate.py             # CLI: --model rtmpose|hrnet|openpose
-│   │   └── baseline.py             # Baseline de orientação corporal
-│   │
-│   └── utils/
-│       ├── keypoint_mapping.py     # coco17_to_h3wb17()
-│       ├── data_io.py              # load_clip_image(), load_keypoints_2d()
-│       ├── dataset.py              # DSPDataset (PyTorch DataLoader)
-│       └── skeleton.py             # H3WB_SWAP_PAIRS
-│
-├── tests/                          # 53 testes unitários
-│   ├── test_pose.py
-│   ├── test_rtmpose_estimator.py
-│   ├── test_hrnet_estimator.py
-│   ├── test_openpose_estimator.py
-│   ├── test_metrics.py
-│   ├── test_dataset.py
-│   └── test_data_split.py
-│
-├── .env.example                    # Template de variáveis de ambiente
-└── pyproject.toml
+vídeo → [1] detecção → [2] crop justo → [3] estimação de pose → [4] reprojeção → frame anotado
+```
+
+| # | Estágio | O que faz | Código |
+|---|---|---|---|
+| 1 | **Detecção** | YOLO26x localiza cada jogador (caixas justas) | [detection.py](src/football_orient_pose/detection.py) |
+| 2 | **Crop justo** | recorta cada jogador com _letterbox_ (sem distorção) | [crop.py](src/football_orient_pose/crop.py) |
+| 3 | **Pose** | RTMPose-X (fine-tunado) estima os keypoints no crop | [estimators/rtmpose.py](src/football_orient_pose/estimators/rtmpose.py) |
+| 4 | **Reprojeção** | devolve o esqueleto às coordenadas do frame original | [pipeline.py](src/football_orient_pose/pipeline.py) |
+
+A função [`pose_all()`](src/football_orient_pose/pipeline.py) aplica o pipeline a **todos** os
+jogadores detectados de um frame (foi o que gerou o GIF do topo).
+
+---
+
+## 🗂️ Mapa do repositório
+
+| Pasta / arquivo | O que é | Por que importa para a avaliação |
+|---|---|---|
+| [docs/artigo/](docs/artigo/) | o artigo (Markdown) | **entrega principal** — leia primeiro |
+| [Template_SBC/template-latex/](Template_SBC/template-latex/) | o artigo no template SBC (LaTeX) | versão final/formatada do artigo |
+| [docs/](docs/README.md) | relatórios técnicos por projeto (visão + fine-tuning) + backlog | a fundamentação de cada número do artigo |
+| [src/football_orient_pose/](src/football_orient_pose/) | a biblioteca: `detection`, `crop`, `pipeline`, `pose` + subpacotes `estimators/`, `evaluation/`, `finetuning/`, `utils/` | o coração do código |
+| [scripts/](scripts/) | CLIs por etapa: `clips/`, `evaluation/`, `pipeline/`, `setup/`, `training/` | como cada experimento foi rodado |
+| [results/](results/) | `tables/` (métricas), `showcase/` (frames + GIFs), `detection_viz/`, `checkpoints/`, `training_runs/` | os resultados gerados |
+| [tests/](tests/) | suíte de testes unitários (`pytest`) | qualidade/reprodutibilidade do código |
+| [notebooks/](notebooks/) | validação interativa dos estimadores | exploração e checagem |
+| [configs/](configs/) | `split.json` (split oficial 80/20 por clip, seed 42) | reprodutibilidade do split |
+| [Makefile](Makefile) | atalhos para setup, treino, avaliação e showcase | ponto único de entrada dos comandos |
+
+---
+
+## ▶️ Como reproduzir
+
+> Ambiente gerenciado com **[uv](https://github.com/astral-sh/uv)**. Instale as dependências com
+> `uv sync`. Os alvos abaixo estão todos no [Makefile](Makefile) (`make help` lista todos).
+
+**1. Dados e pesos**
+```bash
+make setup                              # descompacta o dataset 3DSP para data/
+bash scripts/setup/download_models.sh   # baixa os pesos dos modelos
+cp .env.example .env                    # ajuste DATA_DIR se necessário
+```
+
+**2. Avaliar (estimadores e detector)**
+```bash
+make evaluate CKPT=<checkpoint.pth>     # avalia um estimador no split val (PCK/PDJ/OKS/MPJPE)
+make docker-eval-detector               # avalia o detector
+make docker-detectors-table             # gera a tabela comparativa de detectores
+```
+
+**3. Fine-tuning (matriz 2×2)** — detalhe em [docs/finetuning/epico-1/guia.md](docs/finetuning/epico-1/guia.md)
+```bash
+make train-a    # From Scratch, sem augmentation (baseline)
+make train-b    # From Scratch, com augmentation
+make train-c    # Transfer Learning, sem augmentation
+make train-d    # Transfer Learning, com augmentation  ← receita campeã (67,5%)
+```
+
+**4. Pipeline em vídeo real (o showcase)**
+```bash
+make pose-all-brazil    # roda o pipeline completo nos clips da Seleção Brasileira
+make gifs               # monta os GIFs animados a partir dos frames
+```
+
+**5. Testes**
+```bash
+uv run pytest           # suíte unitária em tests/
 ```
 
 ---
 
-## Avaliação
+## 🔭 Escopo e decisões
 
-```bash
-# Avaliar um modelo no split de validação
-uv run python -m football_orient_pose.evaluation.evaluate \
-  --model rtmpose \
-  --split val \
-  --device cuda \
-  --data-dir data \
-  --split-config configs/split.json \
-  --output-dir results/tables
-```
-
-| Modelo | PDJ@0.5 | Referência (paper) |
-|--------|---------|-------------------|
-| RTMPose-X | **93.62%** | 89.51% |
-| HRNet-W48 | **88.90%** | ~56.08% |
-| OpenPose  | — | inédito |
+- **Orientação corporal:** fora do escopo desta entrega — registrada como **trabalho futuro** no
+  artigo. O pipeline atual entrega a **pose 2D**, base necessária para a orientação.
+- **Anotação de keypoints em vídeo real:** em **backlog** (ver
+  [docs/backlog/README.md](docs/backlog/README.md)) — sem _ground truth_ anotado nos clips reais, as
+  métricas de pose ficam restritas ao dataset 3DSP; o showcase em vídeo real é, por ora, **qualitativo**.
+- **Relação com o fine-tuning (projeto RNP):** o fine-tuning do RTMPose-X é a **etapa de adaptação ao
+  domínio** deste mesmo pipeline — por isso integra a contribuição do artigo. Os relatórios completos
+  da matriz experimental estão em [docs/finetuning/](docs/finetuning/).
 
 ---
 
-## Fine-tuning (Épico 1)
+## 📚 Documentação completa
 
-Infraestrutura para treinar o RTMPose-X nos 4 cenários da matriz experimental 2×2
-(From Scratch vs Transfer Learning × Com vs Sem augmentation) e avaliar checkpoints
-com PDJ@0.5, PCK@0.2, OKS e MPJPE-2D.
-
-### Setup — Build da imagem Docker
-
-Requer Docker + NVIDIA Container Toolkit (GPU). Os pesos COCO para Transfer Learning
-são baixados automaticamente durante o build.
-
-```bash
-docker compose -f docker-compose.finetuning.yml build
-```
-
-Ou pull da imagem pré-buildada:
-
-```bash
-docker pull phael777/football-finetuning:latest
-```
-
-### Treino — Cenários individuais
-
-```bash
-# Cenário A — From Scratch, sem augmentation (baseline)
-docker compose -f docker-compose.finetuning.yml run --rm train \
-    python scripts/training/train.py --cenario A --epochs 50
-
-# Cenário B — From Scratch, com augmentation
-docker compose -f docker-compose.finetuning.yml run --rm train \
-    python scripts/training/train.py --cenario B --epochs 50
-
-# Cenário C — Transfer Learning, sem augmentation [ALTA PRIORIDADE]
-docker compose -f docker-compose.finetuning.yml run --rm train \
-    python scripts/training/train.py --cenario C \
-    --epochs-fase1 15 --epochs-fase2 20 --epochs-fase3 15
-
-# Cenário D — Transfer Learning, com augmentation
-docker compose -f docker-compose.finetuning.yml run --rm train \
-    python scripts/training/train.py --cenario D \
-    --epochs-fase1 15 --epochs-fase2 20 --epochs-fase3 15
-```
-
-### Treino — Todos os cenários em sequência
-
-```bash
-for CENARIO in A B C D; do
-  docker compose -f docker-compose.finetuning.yml run --rm train \
-    python scripts/training/train.py --cenario $CENARIO
-done
-```
-
-### Treino orquestrado A + C (fire-and-forget) — usado nos experimentos
-
-`scripts/training/run_experiments.sh` roda os Cenários A e C de ponta a ponta
-(treino → avaliação train/val de cada um → resumo consolidado) num container
-**destacado** (`-d`), que sobrevive à queda da sessão SSH. Foi este o comando usado
-para gerar os resultados abaixo (RTX 4090, GPU via CDI — `--gpus all`, sem sudo):
-
-```bash
-cd ~/football-orient-pose && git pull   # garante o código atualizado no host
-
-docker run -d --name exp --gpus all --shm-size=16g \
-  -v ~/football-orient-pose/data:/workspace/data:ro \
-  -v ~/football-orient-pose/results:/workspace/results \
-  -v ~/football-orient-pose/scripts:/workspace/scripts:ro \
-  -v ~/football-orient-pose/configs:/workspace/configs:ro \
-  -v ~/football-orient-pose/src:/workspace/src:ro \
-  -e EPOCHS_A=200 -e F1=60 -e F2=80 -e F3=60 \
-  football-finetuning:latest bash scripts/training/run_experiments.sh
-```
-
-Parâmetros (via `-e`): `EPOCHS_A` (épocas do A), `F1/F2/F3` (épocas das 3 fases do C),
-`BATCH` (default 32). Sem `-e`, usa os defaults `EPOCHS_A=150`, `F1/F2/F3=45/60/45`.
-
-Acompanhar o progresso e ver os resultados:
-
-```bash
-docker logs -f exp                            # log ao vivo (Ctrl+C só para de seguir; o treino continua)
-docker ps -a | grep exp                       # status: "Up" = rodando | "Exited (0)" = terminou ok
-
-cat results/logs/exp_*/SUMMARY.md             # tabela consolidada A vs C (val + diagnóstico train/val)
-ls  results/logs/exp_*/                        # logs por etapa: train_A.log, eval_A_val.log, ...
-ls  results/tables/finetuned_cenario_*.json    # as 4 métricas por cenário e split (train/val)
-```
-
-Os checkpoints (`results/checkpoints/`) e os logs/JSONs (`results/`) ficam no host
-mesmo após remover o container (`docker rm exp`).
-
-### Avaliação de checkpoint
-
-```bash
-# Avaliar um checkpoint no val split
-docker compose -f docker-compose.finetuning.yml run --rm train \
-    python scripts/evaluation/evaluate.py \
-    --checkpoint results/checkpoints/cenario_C/best_PCK.pth \
-    --split val
-
-# Avaliar todos os cenários treinados
-for CENARIO in A B C D; do
-  docker compose -f docker-compose.finetuning.yml run --rm train \
-    python scripts/evaluation/evaluate.py \
-    --checkpoint results/checkpoints/cenario_${CENARIO}/best_PCK.pth \
-    --split val
-done
-```
-
-Checkpoints salvos em `results/checkpoints/cenario_{A,B,C,D}/best_PCK.pth`.
-Métricas salvas em `results/tables/finetuned_cenario_{A,B,C,D}_val.json`.
-
-### Resultados preliminares (Cenários A e C)
-
-| Modelo | PDJ@0.5 | PCK@0.2 | OKS | MPJPE-2D |
-|---|---|---|---|---|
-| RTMPose-X zero-shot | 93,6% | 41,8% | 81,8% | 4,81 px |
-| **Cenário A** (from scratch, val) | 90,7% | 47,0% | 80,1% | 5,34 px |
-| **Cenário C** (TL fase 2, val) | **95,2%** | **61,5%** | **87,3%** | **3,63 px** |
-
-Relatório completo: [docs/finetuning/epic1-relatorio-preliminar.md](docs/finetuning/epic1-relatorio-preliminar.md)
+Índice de todos os relatórios técnicos (visão, fine-tuning e backlog): **[docs/README.md](docs/README.md)**.
