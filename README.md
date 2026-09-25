@@ -3,8 +3,8 @@
 > **Um Pipeline Quantitativo para Estimação de Pose de Jogadores de Futebol em Vídeo de Transmissão:**
 > Seleção de Detector, Benchmark de Estimadores e Adaptação ao Domínio
 
-**Autores:** Wagner Victor Alves de Menezes (202403929) · Victor Gabriel Ribeiro Jacome (202403926) ·
-Raphael Alves de Lima Soares (202403922) · André Guilherme Alves do Carmo (202301423)
+**Autores:** Wagner Victor Alves de Menezes  · Victor Gabriel Ribeiro Jacome  ·
+Raphael Alves de Lima Soares  · André Guilherme Alves do Carmo 
 
 Bacharelado em Inteligência Artificial — Instituto de Informática, **Universidade Federal de Goiás (UFG)**
 Disciplina: **Visão Computacional** — Prof. Ricardo Augusto Pereira Franco
