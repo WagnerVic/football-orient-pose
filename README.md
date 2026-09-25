@@ -14,24 +14,6 @@ Disciplina: **Visão Computacional** — Prof. Ricardo Augusto Pereira Franco
 > _O pipeline aplicado a uma transmissão real (Seleção Brasileira): detecção + estimação de pose de
 > todos os jogadores, frame a frame, de forma 100% automática._
 
----
-
-## 📌 Para o professor — guia de avaliação
-
-Este repositório contém **um trabalho de Visão Computacional completo**: um pipeline que, a partir de
-**vídeo de transmissão (broadcast)**, estima a **pose 2D** dos jogadores. A contribuição central é
-**metodológica e quantitativa** — cada estágio do pipeline (detector e estimador) é **escolhido por
-experimento**, e o estimador é **adaptado ao domínio por fine-tuning**, fornecendo a avaliação
-numérica que faltava a esse problema.
-
-### Por onde começar (ordem de leitura sugerida)
-
-1. **O artigo** → [docs/artigo/artigo-vc.md](docs/artigo/artigo-vc.md) — **a entrega principal**.
-   Contém problema, objetivos, metodologia, resultados e conclusão. _(Versão LaTeX/SBC em
-   [Template_SBC/template-latex/sbc-template.tex](Template_SBC/template-latex/sbc-template.tex).)_
-2. **Este README** — mapa do repositório: o que é cada pasta e como reproduzir os resultados.
-3. **Os relatórios técnicos** → [docs/](docs/README.md) — o detalhe por trás de cada número do artigo
-   (comparação de detectores, benchmark de estimadores, matriz de fine-tuning).
 
 ### Onde está cada entrega
 
@@ -98,7 +80,6 @@ jogadores detectados de um frame (foi o que gerou o GIF do topo).
 | Pasta / arquivo | O que é | Por que importa para a avaliação |
 |---|---|---|
 | [docs/artigo/](docs/artigo/) | o artigo (Markdown) | **entrega principal** — leia primeiro |
-| [Template_SBC/template-latex/](Template_SBC/template-latex/) | o artigo no template SBC (LaTeX) | versão final/formatada do artigo |
 | [docs/](docs/README.md) | relatórios técnicos por projeto (visão + fine-tuning) + backlog | a fundamentação de cada número do artigo |
 | [src/football_orient_pose/](src/football_orient_pose/) | a biblioteca: `detection`, `crop`, `pipeline`, `pose` + subpacotes `estimators/`, `evaluation/`, `finetuning/`, `utils/` | o coração do código |
 | [scripts/](scripts/) | CLIs por etapa: `clips/`, `evaluation/`, `pipeline/`, `setup/`, `training/` | como cada experimento foi rodado |
