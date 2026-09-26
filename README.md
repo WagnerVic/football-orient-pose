@@ -2,7 +2,7 @@
 
 # A Quantitative Pipeline for Soccer Player Pose Estimation in Broadcast Video
 
-**Detector selection, estimator benchmark and domain adaptation — every stage chosen by experiment**
+**From TV broadcast to player pose — with every design choice backed by an experiment**
 
 Wagner Victor Alves de Menezes · Ricardo Augusto Pereira Franco · Raphael Alves de Lima Soares ·
 Victor Gabriel Ribeiro Jacome · André Guilherme Alves do Carmo
@@ -22,17 +22,48 @@ Institute of Informatics, Federal University of Goiás (UFG), Brazil
 
 ---
 
-## Highlights
+## Overview
+
+Every televised match is a free, high-quality record of how players move: where they face, how
+they strike the ball, how they keep their balance. Turning that footage into body pose would make
+tactical and biomechanical analysis possible without wearables, sensors or special cameras — for
+any club, federation or analyst with access to a TV broadcast.
+
+Broadcast video, however, is a hostile domain for pose estimation. A player often occupies about
+60 × 60 pixels, blurred by motion, partly hidden by other players and caught in poses that everyday
+photos rarely show. Models trained on everyday images still find *where* a joint is, but miss its
+exact position by a few pixels — and on a player that small, a few pixels separate a correct wrist
+from a wrong one.
+
+This project builds a complete pipeline for the problem and, instead of choosing components by
+reputation, **lets experiments decide every stage**. Four person detectors are compared against
+human annotations, three pose estimators are benchmarked on soccer shots, and the winner is adapted
+to the domain in a controlled study that separates the effect of pretrained weights from the effect
+of data augmentation. The adapted estimator is **25.8 points more precise** than the off-the-shelf
+one — without new data and without a bigger model.
+
+<div align="center">
+
+| **84.4 mAP** | **41.8% → 67.5%** | **1.1 pp** | **1 command** |
+|:---:|:---:|:---:|:---:|
+| best of four person detectors<br>(YOLO26x) | PCK@0.2 of RTMPose-X,<br>off-the-shelf → adapted | train–validation gap<br>of the adapted model | to run the pipeline<br>on your own video |
+
+</div>
+
+## Key findings
 
 - **The bottleneck is localization, not detection.** Off-the-shelf RTMPose-X finds the right body
-  region for 93.6% of the joints (PDJ@0.5) but places only 41.8% of them precisely (PCK@0.2) on
-  small, blurred broadcast crops.
-- **Domain adaptation closes most of the gap.** Fine-tuning from COCO weights with geometric data
-  augmentation raises PCK@0.2 from **41.8% to 67.5%**, with a train–validation gap of only 1.1 pp,
-  and is the only setting that brings elbows, wrists, knees and ankles above the zero-shot level.
-- **Every stage is measured.** Four person detectors are benchmarked against 740 hand-annotated
-  boxes (YOLO26x wins with 84.4 mAP and 98.7% precision), and three pose estimators are compared
-  zero-shot on the 3DSP dataset before one is adapted.
+  region for 93.6% of the joints (PDJ@0.5) but places only 41.8% of them precisely (PCK@0.2).
+- **Domain adaptation, not model capacity, closes the gap.** Fine-tuning from COCO weights with
+  data augmentation reaches 67.5% PCK@0.2 with almost no overfitting, and is the only setting that
+  brings elbows, wrists, knees and ankles above the off-the-shelf level.
+- **Pretrained weights and augmentation are complementary.** Starting from COCO weights beats
+  training from scratch at every augmentation level (+15.1 pp without augmentation, +9.4 pp with
+  it), and augmentation helps both (+20.3 pp from scratch, +14.7 pp from COCO). Neither alone gets
+  close to the combination.
+- **What augmentation really buys is geometry.** Horizontal flip plus rotation, scale and shift
+  account for about 90% of the augmentation gain; synthetic occlusion and motion blur add about
+  0.7 pp each.
 
 ## How it works
 
@@ -91,8 +122,7 @@ augmentation. Same protocol for every cell: batch 64, AdamW, 150 epochs, best ch
 | **D-FULL** | **COCO** | **full** | **67.5** | **96.6** | **89.8** | **3.08** | **1.1 pp** |
 
 "Full" augmentation is an additive ladder: horizontal flip → geometric (rotation ±30°, scale
-0.75–1.25, shift 0.1) → occlusion → motion blur. Flip and the geometric transform account for about
-90% of its gain; occlusion and blur add about 0.7 pp each.
+0.75–1.25, shift 0.1) → occlusion → motion blur.
 
 <details>
 <summary>PCK@0.2 per body part</summary>
