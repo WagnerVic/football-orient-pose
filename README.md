@@ -2,7 +2,7 @@
 
 # A Quantitative Pipeline for Soccer Player Pose Estimation in Broadcast Video
 
-**From TV broadcast to player pose — with every design choice backed by an experiment**
+**Detector selection, estimator benchmark and domain adaptation — every stage chosen by experiment**
 
 Wagner Victor Alves de Menezes · Ricardo Augusto Pereira Franco · Raphael Alves de Lima Soares ·
 Victor Gabriel Ribeiro Jacome · André Guilherme Alves do Carmo
