@@ -9,7 +9,7 @@ Não substitui o Cenário C — é uma ablação para responder: "o progressive 
 necessário, ou um fine-tune de fase única no estágio certo basta?".
 
 Uso via train.py (rota de fase única):
-    python scripts/train.py --cenario C2 [--epochs 150]
+    python scripts/training/train.py --cenario C2 [--epochs 150]
 """
 
 custom_imports = dict(

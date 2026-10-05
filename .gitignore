@@ -227,9 +227,9 @@ __marimo__/
 # Dataset 3DSP: ignorar dados pesados, manter exemplos
 data/*
 !data/examples/
-# Clips reais extraídos (Épico 13): versionados — a anotação (Épico 9) ocorre sobre eles
+# Clips reais extraídos (#134): versionados — a anotação de bbox (#104) ocorre sobre eles
 !data/clips/
-# Anotações Roboflow (Épico 9): versiona o GT COCO (.json); ignora imagens (cópias de data/clips)
+# Anotações Roboflow (#104): versiona o GT COCO (.json); ignora imagens (cópias de data/clips)
 !data/annotations/
 data/annotations/**/*.jpg
 data/annotations/**/*.jpeg
@@ -281,3 +281,6 @@ data/crops/_preview_*
 
 # Inputs de corte de clips (por execução; provenance fica no info.ini de cada clip)
 intervals_*.json
+
+# demo.py output
+outputs/

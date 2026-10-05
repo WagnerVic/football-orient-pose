@@ -1,0 +1,31 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "A Quantitative Pipeline for Soccer Player Pose Estimation in Broadcast Video"
+type: software
+authors:
+  - family-names: "Menezes"
+    given-names: "Wagner Victor Alves de"
+    affiliation: "Federal University of Goiás"
+  - family-names: "Franco"
+    given-names: "Ricardo Augusto Pereira"
+    affiliation: "Federal University of Goiás"
+  - family-names: "Soares"
+    given-names: "Raphael Alves de Lima"
+    affiliation: "Federal University of Goiás"
+  - family-names: "Jacome"
+    given-names: "Victor Gabriel Ribeiro"
+    affiliation: "Federal University of Goiás"
+  - family-names: "Carmo"
+    given-names: "André Guilherme Alves do"
+    affiliation: "Federal University of Goiás"
+repository-code: "https://github.com/WagnerVic/football-orient-pose"
+license: MIT
+date-released: "2026-09-25"
+keywords:
+  - pose estimation
+  - soccer
+  - sports analytics
+  - broadcast video
+  - RTMPose
+  - YOLO
+  - transfer learning

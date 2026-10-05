@@ -7,7 +7,8 @@ flip no transfer learning. Não é célula da matriz 2×2 — é uma ablação c
 O train.py gerencia as 3 fases (igual ao Cenário C).
 
 Uso via train.py (rota de transfer learning):
-    python scripts/train.py --cenario C-RAW [--epochs-fase1 45] [--epochs-fase2 60] [--epochs-fase3 45]
+    python scripts/training/train.py --cenario C-RAW \
+        [--epochs-fase1 45] [--epochs-fase2 60] [--epochs-fase3 45]
 """
 
 custom_imports = dict(

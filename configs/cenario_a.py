@@ -5,7 +5,7 @@ Treina RTMPose-X do zero (W₀ aleatório) no 3DSP sem augmentation adicional.
 transfer learning nem augmentation.
 
 Uso via train.py:
-    python scripts/train.py --cenario A [--epochs 50]
+    python scripts/training/train.py --cenario A [--epochs 50]
 """
 
 custom_imports = dict(

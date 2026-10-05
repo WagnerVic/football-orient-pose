@@ -9,7 +9,6 @@ escala, então funciona no espaço interno do MMPose (288×384).
 from __future__ import annotations
 
 import numpy as np
-
 from mmengine.evaluator import BaseMetric
 from mmpose.registry import METRICS
 

@@ -1,27 +1,36 @@
-# Documentação
+# Technical reports
 
-A documentação é organizada **por projeto** (há dois projetos no mesmo repositório).
+Detailed reports behind every number in the paper, written in **Portuguese** during development.
+Numbers such as "Épico #113" refer to this repository's
+[GitHub issues](https://github.com/WagnerVic/football-orient-pose/issues?q=is%3Aissue), where each
+experiment was planned and tracked.
 
-## `vision/` — Projeto de Visão (Football Orient Pose)
-Pipeline base de estimação de pose: estimadores zero-shot e métricas.
+## Detector selection
 
-| Arquivo | O que é |
+| Report | Contents |
 |---|---|
-| [`vision/baseline-rtmpose-zero-shot.md`](vision/baseline-rtmpose-zero-shot.md) | Resultados do baseline zero-shot RTMPose-X no 3DSP (fonte canônica: PDJ 93,6% / PCK 41,8%) |
-| [`vision/epic2-entrega-final.md`](vision/epic2-entrega-final.md) | Entrega final do Épico 2 (estimadores, 3 modelos) |
-| [`vision/epic2-retrospectiva.md`](vision/epic2-retrospectiva.md) | Retrospectiva técnica do Épico 2 |
-| [`vision/_planning/`](vision/_planning/) | Artefatos de processo (plans/specs do workflow Superpowers) — histórico |
+| [`vision/epic-113-detectores.md`](vision/epic-113-detectores.md) | Benchmark of YOLO26, RetinaNet, Faster R-CNN and Cascade R-CNN against 740 hand-annotated boxes; why capacity-matched variants matter (YOLO26n vs YOLO26x) |
 
-## `finetuning/` — Projeto Transfer Learning (RNP)
-Fine-tuning do RTMPose-X na matriz experimental 2×2 (Épico 1 do projeto RNP).
+## Pose estimator benchmark (zero-shot)
 
-| Arquivo | O que é |
+| Report | Contents |
 |---|---|
-| [`finetuning/epico-1/visao-geral.md`](finetuning/epico-1/visao-geral.md) | **Comece por aqui** — panorama completo do que foi feito (infra + execução + resultados + pendências) |
-| [`finetuning/epico-1/guia.md`](finetuning/epico-1/guia.md) | Guia de setup e execução do pipeline de fine-tuning (ambiente, Docker, comandos) |
-| [`finetuning/epico-1/epic1-relatorio-preliminar.md`](finetuning/epico-1/epic1-relatorio-preliminar.md) | Relatório preliminar (pré-fixes do review) — Cenários A e C |
-| [`finetuning/epico-2/epic2-relatorio-final.md`](finetuning/epico-2/epic2-relatorio-final.md) | ⭐ **Relatório FINAL do Épico 2 (canônico)** — matriz 2×2 completa (10 modelos); funde A/C + B/D. Receita campeã: TL + aug geométrica (D-FULL 67,5% · extremidades resolvidas) |
-| [`finetuning/epico-2/epic2-relatorio-a-c.md`](finetuning/epico-2/epic2-relatorio-a-c.md) | *(histórico/detalhe)* parcial A/C — A/C/RAW + ablações C2 e flip |
-| [`finetuning/epico-2/epic2-relatorio-bd.md`](finetuning/epico-2/epic2-relatorio-bd.md) | *(histórico/detalhe)* B/D — cenários com augmentation, ladder fino do TL e atribuição por mecanismo |
+| [`vision/baseline-rtmpose-zero-shot.md`](vision/baseline-rtmpose-zero-shot.md) | Zero-shot RTMPose-X on 3DSP — PDJ, PCK, OKS and MPJPE per body part, showing the localization bottleneck |
+| [`vision/epic2-entrega-final.md`](vision/epic2-entrega-final.md) | Comparison of OpenPose, HRNet-W48 and RTMPose-X; COCO-17 → H3WB-17 keypoint mapping and metric definitions |
 
-> **Nota:** PDF/HTML de relatórios não são versionados (ver `.gitignore`) — gere sob demanda a partir do `.md` fonte.
+## Domain adaptation (fine-tuning)
+
+| Report | Contents |
+|---|---|
+| [`finetuning/epico-2/epic2-relatorio-final.md`](finetuning/epico-2/epic2-relatorio-final.md) | **Main report** — the full transfer learning × augmentation study (10 models), augmentation ladder, overfitting diagnosis, per-joint results, progressive unfreezing phases |
+| [`finetuning/epico-2/epic2-relatorio-a-c.md`](finetuning/epico-2/epic2-relatorio-a-c.md) | Details of the settings without augmentation (A, C) and the flip and single-phase ablations |
+| [`finetuning/epico-2/epic2-relatorio-bd.md`](finetuning/epico-2/epic2-relatorio-bd.md) | Details of the settings with augmentation (B, D) and the attribution of the gain to each augmentation |
+| [`finetuning/epico-1/epic1-relatorio-preliminar.md`](finetuning/epico-1/epic1-relatorio-preliminar.md) | First runs of settings A and C, before the code-review fixes (kept for the record) |
+
+## End-to-end pipeline and data formats
+
+| Report | Contents |
+|---|---|
+| [`vision/epic-126-pipeline.md`](vision/epic-126-pipeline.md) | Detection → crop → pose → reprojection on real broadcast clips; tracking of the shooter across a clip |
+| [`vision/formato-clips.md`](vision/formato-clips.md) | Folder layout and `info.ini` fields of the clips in `data/clips/` |
+| [`vision/formato-crops.md`](vision/formato-crops.md) | Layout of the player crops and the parameters needed to map them back to the frame |

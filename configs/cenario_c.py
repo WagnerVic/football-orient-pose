@@ -14,7 +14,8 @@ Este arquivo contém as definições compartilhadas. O train.py sobrescreve
 frozen_stages, load_from, max_epochs e optim_wrapper antes de cada Runner.
 
 Uso via train.py:
-    python scripts/train.py --cenario C [--epochs-fase1 15] [--epochs-fase2 20] [--epochs-fase3 15]
+    python scripts/training/train.py --cenario C \
+        [--epochs-fase1 15] [--epochs-fase2 20] [--epochs-fase3 15]
 """
 
 custom_imports = dict(

@@ -5,7 +5,7 @@ estilo treino) e **frouxo** (loose, quadrado expandido que emula o crop do 3DSP)
 transformadas determinísticas crop↔frame. Assim o GT de keypoint anotado uma vez serve aos dois
 crops (única variável = enquadramento): projeta-se um ponto de um crop ao outro via coord. de frame.
 
-A saída é ``size×size`` (default 100, para casar com o baseline 3DSP / modelo do Épico 2); ``size``
+A saída é ``size×size`` (default 100, para casar com o 3DSP / modelos fine-tunados); ``size``
 é parâmetro, então resoluções maiores são triviais. O letterbox usa escala uniforme + padding preto
 (**nunca stretch**), espelhando o pré-proc de treino (100×100 → 288×384).
 """
