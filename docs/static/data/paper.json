@@ -1,0 +1,196 @@
+{
+  "_notes": [
+    "Single source for the project page. Edit this file; index.html and static/js/main.js render it.",
+    "status: 'submitted' (no line), 'accepted' ('Accepted at <venue.short>') or 'published' ('Published at <venue.short>').",
+    "links.paper: leave empty until the publication page exists; the Paper button turns on by itself once it is filled. Never link a PDF hosted in this repository.",
+    "The Open Graph / Twitter tags live in index.html (crawlers do not run JavaScript): update them by hand if the title or description change.",
+    "Text fields may contain simple inline HTML (<b>, <em>, <sub>, <a>). Any text starting with 'TODO' is rendered highlighted."
+  ],
+  "_sources": {
+    "numbers": "Recomputed from results/tables/*.json (x100, 1 decimal, half-up; MPJPE in px, 2 decimals).",
+    "not_in_results_tables": "Settings A, B and C (matrix and per-part table) and every train-val gap (incl. D-FULL 1.1 pp) come from Tables III-IV of the submitted paper / README: results/tables has no JSON for these runs (finetuned_cenario_A/C_*.json are the preliminary Epic-1 runs, not A-RAW / C-RAW).",
+    "d_full": "D-FULL = results/tables/finetuned_fase2_val.json (phase 2 of progressive unfreezing)."
+  },
+
+  "status": "accepted",
+  "venue": {
+    "short": "WVC 2026",
+    "full": "XXI Workshop de Visão Computacional",
+    "where": "Unicamp",
+    "when": "16–18 November 2026"
+  },
+
+  "title": "A Quantitative Pipeline for Soccer Player Pose Estimation in Broadcast Video",
+  "authors": [
+    { "name": "Wagner Victor Alves de Menezes", "url": "" },
+    { "name": "Ricardo Augusto Pereira Franco", "url": "" },
+    { "name": "Raphael Alves de Lima Soares", "url": "" },
+    { "name": "Victor Gabriel Ribeiro Jacome", "url": "" },
+    { "name": "André Guilherme Alves do Carmo", "url": "" }
+  ],
+  "affiliation": "Institute of Informatics, Federal University of Goiás (UFG), Brazil",
+
+  "links": {
+    "paper": "",
+    "code": "https://github.com/WagnerVic/football-orient-pose"
+  },
+
+  "hero": {
+    "src": "assets/hero.gif",
+    "width": 800,
+    "height": 400,
+    "alt": "Broadcast soccer footage in which every player on the pitch carries an estimated colored skeleton, updated frame by frame.",
+    "caption": "Every player detected, cropped and posed, frame by frame, on a real broadcast (zero-shot RTMPose-X, CPU)."
+  },
+
+  "tldr": "For soccer players in broadcast video, the bottleneck is localization, not detection: an off-the-shelf estimator finds the right body region for 93.6% of the joints but places only 41.8% of them precisely. Adapting it to the domain raises that to 67.5%, without new data and without a bigger model.",
+
+  "highlights": [
+    { "value": "84.4 mAP", "label": "best of four person detectors (YOLO26x)" },
+    { "value": "41.8% → 67.5%", "label": "PCK@0.2 of RTMPose-X, off-the-shelf → adapted" },
+    { "value": "1.1 pp", "label": "train–validation gap of the adapted model" },
+    { "value": "1 command", "label": "to run the pipeline on your own video" }
+  ],
+
+  "abstract": "Pose estimation of soccer players from broadcast video supports tactical and biomechanical analysis, but the domain is harsh: players occupy tiny image regions under motion blur, occlusion and atypical poses, degrading the localization precision of generic estimators. This work evaluates, stage by stage and quantitatively, a pipeline for the problem: it chooses the detector and the estimator by benchmark (the latter, a zero-shot of three models on 3DSP) and adapts the estimator to the domain by fine-tuning. The chosen detector (YOLO26x) reaches mAP 84.4% and recall 95.4%; fine-tuning the estimator (RTMPose-X) raises PCK@0.2 from 41.8% to 67.5%, providing the quantitative evaluation the domain lacked.",
+
+  "pipeline": {
+    "title": "How it works",
+    "text": [
+      "Each frame goes through four stages. YOLO26x detects every person on the pitch; each box is cut into a tight 100 × 100 crop with letterboxing (no distortion); RTMPose-X estimates 17 keypoints in the H3WB layout used by 3DSP; the keypoints are mapped back to frame coordinates.",
+      "Detector and estimator sit behind common interfaces, so either can be swapped without touching the rest of the pipeline."
+    ],
+    "figure": {
+      "src": "assets/pipeline_stages.png",
+      "width": 1256,
+      "height": 354,
+      "alt": "Four panels joined by arrows: 1. Detect, a broadcast frame with a player boxed by YOLO26x; 2. Tight crop, the letterboxed 100 × 100 crop of that player; 3. Estimate pose, the crop with the 17-keypoint RTMPose-X skeleton; 4. Reproject, the skeletons drawn back on the frame."
+    }
+  },
+
+  "detection": {
+    "title": "Detection is not the bottleneck",
+    "text": [
+      "Four person detectors were compared against 740 hand-annotated player boxes on 60 broadcast frames. YOLO26x leads on every metric; the two-stage detectors reach similar recall but also detect spectators in the stands, which drags their precision below 60%.",
+      "The pose estimator is where precision is lost: on the 800 validation crops of 3DSP, off-the-shelf RTMPose-X finds the right body region for <b>93.6%</b> of the joints (PDJ@0.5) but places only <b>41.8%</b> of them within the PCK@0.2 threshold."
+    ],
+    "tables": [
+      {
+        "caption": "Person detectors against 740 hand-annotated boxes. COCO metrics (%); precision, recall and F1 at confidence ≥ 0.3 and IoU ≥ 0.5.",
+        "columns": [
+          { "label": "Detector" },
+          { "label": "mAP", "decimals": 1 },
+          { "label": "AP50", "decimals": 1, "optional": true },
+          { "label": "AP75", "decimals": 1, "optional": true },
+          { "label": "AR<sub>med</sub>", "decimals": 1, "optional": true },
+          { "label": "Prec.", "decimals": 1 },
+          { "label": "Recall", "decimals": 1 },
+          { "label": "F1", "decimals": 1 }
+        ],
+        "rows": [
+          { "cells": ["YOLO26x", 84.4, 95.0, 91.6, 87.5, 98.7, 95.4, 97.0], "best": true },
+          { "cells": ["Cascade R-CNN", 68.3, 90.7, 77.5, 73.8, 54.5, 93.4, 68.9] },
+          { "cells": ["Faster R-CNN", 65.1, 91.9, 74.7, 70.3, 47.8, 94.7, 63.6] },
+          { "cells": ["RetinaNet", 61.9, 91.1, 70.3, 68.2, 57.3, 93.6, 71.1] }
+        ]
+      },
+      {
+        "caption": "Pose estimators, zero-shot, on the 3DSP validation split (800 crops). PDJ, PCK and OKS in %; MPJPE in pixels.",
+        "columns": [
+          { "label": "Model" },
+          { "label": "PDJ@0.5 ↑", "decimals": 1 },
+          { "label": "PCK@0.2 ↑", "decimals": 1 },
+          { "label": "OKS ↑", "decimals": 1 },
+          { "label": "MPJPE ↓", "decimals": 2 }
+        ],
+        "rows": [
+          { "cells": ["OpenPose", 56.1, 22.1, 48.5, 25.58] },
+          { "cells": ["HRNet-W48", 88.9, 40.5, 76.2, 6.04] },
+          { "cells": ["RTMPose-X", 93.6, 41.8, 81.8, 4.81], "best": true }
+        ]
+      }
+    ]
+  },
+
+  "adaptation": {
+    "title": "Domain adaptation closes the gap",
+    "text": [
+      "RTMPose-X is fine-tuned on the 3DSP training split (160 clips, split by clip to avoid leakage) in a 2 × 2 study that starts from COCO weights or from random weights, with or without augmentation, under the same protocol: batch 64, AdamW, 150 epochs.",
+      "Pretrained weights and augmentation are complementary: each helps on its own, but only their combination, <b>D-FULL</b>, reaches <b>67.5%</b> PCK@0.2, 25.8 points above zero-shot, with a train–validation gap of 1.1 pp."
+    ],
+    "matrix": {
+      "caption": "PCK@0.2 (%) on the 3DSP validation split. Full augmentation is an additive ladder: horizontal flip → rotation ±30°, scale 0.75–1.25, shift 0.1 → occlusion → motion blur. Gap = train − validation PCK@0.2.",
+      "rowHeader": "Initial weights",
+      "colHeader": "Augmentation",
+      "rows": ["Random", "COCO"],
+      "cols": ["None", "Full"],
+      "cells": [
+        [
+          { "id": "A", "pck": 37.8, "pdj": 86.5, "oks": 74.5, "mpjpe": 6.76, "gap": null },
+          { "id": "B", "pck": 58.1, "pdj": 93.6, "oks": 85.3, "mpjpe": 4.09, "gap": 37.1 }
+        ],
+        [
+          { "id": "C", "pck": 52.9, "pdj": 91.5, "oks": 82.2, "mpjpe": 4.80, "gap": 12.2 },
+          { "id": "D-FULL", "pck": 67.5, "pdj": 96.6, "oks": 89.8, "mpjpe": 3.08, "gap": 1.1, "best": true }
+        ]
+      ],
+      "reference": { "label": "Zero-shot (COCO weights, no fine-tuning)", "pck": 41.8, "pdj": 93.6, "oks": 81.8, "mpjpe": 4.81 }
+    },
+    "details": {
+      "summary": "PCK@0.2 per body part",
+      "caption": "Zero-shot is weakest at the hips and shoulders. Only the combination of transfer learning and augmentation lifts elbows, wrists, knees and ankles above zero-shot.",
+      "columns": [
+        { "label": "Part" },
+        { "label": "Zero-shot", "decimals": 1 },
+        { "label": "C <span class=\"muted\">TL only</span>", "decimals": 1 },
+        { "label": "B <span class=\"muted\">aug. only</span>", "decimals": 1 },
+        { "label": "D-FULL", "decimals": 1, "best": true }
+      ],
+      "rows": [
+        { "cells": ["Head", 50.4, 73.9, 87.6, 89.5] },
+        { "cells": ["Shoulder", 30.4, 64.9, 70.5, 78.4] },
+        { "cells": ["Elbow", 50.8, 39.4, 42.6, 56.4] },
+        { "cells": ["Wrist", 43.5, 31.0, 33.6, 46.1] },
+        { "cells": ["Hip", 22.8, 54.5, 60.2, 69.3] },
+        { "cells": ["Knee", 58.3, 47.3, 53.5, 64.8] },
+        { "cells": ["Ankle", 59.4, 51.6, 54.0, 67.3] }
+      ]
+    }
+  },
+
+  "gallery": {
+    "title": "Every player, every frame",
+    "text": [
+      "On real broadcast clips, every person on the pitch is detected, cropped and posed in each frame, and the skeletons are mapped back to the frame. These clips have no pose ground truth, so this part is a qualitative check of the integrated pipeline."
+    ],
+    "groups": [
+      {
+        "layout": "pair",
+        "items": [
+          { "type": "image", "src": "static/images/brazil_03.gif", "width": 640, "height": 360, "alt": "Wide broadcast shot near the penalty area: every visible player has a bounding box and an estimated skeleton." },
+          { "type": "image", "src": "static/images/brazil_05.gif", "width": 640, "height": 360, "alt": "Wide broadcast shot around the center circle: every visible player has a bounding box and an estimated skeleton." }
+        ],
+        "caption": "All players, posed frame by frame."
+      },
+      {
+        "layout": "crop-frame",
+        "items": [
+          { "type": "image", "src": "static/images/example_01_crop.gif", "width": 300, "height": 300, "alt": "Tight crop of a shooter striking the ball, with the estimated skeleton overlaid." },
+          { "type": "video", "sources": ["static/videos/example_01_frame.webm", "static/videos/example_01_frame.mp4"], "poster": "static/images/example_01_frame_poster.jpg", "width": 640, "height": 360, "alt": "Broadcast frame of the same shot, with the shooter outlined in red among the other detected players." },
+          { "type": "image", "src": "static/images/example_03_crop.gif", "width": 300, "height": 300, "alt": "Tight crop of a second shooter, with the estimated skeleton overlaid." },
+          { "type": "video", "sources": ["static/videos/example_03_frame.webm", "static/videos/example_03_frame.mp4"], "poster": "static/images/example_03_frame_poster.jpg", "width": 640, "height": 360, "alt": "Broadcast frame of the second shot, with the shooter outlined in red among the other detected players." }
+        ],
+        "caption": "The shooter: tight crop with the estimated skeleton (left) and the same moment in the broadcast frame (right)."
+      }
+    ]
+  },
+
+  "bibtex": "@software{menezes2026soccerpose,\n  title  = {A Quantitative Pipeline for Soccer Player Pose Estimation in Broadcast Video},\n  author = {Menezes, Wagner Victor Alves de and Franco, Ricardo Augusto Pereira and\n            Soares, Raphael Alves de Lima and Jacome, Victor Gabriel Ribeiro and\n            Carmo, Andr{\\'e} Guilherme Alves do},\n  year   = {2026},\n  url    = {https://github.com/WagnerVic/football-orient-pose}\n}",
+  "bibtexNote": "Until the paper is published, please cite the software. This entry will be replaced by the publication reference.",
+
+  "footer": {
+    "acknowledgements": "Built on the <a href=\"https://github.com/calvinyeungck/3D-Shot-Posture-Dataset\">3DSP dataset</a> (Yeung, Ide and Fujii, CVPRW 2024), <a href=\"https://github.com/open-mmlab/mmpose\">RTMPose and MMPose</a> (OpenMMLab), <a href=\"https://github.com/ultralytics/ultralytics\">Ultralytics YOLO</a> and <a href=\"https://github.com/Tau-J/rtmlib\">rtmlib</a>.",
+    "license": "Code released under the <a href=\"https://github.com/WagnerVic/football-orient-pose/blob/main/LICENSE\">MIT License</a>.",
+    "footage": "Broadcast footage belongs to its respective rights holders and is shown only to demonstrate the method."
+  }
+}
