@@ -21,6 +21,19 @@ docs/
 The paper PDF is **not** part of the page: `docs/**/*.pdf` is git-ignored, and Pages only serves
 committed files. Do not `git add -f` it. The Paper button links to the publication page instead.
 
+## Languages
+
+The flags in the top-right corner switch between English (default), Brazilian Portuguese, Spanish
+and Simplified Chinese. The choice is remembered in the browser, and `?lang=pt`, `?lang=es` or
+`?lang=zh` opens the page directly in that language (handy for sharing).
+
+In `paper.json`, a translated field is an object `{"en": ..., "pt": ..., "es": ..., "zh": ...}`;
+a missing language falls back to English. Numeric table cells are shared and printed with a decimal
+comma in Portuguese and Spanish. Numbers written inside sentences are text: when one changes, fix it
+in all four languages. Labels of the page chrome (buttons, "Abstract", "Accepted at") live in
+`LANGS` at the top of `static/js/main.js`. To add a language, add its entry to `LANGS` and `FLAGS`
+there and its key to every translated field.
+
 ## Enable GitHub Pages (once)
 
 Repository **Settings → Pages → Build and deployment**: Source *Deploy from a branch*, branch
@@ -40,7 +53,7 @@ python -m http.server 8000
 
 ## Update for the camera-ready
 
-1. Edit `static/data/paper.json`: `abstract`, and `title`/`authors` if they changed.
+1. Edit `static/data/paper.json`: `abstract` (in every language), and `title`/`authors` if they changed.
 2. If a number changed, recompute it from `results/tables/*.json` (×100, one decimal) and update it
    everywhere it appears in `paper.json` (`tldr`, `highlights`, section texts, tables, matrix).
    Settings A, B, C and the train–validation gaps have no JSON in `results/tables/`; they come from
@@ -57,7 +70,7 @@ In `static/data/paper.json`:
    never a PDF hosted here). The Paper button turns on by itself.
 2. `status`: `"published"` (shows "Published at …"); adjust `venue.short` if needed.
 3. `bibtex`: replace the `@software` entry with the publication reference, and update or empty
-   `bibtexNote`.
+   `bibtexNote` in every language.
 
 ## Adding showcase media
 

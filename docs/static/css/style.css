@@ -65,6 +65,12 @@ body {
   overflow-wrap: break-word;
 }
 
+:lang(zh) body,
+body:lang(zh) {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei",
+    "Noto Sans CJK SC", "Noto Sans SC", "Source Han Sans SC", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
 a { color: var(--accent); text-decoration: none; }
 a:hover { text-decoration: underline; }
 
@@ -116,6 +122,8 @@ h1 {
   font-size: 0.95rem;
   font-style: italic;
 }
+
+:lang(zh) .status { font-style: normal; }
 
 .buttons {
   display: flex;
@@ -364,13 +372,42 @@ details.more .table-figure { margin: 0; padding: 12px 14px 4px; }
   color: var(--todo-fg);
 }
 
-/* ---------- theme toggle ---------- */
+/* ---------- language flags and theme toggle ---------- */
 
-.theme-toggle {
+.top-controls {
   position: absolute;
   top: 14px;
   right: 14px;
   z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.langs { display: flex; align-items: center; gap: 6px; }
+.flag {
+  display: block;
+  width: 30px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  overflow: hidden;
+  background: none;
+  box-shadow: 0 0 0 1px var(--border);
+  opacity: 0.45;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.15s;
+}
+.flag svg { display: block; width: 100%; height: 100%; }
+.flag:hover { opacity: 0.85; }
+.flag[aria-pressed="true"] {
+  opacity: 1;
+  box-shadow: 0 0 0 2px var(--bg), 0 0 0 3.5px var(--accent);
+}
+.flag:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+.theme-toggle {
   display: grid;
   place-items: center;
   width: 38px;
