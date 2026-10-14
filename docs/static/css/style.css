@@ -112,6 +112,14 @@ h1 {
   font-size: 1.05rem;
 }
 .authors .author { white-space: nowrap; }
+.authors a.author {
+  color: var(--fg);
+  text-decoration: underline;
+  text-decoration-color: var(--border);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 4px;
+}
+.authors a.author:hover { color: var(--accent); text-decoration-color: var(--accent); }
 .authors .sep { color: var(--muted); padding: 0 0.35em; }
 
 .affiliation { margin: 0; color: var(--muted); }
