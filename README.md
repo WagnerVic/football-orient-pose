@@ -13,6 +13,7 @@ Institute of Informatics, Federal University of Goiás (UFG), Brazil
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](pyproject.toml)
 [![Paper](https://img.shields.io/badge/paper-coming%20soon-lightgrey.svg)](#citation)
+[![Project page](https://img.shields.io/badge/project-page-1f7a4d.svg)](https://wagnervic.github.io/football-orient-pose/)
 
 <img src="docs/assets/hero.gif" width="800" alt="Pose of every player estimated frame by frame on a real soccer broadcast">
 
