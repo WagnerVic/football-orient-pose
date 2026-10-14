@@ -1,15 +1,18 @@
 {
   "_notes": [
     "Single source for the project page. Edit this file; index.html and static/js/main.js render it.",
+    "Languages: en (default), pt (Brazilian Portuguese), es (Spanish), zh (Simplified Chinese). A translated field is an object {\"en\": ..., \"pt\": ..., \"es\": ..., \"zh\": ...}; a missing language falls back to en. Plain strings and numbers are shared by every language.",
+    "Numeric table cells are numbers: the page prints them with a decimal comma in pt/es and a decimal point in en/zh. Numbers written inside prose are text, so a changed number must be updated in all four languages.",
     "status: 'submitted' (no line), 'accepted' ('Accepted at <venue.short>') or 'published' ('Published at <venue.short>').",
     "links.paper: leave empty until the publication page exists; the Paper button turns on by itself once it is filled. Never link a PDF hosted in this repository.",
-    "The Open Graph / Twitter tags live in index.html (crawlers do not run JavaScript): update them by hand if the title or description change.",
+    "The Open Graph / Twitter tags live in index.html (crawlers do not run JavaScript) and are in English: update them by hand if the title or description change.",
     "Text fields may contain simple inline HTML (<b>, <em>, <sub>, <a>). Any text starting with 'TODO' is rendered highlighted."
   ],
   "_sources": {
     "numbers": "Recomputed from results/tables/*.json (x100, 1 decimal, half-up; MPJPE in px, 2 decimals).",
     "not_in_results_tables": "Settings A, B and C (matrix and per-part table) and every train-val gap (incl. D-FULL 1.1 pp) come from Tables III-IV of the submitted paper / README: results/tables has no JSON for these runs (finetuned_cenario_A/C_*.json are the preliminary Epic-1 runs, not A-RAW / C-RAW).",
-    "d_full": "D-FULL = results/tables/finetuned_fase2_val.json (phase 2 of progressive unfreezing)."
+    "d_full": "D-FULL = results/tables/finetuned_fase2_val.json (phase 2 of progressive unfreezing).",
+    "abstract": "en: abstract of the submitted paper. pt: the team's own Portuguese version (resumo of the SBC draft), aligned with the submitted abstract. es, zh: translations of the submitted abstract."
   },
 
   "status": "accepted",
@@ -17,7 +20,12 @@
     "short": "WVC 2026",
     "full": "XXI Workshop de Visão Computacional",
     "where": "Unicamp",
-    "when": "16–18 November 2026"
+    "when": {
+      "en": "16–18 November 2026",
+      "pt": "16 a 18 de novembro de 2026",
+      "es": "16–18 de noviembre de 2026",
+      "zh": "2026 年 11 月 16–18 日"
+    }
   },
 
   "title": "A Quantitative Pipeline for Soccer Player Pose Estimation in Broadcast Video",
@@ -28,7 +36,12 @@
     { "name": "Victor Gabriel Ribeiro Jacome", "url": "" },
     { "name": "André Guilherme Alves do Carmo", "url": "" }
   ],
-  "affiliation": "Institute of Informatics, Federal University of Goiás (UFG), Brazil",
+  "affiliation": {
+    "en": "Institute of Informatics, Federal University of Goiás (UFG), Brazil",
+    "pt": "Instituto de Informática, Universidade Federal de Goiás (UFG), Brasil",
+    "es": "Instituto de Informática, Universidad Federal de Goiás (UFG), Brasil",
+    "zh": "巴西戈亚斯联邦大学（UFG）信息学院"
+  },
 
   "links": {
     "paper": "",
@@ -39,52 +52,147 @@
     "src": "assets/hero.gif",
     "width": 800,
     "height": 400,
-    "alt": "Broadcast soccer footage in which every player on the pitch carries an estimated colored skeleton, updated frame by frame.",
-    "caption": "Every player detected, cropped and posed, frame by frame, on a real broadcast (zero-shot RTMPose-X, CPU)."
+    "alt": {
+      "en": "Broadcast soccer footage in which every player on the pitch carries an estimated colored skeleton, updated frame by frame.",
+      "pt": "Vídeo de transmissão de futebol em que cada jogador em campo recebe um esqueleto colorido estimado, atualizado quadro a quadro.",
+      "es": "Vídeo de una transmisión de fútbol en el que cada jugador en el campo lleva superpuesto un esqueleto estimado en color, actualizado fotograma a fotograma.",
+      "zh": "足球转播画面中，场上每名球员身上都叠加了估计出的彩色骨架，并逐帧更新。"
+    },
+    "caption": {
+      "en": "Every player detected, cropped and posed, frame by frame, on a real broadcast (zero-shot RTMPose-X, CPU).",
+      "pt": "Cada jogador detectado, recortado e com a pose estimada, quadro a quadro, numa transmissão real (RTMPose-X zero-shot, CPU).",
+      "es": "Cada jugador detectado, recortado y con su pose estimada, fotograma a fotograma, en una transmisión real (RTMPose-X zero-shot, CPU).",
+      "zh": "在真实转播画面中逐帧检测、裁剪每名球员并估计其姿态（零样本 RTMPose-X，CPU 运行）。"
+    }
   },
 
-  "tldr": "For soccer players in broadcast video, the bottleneck is localization, not detection: an off-the-shelf estimator finds the right body region for 93.6% of the joints but places only 41.8% of them precisely. Adapting it to the domain raises that to 67.5%, without new data and without a bigger model.",
+  "tldr": {
+    "en": "For soccer players in broadcast video, the bottleneck is localization, not detection: an off-the-shelf estimator finds the right body region for 93.6% of the joints but places only 41.8% of them precisely. Adapting it to the domain raises that to 67.5%, without new data and without a bigger model.",
+    "pt": "Para jogadores de futebol em vídeo de transmissão, o gargalo é a localização, não a detecção: um estimador de prateleira encontra a região certa do corpo para 93,6% das articulações, mas posiciona com precisão apenas 41,8% delas. Adaptá-lo ao domínio eleva esse valor para 67,5%, sem novos dados e sem um modelo maior.",
+    "es": "En jugadores de fútbol en vídeo de transmisión, el cuello de botella es la localización, no la detección: un estimador genérico sin adaptar encuentra la región correcta del cuerpo en el 93,6 % de las articulaciones, pero solo ubica con precisión el 41,8 %. Adaptarlo al dominio eleva esa cifra al 67,5 %, sin datos nuevos y sin un modelo más grande.",
+    "zh": "对于足球转播视频中的球员，瓶颈在于定位而非检测：现成的姿态估计器能为 93.6% 的关节找到正确的身体区域，但只有 41.8% 的关节定位精确。将其适配到该领域后，这一比例提升至 67.5%，既不需要新数据，也不需要更大的模型。"
+  },
 
   "highlights": [
-    { "value": "84.4 mAP", "label": "best of four person detectors (YOLO26x)" },
-    { "value": "41.8% → 67.5%", "label": "PCK@0.2 of RTMPose-X, off-the-shelf → adapted" },
-    { "value": "1.1 pp", "label": "train–validation gap of the adapted model" },
-    { "value": "1 command", "label": "to run the pipeline on your own video" }
+    {
+      "value": { "en": "84.4 mAP", "pt": "84,4 mAP", "es": "84,4 mAP", "zh": "84.4 mAP" },
+      "label": {
+        "en": "best of four person detectors (YOLO26x)",
+        "pt": "melhor de quatro detectores de pessoas (YOLO26x)",
+        "es": "el mejor de cuatro detectores de personas (YOLO26x)",
+        "zh": "四种人体检测器中的最佳者（YOLO26x）"
+      }
+    },
+    {
+      "value": { "en": "41.8% → 67.5%", "pt": "41,8% → 67,5%", "es": "41,8 % → 67,5 %", "zh": "41.8% → 67.5%" },
+      "label": {
+        "en": "PCK@0.2 of RTMPose-X, off-the-shelf → adapted",
+        "pt": "PCK@0,2 do RTMPose-X, de prateleira → adaptado",
+        "es": "PCK@0,2 de RTMPose-X, sin adaptar → adaptado",
+        "zh": "RTMPose-X 的 PCK@0.2：现成模型 → 领域适配后"
+      }
+    },
+    {
+      "value": { "en": "1.1 pp", "pt": "1,1 pp", "es": "1,1 p. p.", "zh": "1.1 个百分点" },
+      "label": {
+        "en": "train–validation gap of the adapted model",
+        "pt": "gap treino–validação do modelo adaptado",
+        "es": "brecha entre entrenamiento y validación del modelo adaptado",
+        "zh": "适配后模型的训练–验证差距"
+      }
+    },
+    {
+      "value": { "en": "1 command", "pt": "1 comando", "es": "1 comando", "zh": "1 条命令" },
+      "label": {
+        "en": "to run the pipeline on your own video",
+        "pt": "para rodar o pipeline no seu próprio vídeo",
+        "es": "para ejecutar el pipeline en tu propio vídeo",
+        "zh": "即可在你自己的视频上运行整套流程"
+      }
+    }
   ],
 
-  "abstract": "Pose estimation of soccer players from broadcast video supports tactical and biomechanical analysis, but the domain is harsh: players occupy tiny image regions under motion blur, occlusion and atypical poses, degrading the localization precision of generic estimators. This work evaluates, stage by stage and quantitatively, a pipeline for the problem: it chooses the detector and the estimator by benchmark (the latter, a zero-shot of three models on 3DSP) and adapts the estimator to the domain by fine-tuning. The chosen detector (YOLO26x) reaches mAP 84.4% and recall 95.4%; fine-tuning the estimator (RTMPose-X) raises PCK@0.2 from 41.8% to 67.5%, providing the quantitative evaluation the domain lacked.",
+  "abstract": {
+    "en": "Pose estimation of soccer players from broadcast video supports tactical and biomechanical analysis, but the domain is harsh: players occupy tiny image regions under motion blur, occlusion and atypical poses, degrading the localization precision of generic estimators. This work evaluates, stage by stage and quantitatively, a pipeline for the problem: it chooses the detector and the estimator by benchmark (the latter, a zero-shot of three models on 3DSP) and adapts the estimator to the domain by fine-tuning. The chosen detector (YOLO26x) reaches mAP 84.4% and recall 95.4%; fine-tuning the estimator (RTMPose-X) raises PCK@0.2 from 41.8% to 67.5%, providing the quantitative evaluation the domain lacked.",
+    "pt": "A estimação de pose de jogadores em vídeo de transmissão apoia a análise tática e biomecânica, mas o domínio é hostil: jogadores ocupam regiões minúsculas, sob borrão, oclusão e poses atípicas, degradando a precisão de localização dos estimadores genéricos. Este trabalho avalia, estágio a estágio e de forma quantitativa, um pipeline para o problema: escolhe o detector e o estimador por benchmark (este, um <em>zero-shot</em> de três modelos no 3DSP) e adapta o estimador ao domínio por <em>fine-tuning</em>. O detector escolhido (YOLO26x) atinge mAP 84,4% e <em>recall</em> 95,4%; o <em>fine-tuning</em> do estimador (RTMPose-X) eleva o PCK@0,2 de 41,8% para 67,5%, fornecendo a avaliação quantitativa que faltava ao domínio.",
+    "es": "La estimación de la pose de jugadores de fútbol a partir de vídeo de transmisión respalda el análisis táctico y biomecánico, pero el dominio es hostil: los jugadores ocupan regiones diminutas de la imagen, con desenfoque de movimiento, oclusiones y poses atípicas, lo que degrada la precisión de localización de los estimadores genéricos. Este trabajo evalúa, etapa por etapa y de forma cuantitativa, un pipeline para el problema: elige el detector y el estimador mediante benchmarks (en el caso del estimador, una evaluación <em>zero-shot</em> de tres modelos en 3DSP) y adapta el estimador al dominio mediante ajuste fino. El detector elegido (YOLO26x) alcanza un mAP del 84,4 % y un <em>recall</em> del 95,4 %; el ajuste fino del estimador (RTMPose-X) eleva el PCK@0,2 del 41,8 % al 67,5 %, lo que aporta la evaluación cuantitativa de la que carecía el dominio.",
+    "zh": "从转播视频中估计足球运动员的姿态可为战术和生物力学分析提供支持，但这一领域条件严苛：球员在图像中只占极小的区域，并伴有运动模糊、遮挡和非典型姿态，从而降低了通用估计器的定位精度。本文针对这一问题，逐阶段、定量地评估了一套处理流程：通过基准测试选择检测器和姿态估计器（后者为三个模型在 3DSP 上的零样本评估），并通过微调使估计器适应该领域。所选检测器（YOLO26x）的 mAP 达到 84.4%，召回率达到 95.4%；对估计器（RTMPose-X）进行微调后，PCK@0.2 从 41.8% 提升至 67.5%，为该领域提供了此前缺乏的定量评估。"
+  },
 
   "pipeline": {
-    "title": "How it works",
-    "text": [
-      "Each frame goes through four stages. YOLO26x detects every person on the pitch; each box is cut into a tight 100 × 100 crop with letterboxing (no distortion); RTMPose-X estimates 17 keypoints in the H3WB layout used by 3DSP; the keypoints are mapped back to frame coordinates.",
-      "Detector and estimator sit behind common interfaces, so either can be swapped without touching the rest of the pipeline."
-    ],
+    "title": { "en": "How it works", "pt": "Como funciona", "es": "Cómo funciona", "zh": "工作原理" },
+    "text": {
+      "en": [
+        "Each frame goes through four stages. YOLO26x detects every person on the pitch; each box is cut into a tight 100 × 100 crop with letterboxing (no distortion); RTMPose-X estimates 17 keypoints in the H3WB layout used by 3DSP; the keypoints are mapped back to frame coordinates.",
+        "Detector and estimator sit behind common interfaces, so either can be swapped without touching the rest of the pipeline."
+      ],
+      "pt": [
+        "Cada quadro passa por quatro estágios. O YOLO26x detecta cada pessoa em campo; cada caixa vira um recorte justo de 100 × 100 com letterboxing (sem distorção); o RTMPose-X estima 17 keypoints no layout H3WB usado pelo 3DSP; os keypoints são mapeados de volta às coordenadas do quadro.",
+        "Detector e estimador ficam atrás de interfaces comuns, então qualquer um dos dois pode ser trocado sem alterar o restante do pipeline."
+      ],
+      "es": [
+        "Cada fotograma pasa por cuatro etapas. YOLO26x detecta a cada persona en el campo; cada caja se convierte en un recorte ajustado de 100 × 100 con <em>letterboxing</em> (sin distorsión); RTMPose-X estima 17 puntos clave en el formato H3WB que usa 3DSP; los puntos clave se proyectan de vuelta a las coordenadas del fotograma.",
+        "El detector y el estimador comparten interfaces comunes, de modo que cualquiera de los dos puede sustituirse sin modificar el resto del pipeline."
+      ],
+      "zh": [
+        "每一帧都经过四个阶段。YOLO26x 检测场上的每个人；每个边界框被裁剪为 100 × 100 的紧凑图像，并采用 letterbox 填充（不产生形变）；RTMPose-X 按 3DSP 所用的 H3WB 格式估计 17 个关键点；最后将关键点映射回原始帧坐标。",
+        "检测器和估计器都通过统一接口接入，因此可以单独替换其中任何一个，而无需改动流程的其余部分。"
+      ]
+    },
     "figure": {
       "src": "assets/pipeline_stages.png",
       "width": 1256,
       "height": 354,
-      "alt": "Four panels joined by arrows: 1. Detect, a broadcast frame with a player boxed by YOLO26x; 2. Tight crop, the letterboxed 100 × 100 crop of that player; 3. Estimate pose, the crop with the 17-keypoint RTMPose-X skeleton; 4. Reproject, the skeletons drawn back on the frame."
+      "alt": {
+        "en": "Four panels joined by arrows: 1. Detect, a broadcast frame with a player boxed by YOLO26x; 2. Tight crop, the letterboxed 100 × 100 crop of that player; 3. Estimate pose, the crop with the 17-keypoint RTMPose-X skeleton; 4. Reproject, the skeletons drawn back on the frame.",
+        "pt": "Quatro painéis ligados por setas: 1. Detect, um quadro de transmissão com um jogador marcado pelo YOLO26x; 2. Tight crop, o recorte de 100 × 100 desse jogador com letterboxing; 3. Estimate pose, o recorte com o esqueleto de 17 keypoints do RTMPose-X; 4. Reproject, os esqueletos desenhados de volta no quadro.",
+        "es": "Cuatro paneles unidos por flechas: 1. Detect, un fotograma de transmisión con un jugador enmarcado por YOLO26x; 2. Tight crop, el recorte de 100 × 100 de ese jugador con letterboxing; 3. Estimate pose, el recorte con el esqueleto de 17 puntos clave de RTMPose-X; 4. Reproject, los esqueletos dibujados de nuevo sobre el fotograma.",
+        "zh": "由箭头连接的四个面板：1. Detect，转播画面中一名球员被 YOLO26x 框出；2. Tight crop，该球员经 letterbox 处理的 100 × 100 裁剪图；3. Estimate pose，叠加了 RTMPose-X 17 个关键点骨架的裁剪图；4. Reproject，骨架被重新绘制回原始画面。"
+      }
     }
   },
 
   "detection": {
-    "title": "Detection is not the bottleneck",
-    "text": [
-      "Four person detectors were compared against 740 hand-annotated player boxes on 60 broadcast frames. YOLO26x leads on every metric; the two-stage detectors reach similar recall but also detect spectators in the stands, which drags their precision below 60%.",
-      "The pose estimator is where precision is lost: on the 800 validation crops of 3DSP, off-the-shelf RTMPose-X finds the right body region for <b>93.6%</b> of the joints (PDJ@0.5) but places only <b>41.8%</b> of them within the PCK@0.2 threshold."
-    ],
+    "title": {
+      "en": "Detection is not the bottleneck",
+      "pt": "A detecção não é o gargalo",
+      "es": "La detección no es el cuello de botella",
+      "zh": "检测并非瓶颈"
+    },
+    "text": {
+      "en": [
+        "Four person detectors were compared against 740 hand-annotated player boxes on 60 broadcast frames. YOLO26x leads on every metric; the two-stage detectors reach similar recall but also detect spectators in the stands, which drags their precision below 60%.",
+        "The pose estimator is where precision is lost: on the 800 validation crops of 3DSP, off-the-shelf RTMPose-X finds the right body region for <b>93.6%</b> of the joints (PDJ@0.5) but places only <b>41.8%</b> of them within the PCK@0.2 threshold."
+      ],
+      "pt": [
+        "Quatro detectores de pessoas foram comparados com 740 caixas de jogadores anotadas manualmente em 60 quadros de transmissão. O YOLO26x lidera em todas as métricas; os detectores two-stage alcançam recall semelhante, mas também detectam espectadores na arquibancada, o que derruba a precisão deles para menos de 60%.",
+        "É no estimador de pose que a precisão se perde: nos 800 recortes de validação do 3DSP, o RTMPose-X de prateleira encontra a região certa do corpo para <b>93,6%</b> das articulações (PDJ@0,5), mas posiciona apenas <b>41,8%</b> delas dentro do limiar do PCK@0,2."
+      ],
+      "es": [
+        "Se compararon cuatro detectores de personas con 740 cajas de jugadores anotadas manualmente en 60 fotogramas de transmisión. YOLO26x es el mejor en todas las métricas; los detectores de dos etapas logran un <em>recall</em> similar, pero también detectan a los espectadores de las gradas, lo que reduce su precisión por debajo del 60 %.",
+        "La precisión se pierde en el estimador de pose: en los 800 recortes de validación de 3DSP, RTMPose-X sin adaptar encuentra la región correcta del cuerpo en el <b>93,6 %</b> de las articulaciones (PDJ@0,5), pero solo sitúa el <b>41,8 %</b> dentro del umbral de PCK@0,2."
+      ],
+      "zh": [
+        "我们在 60 帧转播画面上人工标注了 740 个球员边界框，并据此比较了四种人体检测器。YOLO26x 在所有指标上均领先；两阶段检测器的召回率相近，但也会检测到看台上的观众，导致其精确率低于 60%。",
+        "精度的损失发生在姿态估计器上：在 3DSP 的 800 张验证裁剪图上，现成的 RTMPose-X 能为 <b>93.6%</b> 的关节找到正确的身体区域（PDJ@0.5），但只有 <b>41.8%</b> 的关节落在 PCK@0.2 阈值之内。"
+      ]
+    },
     "tables": [
       {
-        "caption": "Person detectors against 740 hand-annotated boxes. COCO metrics (%); precision, recall and F1 at confidence ≥ 0.3 and IoU ≥ 0.5.",
+        "caption": {
+          "en": "Person detectors against 740 hand-annotated boxes. COCO metrics (%); precision, recall and F1 at confidence ≥ 0.3 and IoU ≥ 0.5.",
+          "pt": "Detectores de pessoas contra 740 caixas anotadas manualmente. Métricas COCO (%); precisão, recall e F1 com confiança ≥ 0,3 e IoU ≥ 0,5.",
+          "es": "Detectores de personas frente a 740 cajas anotadas manualmente. Métricas COCO (%); precisión, <em>recall</em> y F1 con confianza ≥ 0,3 e IoU ≥ 0,5.",
+          "zh": "人体检测器与 740 个人工标注边界框的对比。COCO 指标（%）；精确率、召回率和 F1 在置信度 ≥ 0.3、IoU ≥ 0.5 下计算。"
+        },
         "columns": [
-          { "label": "Detector" },
+          { "label": { "en": "Detector", "pt": "Detector", "es": "Detector", "zh": "检测器" } },
           { "label": "mAP", "decimals": 1 },
           { "label": "AP50", "decimals": 1, "optional": true },
           { "label": "AP75", "decimals": 1, "optional": true },
           { "label": "AR<sub>med</sub>", "decimals": 1, "optional": true },
-          { "label": "Prec.", "decimals": 1 },
-          { "label": "Recall", "decimals": 1 },
+          { "label": { "en": "Prec.", "pt": "Prec.", "es": "Prec.", "zh": "精确率" }, "decimals": 1 },
+          { "label": { "en": "Recall", "pt": "Recall", "es": "Recall", "zh": "召回率" }, "decimals": 1 },
           { "label": "F1", "decimals": 1 }
         ],
         "rows": [
@@ -95,11 +203,16 @@
         ]
       },
       {
-        "caption": "Pose estimators, zero-shot, on the 3DSP validation split (800 crops). PDJ, PCK and OKS in %; MPJPE in pixels.",
+        "caption": {
+          "en": "Pose estimators, zero-shot, on the 3DSP validation split (800 crops). PDJ, PCK and OKS in %; MPJPE in pixels.",
+          "pt": "Estimadores de pose em zero-shot na divisão de validação do 3DSP (800 recortes). PDJ, PCK e OKS em %; MPJPE em pixels.",
+          "es": "Estimadores de pose en zero-shot, en la partición de validación de 3DSP (800 recortes). PDJ, PCK y OKS en %; MPJPE en píxeles.",
+          "zh": "姿态估计器在 3DSP 验证集（800 张裁剪图）上的零样本结果。PDJ、PCK 和 OKS 单位为 %；MPJPE 单位为像素。"
+        },
         "columns": [
-          { "label": "Model" },
-          { "label": "PDJ@0.5 ↑", "decimals": 1 },
-          { "label": "PCK@0.2 ↑", "decimals": 1 },
+          { "label": { "en": "Model", "pt": "Modelo", "es": "Modelo", "zh": "模型" } },
+          { "label": { "en": "PDJ@0.5 ↑", "pt": "PDJ@0,5 ↑", "es": "PDJ@0,5 ↑", "zh": "PDJ@0.5 ↑" }, "decimals": 1 },
+          { "label": { "en": "PCK@0.2 ↑", "pt": "PCK@0,2 ↑", "es": "PCK@0,2 ↑", "zh": "PCK@0.2 ↑" }, "decimals": 1 },
           { "label": "OKS ↑", "decimals": 1 },
           { "label": "MPJPE ↓", "decimals": 2 }
         ],
@@ -113,17 +226,47 @@
   },
 
   "adaptation": {
-    "title": "Domain adaptation closes the gap",
-    "text": [
-      "RTMPose-X is fine-tuned on the 3DSP training split (160 clips, split by clip to avoid leakage) in a 2 × 2 study that starts from COCO weights or from random weights, with or without augmentation, under the same protocol: batch 64, AdamW, 150 epochs.",
-      "Pretrained weights and augmentation are complementary: each helps on its own, but only their combination, <b>D-FULL</b>, reaches <b>67.5%</b> PCK@0.2, 25.8 points above zero-shot, with a train–validation gap of 1.1 pp."
-    ],
+    "title": {
+      "en": "Domain adaptation closes the gap",
+      "pt": "A adaptação ao domínio fecha a lacuna",
+      "es": "La adaptación al dominio cierra la brecha",
+      "zh": "领域适配弥合差距"
+    },
+    "text": {
+      "en": [
+        "RTMPose-X is fine-tuned on the 3DSP training split (160 clips, split by clip to avoid leakage) in a 2 × 2 study that starts from COCO weights or from random weights, with or without augmentation, under the same protocol: batch 64, AdamW, 150 epochs.",
+        "Pretrained weights and augmentation are complementary: each helps on its own, but only their combination, <b>D-FULL</b>, reaches <b>67.5%</b> PCK@0.2, 25.8 points above zero-shot, with a train–validation gap of 1.1 pp."
+      ],
+      "pt": [
+        "O RTMPose-X passa por fine-tuning na divisão de treino do 3DSP (160 clips, divididos por clip para evitar vazamento) numa matriz 2 × 2 que parte de pesos do COCO ou de pesos aleatórios, com ou sem augmentation, sob o mesmo protocolo: batch 64, AdamW, 150 épocas.",
+        "Pesos pré-treinados e augmentation são complementares: cada um ajuda sozinho, mas só a combinação dos dois, o <b>D-FULL</b>, chega a <b>67,5%</b> de PCK@0,2, 25,8 pontos acima do zero-shot, com gap treino–validação de 1,1 pp."
+      ],
+      "es": [
+        "RTMPose-X se ajusta (<em>fine-tuning</em>) en la partición de entrenamiento de 3DSP (160 clips, divididos por clip para evitar fugas de datos) en un estudio 2 × 2 que parte de pesos de COCO o de pesos aleatorios, con o sin aumento de datos, bajo el mismo protocolo: batch 64, AdamW, 150 épocas.",
+        "Los pesos preentrenados y el aumento de datos son complementarios: cada uno ayuda por sí solo, pero solo su combinación, <b>D-FULL</b>, alcanza un <b>67,5 %</b> de PCK@0,2, 25,8 puntos por encima del zero-shot, con una brecha entre entrenamiento y validación de 1,1 p. p."
+      ],
+      "zh": [
+        "我们在 3DSP 训练集（160 个片段，按片段划分以避免数据泄漏）上对 RTMPose-X 进行微调，采用 2 × 2 实验设计：从 COCO 权重或随机权重出发，分别使用或不使用数据增强，训练设置保持一致：batch 64、AdamW、150 个 epoch。",
+        "预训练权重与数据增强相辅相成：二者单独使用都有帮助，但只有二者结合的 <b>D-FULL</b> 达到 <b>67.5%</b> 的 PCK@0.2，比零样本高 25.8 个百分点，且训练–验证差距仅为 1.1 个百分点。"
+      ]
+    },
     "matrix": {
-      "caption": "PCK@0.2 (%) on the 3DSP validation split. Full augmentation is an additive ladder: horizontal flip → rotation ±30°, scale 0.75–1.25, shift 0.1 → occlusion → motion blur. Gap = train − validation PCK@0.2.",
-      "rowHeader": "Initial weights",
-      "colHeader": "Augmentation",
-      "rows": ["Random", "COCO"],
-      "cols": ["None", "Full"],
+      "caption": {
+        "en": "PCK@0.2 (%) on the 3DSP validation split. Full augmentation is an additive ladder: horizontal flip → rotation ±30°, scale 0.75–1.25, shift 0.1 → occlusion → motion blur. Gap = train − validation PCK@0.2.",
+        "pt": "PCK@0,2 (%) na divisão de validação do 3DSP. A augmentation completa é uma escada incremental: flip horizontal → rotação ±30°, escala 0,75–1,25, deslocamento 0,1 → oclusão → borrão de movimento. Gap = PCK@0,2 de treino − validação.",
+        "es": "PCK@0,2 (%) en la partición de validación de 3DSP. El aumento completo es una escalera incremental: volteo horizontal → rotación ±30°, escala 0,75–1,25, desplazamiento 0,1 → oclusión → desenfoque de movimiento. Brecha = PCK@0,2 de entrenamiento − validación.",
+        "zh": "3DSP 验证集上的 PCK@0.2（%）。完整数据增强按递进方式叠加：水平翻转 → 旋转 ±30°、缩放 0.75–1.25、平移 0.1 → 遮挡 → 运动模糊。差距 = 训练集 PCK@0.2 − 验证集 PCK@0.2。"
+      },
+      "rowHeader": { "en": "Initial weights", "pt": "Pesos iniciais", "es": "Pesos iniciales", "zh": "初始权重" },
+      "colHeader": { "en": "Augmentation", "pt": "Augmentation", "es": "Aumento de datos", "zh": "数据增强" },
+      "rows": [
+        { "en": "Random", "pt": "Aleatórios", "es": "Aleatorios", "zh": "随机" },
+        "COCO"
+      ],
+      "cols": [
+        { "en": "None", "pt": "Nenhuma", "es": "Ninguno", "zh": "无" },
+        { "en": "Full", "pt": "Completa", "es": "Completo", "zh": "完整" }
+      ],
       "cells": [
         [
           { "id": "A", "pck": 37.8, "pdj": 86.5, "oks": 74.5, "mpjpe": 6.76, "gap": null },
@@ -134,63 +277,193 @@
           { "id": "D-FULL", "pck": 67.5, "pdj": 96.6, "oks": 89.8, "mpjpe": 3.08, "gap": 1.1, "best": true }
         ]
       ],
-      "reference": { "label": "Zero-shot (COCO weights, no fine-tuning)", "pck": 41.8, "pdj": 93.6, "oks": 81.8, "mpjpe": 4.81 }
+      "reference": {
+        "label": {
+          "en": "Zero-shot (COCO weights, no fine-tuning)",
+          "pt": "Zero-shot (pesos do COCO, sem fine-tuning)",
+          "es": "Zero-shot (pesos de COCO, sin ajuste fino)",
+          "zh": "零样本（COCO 权重，未微调）"
+        },
+        "pck": 41.8, "pdj": 93.6, "oks": 81.8, "mpjpe": 4.81
+      }
     },
     "details": {
-      "summary": "PCK@0.2 per body part",
-      "caption": "Zero-shot is weakest at the hips and shoulders. Only the combination of transfer learning and augmentation lifts elbows, wrists, knees and ankles above zero-shot.",
+      "summary": {
+        "en": "PCK@0.2 per body part",
+        "pt": "PCK@0,2 por parte do corpo",
+        "es": "PCK@0,2 por parte del cuerpo",
+        "zh": "各身体部位的 PCK@0.2"
+      },
+      "caption": {
+        "en": "Zero-shot is weakest at the hips and shoulders. Only the combination of transfer learning and augmentation lifts elbows, wrists, knees and ankles above zero-shot.",
+        "pt": "O zero-shot é mais fraco nos quadris e nos ombros. Só a combinação de transfer learning e augmentation leva cotovelos, punhos, joelhos e tornozelos acima do zero-shot.",
+        "es": "El zero-shot es más débil en las caderas y los hombros. Solo la combinación de aprendizaje por transferencia y aumento de datos lleva codos, muñecas, rodillas y tobillos por encima del zero-shot.",
+        "zh": "零样本模型在髋部和肩部表现最弱。只有将迁移学习与数据增强结合，才能使肘、腕、膝、踝的结果超过零样本水平。"
+      },
       "columns": [
-        { "label": "Part" },
-        { "label": "Zero-shot", "decimals": 1 },
-        { "label": "C <span class=\"muted\">TL only</span>", "decimals": 1 },
-        { "label": "B <span class=\"muted\">aug. only</span>", "decimals": 1 },
+        { "label": { "en": "Part", "pt": "Parte", "es": "Parte", "zh": "部位" } },
+        { "label": { "en": "Zero-shot", "pt": "Zero-shot", "es": "Zero-shot", "zh": "零样本" }, "decimals": 1 },
+        {
+          "label": {
+            "en": "C <span class=\"muted\">TL only</span>",
+            "pt": "C <span class=\"muted\">só TL</span>",
+            "es": "C <span class=\"muted\">solo TL</span>",
+            "zh": "C <span class=\"muted\">仅迁移学习</span>"
+          },
+          "decimals": 1
+        },
+        {
+          "label": {
+            "en": "B <span class=\"muted\">aug. only</span>",
+            "pt": "B <span class=\"muted\">só aug.</span>",
+            "es": "B <span class=\"muted\">solo aum.</span>",
+            "zh": "B <span class=\"muted\">仅数据增强</span>"
+          },
+          "decimals": 1
+        },
         { "label": "D-FULL", "decimals": 1, "best": true }
       ],
       "rows": [
-        { "cells": ["Head", 50.4, 73.9, 87.6, 89.5] },
-        { "cells": ["Shoulder", 30.4, 64.9, 70.5, 78.4] },
-        { "cells": ["Elbow", 50.8, 39.4, 42.6, 56.4] },
-        { "cells": ["Wrist", 43.5, 31.0, 33.6, 46.1] },
-        { "cells": ["Hip", 22.8, 54.5, 60.2, 69.3] },
-        { "cells": ["Knee", 58.3, 47.3, 53.5, 64.8] },
-        { "cells": ["Ankle", 59.4, 51.6, 54.0, 67.3] }
+        { "cells": [{ "en": "Head", "pt": "Cabeça", "es": "Cabeza", "zh": "头部" }, 50.4, 73.9, 87.6, 89.5] },
+        { "cells": [{ "en": "Shoulder", "pt": "Ombro", "es": "Hombro", "zh": "肩部" }, 30.4, 64.9, 70.5, 78.4] },
+        { "cells": [{ "en": "Elbow", "pt": "Cotovelo", "es": "Codo", "zh": "肘部" }, 50.8, 39.4, 42.6, 56.4] },
+        { "cells": [{ "en": "Wrist", "pt": "Punho", "es": "Muñeca", "zh": "腕部" }, 43.5, 31.0, 33.6, 46.1] },
+        { "cells": [{ "en": "Hip", "pt": "Quadril", "es": "Cadera", "zh": "髋部" }, 22.8, 54.5, 60.2, 69.3] },
+        { "cells": [{ "en": "Knee", "pt": "Joelho", "es": "Rodilla", "zh": "膝部" }, 58.3, 47.3, 53.5, 64.8] },
+        { "cells": [{ "en": "Ankle", "pt": "Tornozelo", "es": "Tobillo", "zh": "踝部" }, 59.4, 51.6, 54.0, 67.3] }
       ]
     }
   },
 
   "gallery": {
-    "title": "Every player, every frame",
-    "text": [
-      "On real broadcast clips, every person on the pitch is detected, cropped and posed in each frame, and the skeletons are mapped back to the frame. These clips have no pose ground truth, so this part is a qualitative check of the integrated pipeline."
-    ],
+    "title": {
+      "en": "Every player, every frame",
+      "pt": "Todos os jogadores, todos os quadros",
+      "es": "Cada jugador, cada fotograma",
+      "zh": "每名球员，每一帧"
+    },
+    "text": {
+      "en": [
+        "On real broadcast clips, every person on the pitch is detected, cropped and posed in each frame, and the skeletons are mapped back to the frame. These clips have no pose ground truth, so this part is a qualitative check of the integrated pipeline."
+      ],
+      "pt": [
+        "Em clipes reais de transmissão, cada pessoa em campo é detectada, recortada e tem a pose estimada em cada quadro, e os esqueletos são mapeados de volta ao quadro. Esses clipes não têm ground truth de pose, então esta parte é uma verificação qualitativa do pipeline integrado."
+      ],
+      "es": [
+        "En clips reales de transmisión, cada persona en el campo se detecta, se recorta y se le estima la pose en cada fotograma, y los esqueletos se proyectan de vuelta sobre el fotograma. Estos clips no tienen anotaciones de pose de referencia, así que esta parte es una comprobación cualitativa del pipeline integrado."
+      ],
+      "zh": [
+        "在真实转播片段中，场上的每个人都会在每一帧中被检测、裁剪并估计姿态，骨架随后被映射回原始画面。这些片段没有姿态真值标注，因此这部分是对整套流程的定性检验。"
+      ]
+    },
     "groups": [
       {
         "layout": "pair",
         "items": [
-          { "type": "image", "src": "static/images/brazil_03.gif", "width": 640, "height": 360, "alt": "Wide broadcast shot near the penalty area: every visible player has a bounding box and an estimated skeleton." },
-          { "type": "image", "src": "static/images/brazil_05.gif", "width": 640, "height": 360, "alt": "Wide broadcast shot around the center circle: every visible player has a bounding box and an estimated skeleton." }
+          {
+            "type": "image", "src": "static/images/brazil_03.gif", "width": 640, "height": 360,
+            "alt": {
+              "en": "Wide broadcast shot near the penalty area: every visible player has a bounding box and an estimated skeleton.",
+              "pt": "Plano aberto de transmissão perto da grande área: cada jogador visível tem uma caixa delimitadora e um esqueleto estimado.",
+              "es": "Plano general de transmisión cerca del área: cada jugador visible tiene una caja delimitadora y un esqueleto estimado.",
+              "zh": "禁区附近的转播远景：每名可见球员都有一个边界框和估计出的骨架。"
+            }
+          },
+          {
+            "type": "image", "src": "static/images/brazil_05.gif", "width": 640, "height": 360,
+            "alt": {
+              "en": "Wide broadcast shot around the center circle: every visible player has a bounding box and an estimated skeleton.",
+              "pt": "Plano aberto de transmissão em torno do círculo central: cada jogador visível tem uma caixa delimitadora e um esqueleto estimado.",
+              "es": "Plano general de transmisión alrededor del círculo central: cada jugador visible tiene una caja delimitadora y un esqueleto estimado.",
+              "zh": "中圈附近的转播远景：每名可见球员都有一个边界框和估计出的骨架。"
+            }
+          }
         ],
-        "caption": "All players, posed frame by frame."
+        "caption": {
+          "en": "All players, posed frame by frame.",
+          "pt": "Todos os jogadores, com a pose estimada quadro a quadro.",
+          "es": "Todos los jugadores, con su pose estimada fotograma a fotograma.",
+          "zh": "所有球员的姿态，逐帧估计。"
+        }
       },
       {
         "layout": "crop-frame",
         "items": [
-          { "type": "image", "src": "static/images/example_01_crop.gif", "width": 300, "height": 300, "alt": "Tight crop of a shooter striking the ball, with the estimated skeleton overlaid." },
-          { "type": "video", "sources": ["static/videos/example_01_frame.webm", "static/videos/example_01_frame.mp4"], "poster": "static/images/example_01_frame_poster.jpg", "width": 640, "height": 360, "alt": "Broadcast frame of the same shot, with the shooter outlined in red among the other detected players." },
-          { "type": "image", "src": "static/images/example_03_crop.gif", "width": 300, "height": 300, "alt": "Tight crop of a second shooter, with the estimated skeleton overlaid." },
-          { "type": "video", "sources": ["static/videos/example_03_frame.webm", "static/videos/example_03_frame.mp4"], "poster": "static/images/example_03_frame_poster.jpg", "width": 640, "height": 360, "alt": "Broadcast frame of the second shot, with the shooter outlined in red among the other detected players." }
+          {
+            "type": "image", "src": "static/images/example_01_crop.gif", "width": 300, "height": 300,
+            "alt": {
+              "en": "Tight crop of a shooter striking the ball, with the estimated skeleton overlaid.",
+              "pt": "Recorte justo de um finalizador chutando a bola, com o esqueleto estimado sobreposto.",
+              "es": "Recorte ajustado de un rematador golpeando el balón, con el esqueleto estimado superpuesto.",
+              "zh": "一名球员射门瞬间的紧凑裁剪图，叠加了估计出的骨架。"
+            }
+          },
+          {
+            "type": "video", "sources": ["static/videos/example_01_frame.webm", "static/videos/example_01_frame.mp4"],
+            "poster": "static/images/example_01_frame_poster.jpg", "width": 640, "height": 360,
+            "alt": {
+              "en": "Broadcast frame of the same shot, with the shooter outlined in red among the other detected players.",
+              "pt": "Quadro da transmissão do mesmo chute, com o finalizador marcado em vermelho entre os outros jogadores detectados.",
+              "es": "Fotograma de la transmisión del mismo remate, con el rematador marcado en rojo entre los demás jugadores detectados.",
+              "zh": "同一次射门的转播画面，射门球员以红框标出，周围是其他被检测到的球员。"
+            }
+          },
+          {
+            "type": "image", "src": "static/images/example_03_crop.gif", "width": 300, "height": 300,
+            "alt": {
+              "en": "Tight crop of a second shooter, with the estimated skeleton overlaid.",
+              "pt": "Recorte justo de um segundo finalizador, com o esqueleto estimado sobreposto.",
+              "es": "Recorte ajustado de un segundo rematador, con el esqueleto estimado superpuesto.",
+              "zh": "第二名射门球员的紧凑裁剪图，叠加了估计出的骨架。"
+            }
+          },
+          {
+            "type": "video", "sources": ["static/videos/example_03_frame.webm", "static/videos/example_03_frame.mp4"],
+            "poster": "static/images/example_03_frame_poster.jpg", "width": 640, "height": 360,
+            "alt": {
+              "en": "Broadcast frame of the second shot, with the shooter outlined in red among the other detected players.",
+              "pt": "Quadro da transmissão do segundo chute, com o finalizador marcado em vermelho entre os outros jogadores detectados.",
+              "es": "Fotograma de la transmisión del segundo remate, con el rematador marcado en rojo entre los demás jugadores detectados.",
+              "zh": "第二次射门的转播画面，射门球员以红框标出，周围是其他被检测到的球员。"
+            }
+          }
         ],
-        "caption": "The shooter: tight crop with the estimated skeleton (left) and the same moment in the broadcast frame (right)."
+        "caption": {
+          "en": "The shooter: tight crop with the estimated skeleton (left) and the same moment in the broadcast frame (right).",
+          "pt": "O finalizador: recorte justo com o esqueleto estimado (à esquerda) e o mesmo instante no quadro da transmissão (à direita).",
+          "es": "El rematador: recorte ajustado con el esqueleto estimado (izquierda) y el mismo instante en el fotograma de la transmisión (derecha).",
+          "zh": "射门球员：叠加估计骨架的紧凑裁剪图（左）与转播画面中的同一时刻（右）。"
+        }
       }
     ]
   },
 
   "bibtex": "@software{menezes2026soccerpose,\n  title  = {A Quantitative Pipeline for Soccer Player Pose Estimation in Broadcast Video},\n  author = {Menezes, Wagner Victor Alves de and Franco, Ricardo Augusto Pereira and\n            Soares, Raphael Alves de Lima and Jacome, Victor Gabriel Ribeiro and\n            Carmo, Andr{\\'e} Guilherme Alves do},\n  year   = {2026},\n  url    = {https://github.com/WagnerVic/football-orient-pose}\n}",
-  "bibtexNote": "Until the paper is published, please cite the software. This entry will be replaced by the publication reference.",
+  "bibtexNote": {
+    "en": "Until the paper is published, please cite the software. This entry will be replaced by the publication reference.",
+    "pt": "Até a publicação do artigo, cite o software. Esta entrada será substituída pela referência da publicação.",
+    "es": "Hasta que se publique el artículo, cite el software. Esta entrada se sustituirá por la referencia de la publicación.",
+    "zh": "论文正式发表前，请引用本软件。论文发表后，此条目将替换为正式出版物的引用。"
+  },
 
   "footer": {
-    "acknowledgements": "Built on the <a href=\"https://github.com/calvinyeungck/3D-Shot-Posture-Dataset\">3DSP dataset</a> (Yeung, Ide and Fujii, CVPRW 2024), <a href=\"https://github.com/open-mmlab/mmpose\">RTMPose and MMPose</a> (OpenMMLab), <a href=\"https://github.com/ultralytics/ultralytics\">Ultralytics YOLO</a> and <a href=\"https://github.com/Tau-J/rtmlib\">rtmlib</a>.",
-    "license": "Code released under the <a href=\"https://github.com/WagnerVic/football-orient-pose/blob/main/LICENSE\">MIT License</a>.",
-    "footage": "Broadcast footage belongs to its respective rights holders and is shown only to demonstrate the method."
+    "acknowledgements": {
+      "en": "Built on the <a href=\"https://github.com/calvinyeungck/3D-Shot-Posture-Dataset\">3DSP dataset</a> (Yeung, Ide and Fujii, CVPRW 2024), <a href=\"https://github.com/open-mmlab/mmpose\">RTMPose and MMPose</a> (OpenMMLab), <a href=\"https://github.com/ultralytics/ultralytics\">Ultralytics YOLO</a> and <a href=\"https://github.com/Tau-J/rtmlib\">rtmlib</a>.",
+      "pt": "Construído sobre o <a href=\"https://github.com/calvinyeungck/3D-Shot-Posture-Dataset\">dataset 3DSP</a> (Yeung, Ide e Fujii, CVPRW 2024), <a href=\"https://github.com/open-mmlab/mmpose\">RTMPose e MMPose</a> (OpenMMLab), <a href=\"https://github.com/ultralytics/ultralytics\">Ultralytics YOLO</a> e <a href=\"https://github.com/Tau-J/rtmlib\">rtmlib</a>.",
+      "es": "Basado en el <a href=\"https://github.com/calvinyeungck/3D-Shot-Posture-Dataset\">conjunto de datos 3DSP</a> (Yeung, Ide y Fujii, CVPRW 2024), <a href=\"https://github.com/open-mmlab/mmpose\">RTMPose y MMPose</a> (OpenMMLab), <a href=\"https://github.com/ultralytics/ultralytics\">Ultralytics YOLO</a> y <a href=\"https://github.com/Tau-J/rtmlib\">rtmlib</a>.",
+      "zh": "本工作基于 <a href=\"https://github.com/calvinyeungck/3D-Shot-Posture-Dataset\">3DSP 数据集</a>（Yeung、Ide 和 Fujii，CVPRW 2024）、<a href=\"https://github.com/open-mmlab/mmpose\">RTMPose 与 MMPose</a>（OpenMMLab）、<a href=\"https://github.com/ultralytics/ultralytics\">Ultralytics YOLO</a> 和 <a href=\"https://github.com/Tau-J/rtmlib\">rtmlib</a>。"
+    },
+    "license": {
+      "en": "Code released under the <a href=\"https://github.com/WagnerVic/football-orient-pose/blob/main/LICENSE\">MIT License</a>.",
+      "pt": "Código distribuído sob a <a href=\"https://github.com/WagnerVic/football-orient-pose/blob/main/LICENSE\">licença MIT</a>.",
+      "es": "Código publicado bajo la <a href=\"https://github.com/WagnerVic/football-orient-pose/blob/main/LICENSE\">licencia MIT</a>.",
+      "zh": "代码以 <a href=\"https://github.com/WagnerVic/football-orient-pose/blob/main/LICENSE\">MIT 许可证</a>发布。"
+    },
+    "footage": {
+      "en": "Broadcast footage belongs to its respective rights holders and is shown only to demonstrate the method.",
+      "pt": "As imagens de transmissão pertencem aos respectivos detentores dos direitos e aparecem apenas para demonstrar o método.",
+      "es": "Las imágenes de transmisión pertenecen a sus respectivos titulares de derechos y se muestran solo para demostrar el método.",
+      "zh": "转播画面的版权归各自权利人所有，此处仅用于演示本方法。"
+    }
   }
 }
