@@ -19,6 +19,8 @@ Institute of Informatics, Federal University of Goiás (UFG), Brazil
 
 <sub>Every player detected, cropped and posed, frame by frame, on a real broadcast (zero-shot RTMPose-X, CPU).</sub>
 
+### [Project page](https://wagnervic.github.io/football-orient-pose/) — the work at a glance, in English, Português, Español and 中文
+
 </div>
 
 ---
@@ -239,7 +241,7 @@ scripts/                    command-line tools: clips/, evaluation/, pipeline/, 
 configs/                    MMPose configs of every fine-tuning setting + the fixed data split
 demo.py                     one-command pipeline on a video or image
 results/tables/             every reported metric, as JSON
-docs/                       technical reports of each experiment (in Portuguese)
+docs/                       project page served by GitHub Pages (see docs/PAGE.md)
 tests/                      unit tests (pytest)
 ```
 

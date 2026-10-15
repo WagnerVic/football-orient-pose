@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Valida clips estruturados contra as regras do formato (ver docs/vision/formato-clips.md).
+"""Valida clips estruturados contra as regras do formato (ver ``clip_extractor.write_clip``).
 
 Para cada clip em ``--root``, checa **consistência interna** (não um nº fixo de
 frames): a quantidade de imagens bate com o ``num_frames`` do próprio ``info.ini``,

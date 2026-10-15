@@ -4,8 +4,6 @@ Espelha o papel do ``clip_extractor`` para o estágio anterior (clips). Cada cli
 crops justos 100×100 (``img/``), os ``CropParams`` por frame (``crop_params/``, a chave de
 reprojeção frame↔crop) e o ``info.ini``. É o insumo da anotação de keypoints (US #109): quando ela
 ocorrer, cria ``posture/NNN.json`` ao lado, e o keypoint GT projeta via ``crop.py``.
-
-Spec: ``docs/vision/formato-crops.md``.
 """
 
 from __future__ import annotations
