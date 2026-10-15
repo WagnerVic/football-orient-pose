@@ -9,17 +9,16 @@ Victor Gabriel Ribeiro Jacome · André Guilherme Alves do Carmo
 
 Institute of Informatics, Federal University of Goiás (UFG), Brazil
 
+<a href="https://wagnervic.github.io/football-orient-pose/"><img src="https://img.shields.io/badge/Project%20Page-1f7a4d?style=for-the-badge&logo=githubpages&logoColor=white" alt="Project page"></a>
+<a href="#citation"><img src="https://img.shields.io/badge/Paper-coming%20soon-lightgrey?style=for-the-badge&logo=readthedocs&logoColor=white" alt="Paper: coming soon"></a>
+
 [![CI](https://github.com/WagnerVic/football-orient-pose/actions/workflows/ci.yml/badge.svg)](https://github.com/WagnerVic/football-orient-pose/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](pyproject.toml)
-[![Paper](https://img.shields.io/badge/paper-coming%20soon-lightgrey.svg)](#citation)
-[![Project page](https://img.shields.io/badge/project-page-1f7a4d.svg)](https://wagnervic.github.io/football-orient-pose/)
 
-<img src="docs/assets/hero.gif" width="800" alt="Pose of every player estimated frame by frame on a real soccer broadcast">
+<a href="https://wagnervic.github.io/football-orient-pose/"><img src="docs/assets/hero.gif" width="800" alt="Pose of every player estimated frame by frame on a real soccer broadcast"></a>
 
 <sub>Every player detected, cropped and posed, frame by frame, on a real broadcast (zero-shot RTMPose-X, CPU).</sub>
-
-### [Project page](https://wagnervic.github.io/football-orient-pose/) — the work at a glance, in English, Português, Español and 中文
 
 </div>
 
