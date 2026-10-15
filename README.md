@@ -9,8 +9,8 @@ Victor Gabriel Ribeiro Jacome · André Guilherme Alves do Carmo
 
 Institute of Informatics, Federal University of Goiás (UFG), Brazil
 
-<a href="https://wagnervic.github.io/football-orient-pose/"><img src="https://img.shields.io/badge/Project%20Page-1f7a4d?style=for-the-badge&logo=githubpages&logoColor=white" alt="Project page"></a>
-<a href="#citation"><img src="https://img.shields.io/badge/Paper-coming%20soon-lightgrey?style=for-the-badge&logo=readthedocs&logoColor=white" alt="Paper: coming soon"></a>
+<a href="https://wagnervic.github.io/football-orient-pose/"><img src="https://img.shields.io/badge/Project%20Page-1f7a4d?style=for-the-badge&logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIyLjQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI%2BPGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMTAiLz48cGF0aCBkPSJNMiAxMmgyMCIvPjxwYXRoIGQ9Ik0xMiAyYTE1LjMgMTUuMyAwIDAgMSA0IDEwIDE1LjMgMTUuMyAwIDAgMS00IDEwIDE1LjMgMTUuMyAwIDAgMS00LTEwIDE1LjMgMTUuMyAwIDAgMSA0LTEweiIvPjwvc3ZnPgo%3D" alt="Project page"></a>
+<a href="#citation"><img src="https://img.shields.io/badge/Paper-coming%20soon-lightgrey?style=for-the-badge&logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIyLjQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI%2BPHBhdGggZD0iTTE0IDJINmEyIDIgMCAwIDAtMiAydjE2YTIgMiAwIDAgMCAyIDJoMTJhMiAyIDAgMCAwIDItMlY4eiIvPjxwYXRoIGQ9Ik0xNCAydjZoNiIvPjxwYXRoIGQ9Ik04IDEzaDgiLz48cGF0aCBkPSJNOCAxN2g4Ii8%2BPC9zdmc%2BCg%3D%3D" alt="Paper: coming soon"></a>
 
 [![CI](https://github.com/WagnerVic/football-orient-pose/actions/workflows/ci.yml/badge.svg)](https://github.com/WagnerVic/football-orient-pose/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
