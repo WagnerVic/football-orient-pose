@@ -542,19 +542,34 @@ def main() -> None:
         summary = summarize(load_results(run), scenarios)
         args.summary_json.write_text(json.dumps(_nan_to_none(summary), indent=2))
 
-    if args.once:
+    if args.once or not sys.stdout.isatty():
         print(render(run, system=not args.no_system))
         return
+    live(run, args.interval, system=not args.no_system)
+
+
+def live(run: Path, interval: float, system: bool) -> None:
+    """Painel ao vivo na tela alternativa do terminal (como o top): não suja o histórico.
+
+    Cada quadro é escrito por cima do anterior, linha a linha, sem apagar a tela (sem piscar).
+    Ao sair, o terminal volta ao normal e o último quadro fica impresso.
+    """
+    frame = ""
+    sys.stdout.write("\033[?1049h\033[?25l")  # tela alternativa + cursor oculto
     try:
         while True:
-            frame = render(run, system=not args.no_system)
-            sys.stdout.write("\033[H\033[2J" + frame + "\n")
+            frame = render(run, system=system)
+            lines = frame.split("\n")[: shutil.get_terminal_size((100, 30)).lines - 1]
+            sys.stdout.write("\033[H" + "".join(ln + "\033[K\n" for ln in lines) + "\033[J")
             sys.stdout.flush()
             if "FINISHED" in read_params(run):
                 break
-            time.sleep(args.interval)
+            time.sleep(interval)
     except KeyboardInterrupt:
         pass
+    finally:
+        sys.stdout.write("\033[?25h\033[?1049l")  # cursor visível + volta à tela normal
+        print(frame)
 
 
 if __name__ == "__main__":
