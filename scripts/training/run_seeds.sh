@@ -47,6 +47,10 @@ else
   for seed in $SEEDS; do for scen in $SCENARIOS; do PLAN+=("${seed}:${scen}"); done; done
 fi
 
+if [[ "$RESUME" != 1 && -f "$RUN/progress.tsv" ]]; then
+  echo "ERRO: $RUN já existe — use RESUME=1 para retomar ou outro RUN_NAME (nada foi alterado)." >&2
+  exit 2
+fi
 mkdir -p "$RUN"
 # O container roda como root: devolve a posse dos arquivos ao usuário do host ao sair.
 trap '[[ -n "${HOST_UID:-}" ]] && chown -R "${HOST_UID}:${HOST_GID:-$HOST_UID}" "$RUN"' EXIT
@@ -136,7 +140,7 @@ for item in "${PLAN[@]}"; do
     if already_done "$seed" "$scen" train "$work/best_PCK.pth"; then
       echo "[$(date +%H:%M:%S)] seed ${seed} · ${scen} · train já concluído — pulando"
     else
-      rm -rf "$work"  # treino incompleto de uma execução anterior: recomeça limpo
+      [[ "$RESUME" == 1 ]] && rm -rf "$work"  # treino incompleto da execução anterior: recomeça limpo
       step "$seed" "$scen" train "$dir/logs/train_${scen}.log" -- \
         python scripts/training/train.py --cenario "$scen" "${train_args[@]}" \
           --batch-size "$BATCH" --seed "$seed" --work-dir "$work" || continue
