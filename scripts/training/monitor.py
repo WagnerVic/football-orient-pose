@@ -15,6 +15,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import shutil
 import statistics
 import subprocess
 import sys
@@ -74,6 +75,27 @@ def red(t: str) -> str:
 
 def cyan(t: str) -> str:
     return c(t, "36")
+
+
+def width() -> int:
+    return max(80, min(118, shutil.get_terminal_size((100, 30)).columns - 1))
+
+
+def section(title: str, note: str = "") -> list[str]:
+    """Linha em branco + cabeçalho de seção com régua até a largura do terminal."""
+    head = f"━━ {title} "
+    tail = f" {note} " if note else ""
+    fill = "━" * max(3, width() - len(head) - len(tail))
+    return ["", cyan(bold(head)) + dim(tail) + cyan(fill)]
+
+
+def row(label: str, value: str) -> str:
+    """Linha rotulada: rótulo alinhado à esquerda, separador vertical, valor."""
+    return f"  {label.ljust(12)}" + dim("│ ") + value
+
+
+def rule() -> str:
+    return dim("  " + "─" * (width() - 2))
 
 
 def bar(frac: float, width: int = 30) -> str:
@@ -281,12 +303,16 @@ def render(run: Path, system: bool) -> str:
         t1 = datetime.fromisoformat(finished) if finished else now
         elapsed = fmt_dur((t1 - t0).total_seconds())
 
-    out.append(bold(f"═══ {run.name} ═══") + dim(f"   commit {params.get('GIT_COMMIT', '?')[:7]}"))
+    out.append(bold("═" * width()))
+    commit = f"commit {params.get('GIT_COMMIT', '?')[:7]}"
+    title = f" ▶ {run.name}"
+    out.append(bold(title) + " " * max(2, width() - len(title) - len(commit)) + dim(commit))
     out.append(
-        f"sementes: {' '.join(seeds)}  ·  cenários: {' '.join(scenarios)}  ·  "
+        f"   sementes {' '.join(seeds)}  ·  cenários {' '.join(scenarios)}  ·  "
         f"épocas: do zero {params.get('EPOCHS_SCRATCH')}, TL {params.get('F1')}/"
         f"{params.get('F2')}/{params.get('F3')}  ·  batch {params.get('BATCH')}"
     )
+    out.append(bold("═" * width()))
 
     # ── progresso geral ─────────────────────────────────────────────────────
     done = [k for k in plan if states.get(k, {}).get("status") == "done"]
@@ -301,14 +327,12 @@ def render(run: Path, system: bool) -> str:
                          expected_minutes(running[0][1], running[0][2], params, states))
     frac = 1 - remaining / total_min
     status = green("CONCLUÍDO") if finished else (yellow("RODANDO") if running else dim("parado"))
-    out.append("")
+    out += section("PROGRESSO GERAL")
+    out.append(f"  {bar(frac, 40)}  {bold(f'{frac*100:5.1f}%')}   {status}")
     out.append(
-        f"{bold('PROGRESSO')}  {bar(frac)} {frac*100:5.1f}%   {status}   "
-        f"decorrido {elapsed or '—'}"
-        + ("" if finished else f"   · restante ~{fmt_dur(remaining * 60)}")
-    )
-    out.append(
-        f"  etapas: {len(done)}/{len(plan)} concluídas"
+        f"  decorrido {elapsed or '—'}"
+        + ("" if finished else f"  ·  restante ~{fmt_dur(remaining * 60)}")
+        + f"  ·  etapas {len(done)}/{len(plan)} concluídas"
         + (red(f"  ·  {len(failed)} com falha") if failed else "")
     )
 
@@ -325,11 +349,12 @@ def render(run: Path, system: bool) -> str:
         seed, scen, step = running[0]
         st = states[running[0]]
         log = resolve_log(run, st["log"])
-        out.append("")
+        out += section("EM ANDAMENTO")
         out.append(
-            bold("EM ANDAMENTO") + f"  seed {seed} · {cyan(scen)} ({LABELS.get(scen, '')}) · "
-            f"{step} · {fmt_dur((now - st['started']).total_seconds())}"
+            f"  {bold(f'seed {seed}')}  ·  {cyan(bold(scen))} ({LABELS.get(scen, '')})  ·  "
+            f"etapa {bold(step)}  ·  há {fmt_dur((now - st['started']).total_seconds())}"
         )
+        out.append(rule())
         if log.exists():
             age = (time.time() - log.stat().st_mtime) / 60
             if age > STALE_MINUTES:
@@ -338,51 +363,53 @@ def render(run: Path, system: bool) -> str:
         if step == "train":
             info = parse_train_log(log)
             if info["phase"]:
-                n_phases = "1" if info["phase"] == "única" else "3"
                 head = ("fase única" if info["phase"] == "única"
-                        else f"fase {info['phase']}/{n_phases} ({info['phase_desc']})")
+                        else f"{info['phase']} de 3 · {info['phase_desc']}")
+                out.append(row("Fase", bold(head)))
                 tr = info["train"]
                 if tr:
                     total_ep = info["phase_epochs"] or tr["epoch"]
-                    out.append(
-                        f"  {head} · época {tr['epoch']}/{total_ep} "
-                        f"{bar(tr['epoch'] / total_ep, 20)} · iter {tr['iter']}/{tr['iters']}"
-                    )
-                    out.append(
-                        f"  loss {tr['loss']:.4f} · acc_pose {tr['acc']:.3f} · lr {tr['lr']:.1e}"
-                        f" · memória {tr['mem_mb']/1024:.1f} GB · ETA da fase {tr['eta']}"
-                    )
+                    epoch_bar = bar(tr["epoch"] / total_ep, 30)
+                    out.append(row("Época", f"{epoch_bar}  {tr['epoch']}/{total_ep}  ·  iter "
+                                            f"{tr['iter']}/{tr['iters']}  ·  ETA {tr['eta']}"))
+                    out.append(row("Treino", f"loss {bold(format(tr['loss'], '.4f'))}"
+                                             f"  ·  acc_pose {tr['acc']:.3f}  ·  lr {tr['lr']:.1e}"
+                                             f"  ·  memória {tr['mem_mb'] / 1024:.1f} GB"))
                 else:
-                    out.append(f"  {head} · preparando (carregando modelo e dados)…")
+                    out.append(row("Época", dim("preparando (carregando modelo e dados)…")))
                 if info["val"]:
                     best = max(info["val"], key=lambda v: v[1])
-                    recent = "  ".join(f"ep{e} {p*100:.1f}%" for e, p, _ in info["val"][-6:])
-                    out.append(f"  PCK@0.2 val por época: {recent}")
-                    out.append(f"  melhor da fase: {green(f'{best[1]*100:.2f}%')} (época {best[0]})"
-                               f" · PDJ {best[2]*100:.1f}%")
+                    recent = "  ".join(f"ep{e} {p * 100:.1f}%" for e, p, _ in info["val"][-6:])
+                    out.append(row("Validação", f"PCK@0.2  {recent}"))
+                    out.append(row("Melhor", f"{green(bold(f'{best[1] * 100:.2f}%'))} na época "
+                                             f"{best[0]}  ·  PDJ {best[2] * 100:.1f}%"))
             if info["phase_results"]:
                 parts = []
                 for ph in sorted(info["phase_results"]):
                     v = info["phase_results"][ph]
-                    parts.append(f"F{ph} " + (dim("pulada") if v is None else f"{v*100:.2f}%"))
-                sel = f" → escolhida: {info['selected']}" if info["selected"] else ""
-                out.append(f"  fases concluídas (PCK estrito): {' · '.join(parts)}{sel}")
+                    parts.append(f"F{ph} " + (dim("pulada") if v is None else f"{v * 100:.2f}%"))
+                sel = f"  →  escolhida {green(info['selected'])}" if info["selected"] else ""
+                out.append(rule())
+                out.append(row("Fases do TL", f"{'  ·  '.join(parts)}{sel}  "
+                                              + dim("(PCK estrito no val)")))
             if info["last_line"]:
-                out.append(dim(f"  último log: {info['last_line'][:110]}"))
+                out.append(rule())
+                out.append(row("Log", dim(info["last_line"][: width() - 18])))
         elif log.exists():
-            out.append(dim(f"  último log: {log.read_text(errors='replace').strip()[-110:]}"))
+            out.append(row("Log", dim(log.read_text(errors="replace").strip()[-(width() - 18):])))
 
     # ── falhas ──────────────────────────────────────────────────────────────
+    if failed:
+        out += section("FALHAS", "abra o log indicado para ver o erro")
     for key in failed:
         st = states[key]
         out.append(red(f"  ✗ seed {key[0]} · {key[1]} · {key[2]} falhou — log: {st['log']}"))
 
     # ── resultados por semente ──────────────────────────────────────────────
     results = load_results(run)
-    out.append("")
-    out.append(bold("RESULTADOS POR SEMENTE")
-               + dim("   PCK@0.2 val (%)  ·  entre parênteses: gap treino−val (pp)"))
-    out.append("  " + "seed".ljust(7) + "".join(sc.ljust(17) for sc in scenarios))
+    out += section("RESULTADOS POR SEMENTE", "PCK@0.2 val (%) · (gap treino−val, pp)")
+    out.append(bold("  " + "seed".ljust(7) + "".join(sc.ljust(17) for sc in scenarios)))
+    out.append(rule())
     for seed in seeds:
         cells = []
         for scen in scenarios:
@@ -404,11 +431,11 @@ def render(run: Path, system: bool) -> str:
 
     # ── média ± desvio ──────────────────────────────────────────────────────
     summary = summarize(results, scenarios)
-    out.append("")
-    out.append(bold("MÉDIA ± DESVIO PADRÃO") + dim("   (val; gap = treino − val)"))
-    out.append("  " + "cenário".ljust(9) + "n".rjust(3) + "  " + "PCK@0.2".ljust(14)
-               + "PDJ@0.5".ljust(14) + "OKS".ljust(14) + "OKS COCO".ljust(14)
-               + "MPJPE px".ljust(14) + "gap pp")
+    out += section("MÉDIA ± DESVIO PADRÃO", "validação · gap = treino − val")
+    out.append(bold("  " + "cenário".ljust(9) + "n".rjust(3) + "  " + "PCK@0.2".ljust(14)
+                    + "PDJ@0.5".ljust(14) + "OKS".ljust(14) + "OKS COCO".ljust(14)
+                    + "MPJPE px".ljust(14) + "gap pp"))
+    out.append(rule())
     for scen in scenarios:
         e = summary[scen]
         out.append(
@@ -419,7 +446,8 @@ def render(run: Path, system: bool) -> str:
         )
 
     out.append("")
-    out.append(dim(f"atualizado {now:%H:%M:%S} · Ctrl+C para sair (o treino continua rodando)"))
+    out.append(bold("═" * width()))
+    out.append(dim(f"  atualizado {now:%H:%M:%S}  ·  Ctrl+C para sair (o treino continua rodando)"))
     return "\n".join(out)
 
 
