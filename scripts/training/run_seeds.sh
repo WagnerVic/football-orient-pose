@@ -6,18 +6,24 @@
 # Acompanhe com `make monitor` (scripts/training/monitor.py), que lê o progress.tsv daqui.
 #
 # Parâmetros (variáveis de ambiente):
-#   SEEDS="1 2 3 4 5 6 7 8 9"     sementes
+#   SEEDS="1 2 3 4 5 6 7 8 9"     sementes (cada uma roda todos os cenários)
 #   SCENARIOS="A-RAW B C-RAW D"   A-RAW/B = do zero (fase única); C-RAW/D = transfer learning (3 fases)
+#   SCENARIO_SEEDS="A-RAW:584961187 D:726553664"
+#                                 alternativa a SEEDS × SCENARIOS: um par cenário:semente por vez
+#                                 (ex.: repetir os runs originais com a semente registrada no log)
 #   EPOCHS_SCRATCH=150            épocas de A-RAW e B
 #   F1=45 F2=60 F3=45             épocas das fases do transfer learning
 #   BATCH=64  DELTA_PCK=0.05      VAL_INTERVAL= (vazio = o do config)
 #   RUN_NAME=<data>_seeds         pasta da execução em runs/
 #   KEEP_EPOCH_CKPTS=0            1 = mantém epoch_*.pth (por padrão só os best_*.pth ficam)
+#   REFERENCE=docs/experiments/reference_run1.json
+#                                 métricas de referência; o monitor mostra a comparação com elas
 
 set -uo pipefail
 
 SEEDS=${SEEDS:-"1 2 3 4 5 6 7 8 9"}
 SCENARIOS=${SCENARIOS:-"A-RAW B C-RAW D"}
+SCENARIO_SEEDS=${SCENARIO_SEEDS:-}
 EPOCHS_SCRATCH=${EPOCHS_SCRATCH:-150}
 F1=${F1:-45}; F2=${F2:-60}; F3=${F3:-45}
 BATCH=${BATCH:-64}
@@ -27,6 +33,14 @@ KEEP_EPOCH_CKPTS=${KEEP_EPOCH_CKPTS:-0}
 RUN_NAME=${RUN_NAME:-$(date +%Y%m%d_%H%M%S)_seeds}
 RUN="runs/${RUN_NAME}"
 
+# Plano: lista de pares semente:cenário, na ordem de execução.
+PLAN=()
+if [[ -n "$SCENARIO_SEEDS" ]]; then
+  for pair in $SCENARIO_SEEDS; do PLAN+=("${pair#*:}:${pair%%:*}"); done
+else
+  for seed in $SEEDS; do for scen in $SCENARIOS; do PLAN+=("${seed}:${scen}"); done; done
+fi
+
 mkdir -p "$RUN"
 # O container roda como root: devolve a posse dos arquivos ao usuário do host ao sair.
 trap '[[ -n "${HOST_UID:-}" ]] && chown -R "${HOST_UID}:${HOST_GID:-$HOST_UID}" "$RUN"' EXIT
@@ -35,6 +49,7 @@ cat > "$RUN/params.env" <<EOF
 RUN_NAME=${RUN_NAME}
 SEEDS=${SEEDS}
 SCENARIOS=${SCENARIOS}
+PLAN=${PLAN[*]}
 EPOCHS_SCRATCH=${EPOCHS_SCRATCH}
 F1=${F1}
 F2=${F2}
@@ -43,6 +58,7 @@ BATCH=${BATCH}
 DELTA_PCK=${DELTA_PCK}
 VAL_INTERVAL=${VAL_INTERVAL}
 GIT_COMMIT=${GIT_COMMIT:-unknown}
+REFERENCE=${REFERENCE:-}
 STARTED=$(date -Iseconds)
 EOF
 printf 'time\tseed\tscenario\tstep\tstatus\tseconds\tlog\n' > "$RUN/progress.tsv"
@@ -75,8 +91,8 @@ step() {  # seed scenario step log -- comando...
   return $rc
 }
 
-for seed in $SEEDS; do
-  for scen in $SCENARIOS; do
+for item in "${PLAN[@]}"; do
+    seed=${item%%:*}; scen=${item#*:}
     cfg=$(config_of "$scen") || exit 1
     dir="$RUN/seed_${seed}"
     work="$dir/cenario_${scen}"
@@ -100,7 +116,6 @@ for seed in $SEEDS; do
     done
 
     [[ "$KEEP_EPOCH_CKPTS" == 1 ]] || find "$work" -name 'epoch_*.pth' -delete
-  done
 done
 
 echo "FINISHED=$(date -Iseconds)" >> "$RUN/params.env"

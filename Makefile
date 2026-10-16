@@ -117,7 +117,7 @@ docker-seeds:
 	@mkdir -p $(RUNS_HOST)
 	@docker run --rm --gpus all --shm-size=16g \
 		-e SEEDS -e SCENARIOS -e EPOCHS_SCRATCH -e F1 -e F2 -e F3 -e BATCH \
-		-e DELTA_PCK -e VAL_INTERVAL -e RUN_NAME -e KEEP_EPOCH_CKPTS \
+		-e DELTA_PCK -e VAL_INTERVAL -e RUN_NAME -e KEEP_EPOCH_CKPTS -e SCENARIO_SEEDS -e REFERENCE \
 		-e GIT_COMMIT=$(shell git rev-parse --short HEAD) \
 		-e HOST_UID=$$(id -u) -e HOST_GID=$$(id -g) \
 		-v $(DATA_HOST):/workspace/data:ro \

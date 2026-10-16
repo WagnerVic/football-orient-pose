@@ -122,6 +122,14 @@ def read_params(run: Path) -> dict:
     return params
 
 
+def plan_pairs(params: dict) -> list[tuple[str, str]]:
+    """Pares (semente, cenário) na ordem do run_seeds.sh: PLAN, ou SEEDS × SCENARIOS."""
+    if params.get("PLAN"):
+        return [tuple(item.split(":", 1)) for item in params["PLAN"].split()]
+    return [(sd, sc) for sd in params.get("SEEDS", "").split()
+            for sc in params.get("SCENARIOS", "").split()]
+
+
 def read_progress(run: Path) -> list[dict]:
     f = run / "progress.tsv"
     if not f.exists():
@@ -226,6 +234,19 @@ def load_results(run: Path) -> dict:
     return results
 
 
+def load_reference(path: str) -> dict:
+    """Métricas de referência por cenário (docs/experiments/reference_*.json), se houver."""
+    if not path:
+        return {}
+    f = Path(path)
+    if not f.is_absolute():
+        f = Path(__file__).resolve().parents[2] / f
+    try:
+        return json.loads(f.read_text())["scenarios"]
+    except (OSError, KeyError, json.JSONDecodeError):
+        return {}
+
+
 def mean_std(values: list[float]) -> tuple[float, float]:
     if not values:
         return float("nan"), float("nan")
@@ -288,10 +309,11 @@ def render(run: Path, system: bool) -> str:
     params = read_params(run)
     progress = read_progress(run)
     states = step_states(progress)
-    seeds = params.get("SEEDS", "").split()
-    scenarios = params.get("SCENARIOS", "").split()
+    pairs = plan_pairs(params)
+    seeds = list(dict.fromkeys(sd for sd, _ in pairs))
+    scenarios = list(dict.fromkeys(sc for _, sc in pairs))
     steps = ["train", "eval_val", "eval_train"]
-    plan = [(sd, sc, sp) for sd in seeds for sc in scenarios for sp in steps]
+    plan = [(sd, sc, sp) for sd, sc in pairs for sp in steps]
     now = datetime.now().astimezone()
     out: list[str] = []
 
@@ -408,7 +430,8 @@ def render(run: Path, system: bool) -> str:
     # ── resultados por semente ──────────────────────────────────────────────
     results = load_results(run)
     out += section("RESULTADOS POR SEMENTE", "PCK@0.2 val (%) · (gap treino−val, pp)")
-    out.append(bold("  " + "seed".ljust(7) + "".join(sc.ljust(17) for sc in scenarios)))
+    sw = max([7] + [len(sd) + 2 for sd in seeds])
+    out.append(bold("  " + "seed".ljust(sw) + "".join(sc.ljust(17) for sc in scenarios)))
     out.append(rule())
     for seed in seeds:
         cells = []
@@ -421,13 +444,47 @@ def render(run: Path, system: bool) -> str:
                 if "train" in r:
                     gap = f" ({(r['train']['pck_02'] - r['val']['pck_02']) * 100:+.1f})"
                 cells.append(f"{v:5.1f}{gap}".ljust(17))
+            elif (seed, scen) not in pairs:
+                cells.append(" " * 17)
             elif state == "start":
                 cells.append(yellow("rodando".ljust(17)))
             elif state == "fail":
                 cells.append(red("falhou".ljust(17)))
             else:
                 cells.append(dim("·".ljust(17)))
-        out.append("  " + seed.ljust(7) + "".join(cells))
+        out.append("  " + seed.ljust(sw) + "".join(cells))
+
+    # ── comparação com a referência ─────────────────────────────────────────
+    ref = load_reference(params.get("REFERENCE", ""))
+    if ref:
+        out += section("COMPARAÇÃO COM O RUN ORIGINAL", Path(params["REFERENCE"]).name)
+        out.append(bold("  " + "cenário".ljust(9) + "seed".ljust(12) + "PCK@0.2 orig".ljust(14)
+                        + "agora".ljust(10) + "Δ pp".ljust(9) + "PDJ orig → agora".ljust(20)
+                        + "gap orig → agora"))
+        out.append(rule())
+        for scen in scenarios:
+            r0 = ref.get(scen)
+            if not r0:
+                continue
+            o_pck, o_pdj = 100 * r0["val"]["pck_02"], 100 * r0["val"]["pdj_05"]
+            o_gap = 100 * (r0["train"]["pck_02"] - r0["val"]["pck_02"])
+            now_runs = [r for sd, r in results.get(scen, {}).items()
+                        if (sd, scen) in pairs and "val" in r]
+            if now_runs:
+                r1 = now_runs[0]
+                n_pck, n_pdj = 100 * r1["val"]["pck_02"], 100 * r1["val"]["pdj_05"]
+                delta = n_pck - o_pck
+                color = green if abs(delta) <= 2 else (yellow if abs(delta) <= 5 else red)
+                gap_now = (f"{100 * (r1['train']['pck_02'] - r1['val']['pck_02']):.1f}"
+                           if "train" in r1 else "…")
+                out.append("  " + scen.ljust(9) + str(r0["seed"]).ljust(12)
+                           + f"{o_pck:.2f}".ljust(14) + f"{n_pck:.2f}".ljust(10)
+                           + color(f"{delta:+.2f}".ljust(9))
+                           + f"{o_pdj:.1f} → {n_pdj:.1f}".ljust(20) + f"{o_gap:.1f} → {gap_now}")
+            else:
+                out.append("  " + scen.ljust(9) + str(r0["seed"]).ljust(12)
+                           + f"{o_pck:.2f}".ljust(14) + dim("aguardando"))
+        out.append(dim("  Δ verde ≤ 2 pp · amarelo ≤ 5 pp · vermelho > 5 pp"))
 
     # ── média ± desvio ──────────────────────────────────────────────────────
     summary = summarize(results, scenarios)
@@ -481,7 +538,7 @@ def main() -> None:
         sys.exit(f"nenhuma execução encontrada em {args.run or args.root}")
 
     if args.summary_json:
-        scenarios = read_params(run).get("SCENARIOS", "").split()
+        scenarios = list(dict.fromkeys(sc for _, sc in plan_pairs(read_params(run))))
         summary = summarize(load_results(run), scenarios)
         args.summary_json.write_text(json.dumps(_nan_to_none(summary), indent=2))
 
