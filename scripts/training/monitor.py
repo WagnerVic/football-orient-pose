@@ -275,11 +275,15 @@ def summarize(results: dict, scenarios: list[str]) -> dict:
 
 def gpu_status() -> str | None:
     try:
-        out = subprocess.run(
+        proc = subprocess.run(
             ["nvidia-smi", "--query-gpu=utilization.gpu,memory.used,memory.total,"
              "temperature.gpu,power.draw", "--format=csv,noheader,nounits"],
             capture_output=True, text=True, timeout=5,
-        ).stdout.strip().splitlines()[0]
+        )
+        if proc.returncode != 0:
+            msg = (proc.stdout + proc.stderr).strip().splitlines()[:1] or ["erro"]
+            return red(bold("⚠ GPU INDISPONÍVEL") + f" — nvidia-smi: {msg[0]}")
+        out = proc.stdout.strip().splitlines()[0]
         util, used, total, temp, power = (x.strip() for x in out.split(","))
         return (f"GPU {util:>3}% · {float(used)/1024:.1f}/{float(total)/1024:.1f} GB · "
                 f"{temp}°C · {float(power):.0f} W")
@@ -338,7 +342,7 @@ def render(run: Path, system: bool) -> str:
 
     # ── progresso geral ─────────────────────────────────────────────────────
     done = [k for k in plan if states.get(k, {}).get("status") == "done"]
-    failed = [k for k in plan if states.get(k, {}).get("status") == "fail"]
+    failed = [k for k in plan if states.get(k, {}).get("status") in ("fail", "abort")]
     running = [k for k in plan if states.get(k, {}).get("status") == "start"]
     total_min = sum(expected_minutes(sc, sp, params, states) for _, sc, sp in plan) or 1
     done_min = sum(expected_minutes(sc, sp, params, states) for _, sc, sp in done + failed)
@@ -348,12 +352,18 @@ def render(run: Path, system: bool) -> str:
         remaining -= min((now - st["started"]).total_seconds() / 60,
                          expected_minutes(running[0][1], running[0][2], params, states))
     frac = 1 - remaining / total_min
-    status = green("CONCLUÍDO") if finished else (yellow("RODANDO") if running else dim("parado"))
+    aborted = params.get("ABORTED")
+    if aborted:
+        status = red(bold(f"INTERROMPIDA — {aborted.split()[0].upper()} INDISPONÍVEL"))
+    elif finished:
+        status = green("CONCLUÍDO")
+    else:
+        status = yellow("RODANDO") if running else dim("parado")
     out += section("PROGRESSO GERAL")
     out.append(f"  {bar(frac, 40)}  {bold(f'{frac*100:5.1f}%')}   {status}")
     out.append(
         f"  decorrido {elapsed or '—'}"
-        + ("" if finished else f"  ·  restante ~{fmt_dur(remaining * 60)}")
+        + ("" if finished or aborted else f"  ·  restante ~{fmt_dur(remaining * 60)}")
         + f"  ·  etapas {len(done)}/{len(plan)} concluídas"
         + (red(f"  ·  {len(failed)} com falha") if failed else "")
     )
@@ -425,7 +435,8 @@ def render(run: Path, system: bool) -> str:
         out += section("FALHAS", "abra o log indicado para ver o erro")
     for key in failed:
         st = states[key]
-        out.append(red(f"  ✗ seed {key[0]} · {key[1]} · {key[2]} falhou — log: {st['log']}"))
+        what = "interrompida (sem GPU)" if st["status"] == "abort" else "falhou"
+        out.append(red(f"  ✗ seed {key[0]} · {key[1]} · {key[2]} {what} — log: {st['log']}"))
 
     # ── resultados por semente ──────────────────────────────────────────────
     results = load_results(run)
@@ -448,7 +459,7 @@ def render(run: Path, system: bool) -> str:
                 cells.append(" " * 17)
             elif state == "start":
                 cells.append(yellow("rodando".ljust(17)))
-            elif state == "fail":
+            elif state in ("fail", "abort"):
                 cells.append(red("falhou".ljust(17)))
             else:
                 cells.append(dim("·".ljust(17)))
@@ -562,7 +573,7 @@ def live(run: Path, interval: float, system: bool) -> None:
             lines = frame.split("\n")[: shutil.get_terminal_size((100, 30)).lines - 1]
             sys.stdout.write("\033[H" + "".join(ln + "\033[K\n" for ln in lines) + "\033[J")
             sys.stdout.flush()
-            if "FINISHED" in read_params(run):
+            if {"FINISHED", "ABORTED"} & read_params(run).keys():
                 break
             time.sleep(interval)
     except KeyboardInterrupt:

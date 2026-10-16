@@ -213,6 +213,11 @@ def _print_table(r: dict) -> None:
 
 def main() -> None:
     args = _parse_args()
+    if args.device == "cuda":
+        import torch
+
+        if not torch.cuda.is_available():
+            sys.exit("ERRO: nenhuma GPU CUDA disponível (use --device cpu de propósito).")
 
     config_path = args.config or _infer_config(args.checkpoint)
     if not Path(config_path).exists():
