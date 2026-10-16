@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import shutil
 import statistics
@@ -275,10 +276,16 @@ def summarize(results: dict, scenarios: list[str]) -> dict:
 
 def gpu_status() -> str | None:
     try:
+        # Com NVIDIA_LIBS (bibliotecas extraídas do .run da NVIDIA), usa o nvidia-smi do pacote.
+        libs = os.environ.get("NVIDIA_LIBS")
+        cmd, env = "nvidia-smi", None
+        if libs:
+            cmd = str(Path(libs).expanduser().parent / "pkg" / "nvidia-smi")
+            env = {**os.environ, "LD_LIBRARY_PATH": str(Path(libs).expanduser())}
         proc = subprocess.run(
-            ["nvidia-smi", "--query-gpu=utilization.gpu,memory.used,memory.total,"
+            [cmd, "--query-gpu=utilization.gpu,memory.used,memory.total,"
              "temperature.gpu,power.draw", "--format=csv,noheader,nounits"],
-            capture_output=True, text=True, timeout=5,
+            capture_output=True, text=True, timeout=5, env=env,
         )
         if proc.returncode != 0:
             msg = (proc.stdout + proc.stderr).strip().splitlines()[:1] or ["erro"]
