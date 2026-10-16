@@ -1,0 +1,61 @@
+{
+  "description": "Run 1 da Tabela III (jun/2026, RTX 4090): m\u00e9tricas do melhor checkpoint de cada cen\u00e1rio, copiadas dos JSONs do evaluate.py daquela execu\u00e7\u00e3o.",
+  "scenarios": {
+    "A-RAW": {
+      "seed": 584961187,
+      "run": "20260607_195315_raw",
+      "commit": "261f73e",
+      "val": {
+        "pck_02": 0.378235,
+        "pdj_05": 0.864779,
+        "oks": 0.744646,
+        "mpjpe_2d_px": 6.756
+      },
+      "train": {
+        "pck_02": 0.560055
+      }
+    },
+    "B": {
+      "seed": 1137157804,
+      "run": "20260608_014649_bd",
+      "commit": "5cb9d48",
+      "val": {
+        "pck_02": 0.581324,
+        "pdj_05": 0.935882,
+        "oks": 0.85262,
+        "mpjpe_2d_px": 4.0934
+      },
+      "train": {
+        "pck_02": 0.952224
+      }
+    },
+    "C-RAW": {
+      "seed": 525882101,
+      "run": "20260607_195315_raw",
+      "commit": "261f73e",
+      "val": {
+        "pck_02": 0.52875,
+        "pdj_05": 0.914853,
+        "oks": 0.821896,
+        "mpjpe_2d_px": 4.7979
+      },
+      "train": {
+        "pck_02": 0.651085
+      }
+    },
+    "D": {
+      "seed": 726553664,
+      "run": "20260608_014649_bd",
+      "commit": "5cb9d48",
+      "val": {
+        "pck_02": 0.675368,
+        "pdj_05": 0.965956,
+        "oks": 0.898448,
+        "mpjpe_2d_px": 3.0796
+      },
+      "train": {
+        "pck_02": 0.685993
+      }
+    }
+  }
+}

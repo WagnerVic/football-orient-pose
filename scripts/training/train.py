@@ -33,6 +33,8 @@ from pathlib import Path
 
 # Garante que o src/ do projeto está no path
 sys.path.insert(0, str(Path(__file__).parents[2] / "src"))
+# run_evaluation (avaliação estrita entre as fases do TL) vive em scripts/evaluation/
+sys.path.insert(0, str(Path(__file__).parents[1] / "evaluation"))
 
 import torch
 
@@ -72,13 +74,18 @@ def _parse_args() -> argparse.Namespace:
         help="Sobrescreve val_interval (épocas entre validações; útil p/ treinos curtos)",
     )
     p.add_argument(
+        "--seed", type=int, default=None,
+        help="Semente do MMEngine (randomness.seed) usada em todas as fases; "
+             "sem ela, cada execução sorteia uma semente",
+    )
+    p.add_argument(
         "--work-dir", default=None,
         help="Diretório raiz de checkpoints (default: results/checkpoints/cenario_<X>)",
     )
     return p.parse_args()
 
 
-def _build_runner(config_path: str, overrides: dict):
+def _build_runner(config_path: str, overrides: dict, seed: int | None = None):
     """Constrói um MMPose Runner com config + sobrescritas programáticas."""
     from mmengine.config import Config
     from mmengine.runner import Runner
@@ -95,6 +102,8 @@ def _build_runner(config_path: str, overrides: dict):
             setattr(obj, parts[-1], value)
         else:
             setattr(cfg, key, value)
+    if seed is not None:
+        cfg.randomness = dict(seed=seed)
 
     return Runner.from_cfg(cfg)
 
@@ -147,7 +156,7 @@ def _scheduler_override(max_epochs: int) -> list[dict]:
 
 
 def _strict_pck_on_val(checkpoint: str, config_path: str, data_dir: Path,
-                       split_config: Path, device: str) -> float:
+                       split_config: Path, device: str, output_dir: Path) -> float:
     """PCK@0.2 ESTRITO (``compute_pck`` do projeto) no val — a métrica do artigo.
 
     Usado na decisão da fase 3. Substitui o parsing do log, que devolvia a PCK
@@ -158,7 +167,7 @@ def _strict_pck_on_val(checkpoint: str, config_path: str, data_dir: Path,
     res = run_evaluation(
         checkpoint_path=checkpoint, config_path=config_path, split="val",
         data_dir=data_dir, split_config=split_config,
-        output_dir=Path("results/tables"), device=device,
+        output_dir=output_dir, device=device,
     )
     return float(res["pck_02"])
 
@@ -166,6 +175,7 @@ def _strict_pck_on_val(checkpoint: str, config_path: str, data_dir: Path,
 def _run_from_scratch(
     cenario: str, work_dir: str, epochs: int,
     batch_size: int | None = None, val_interval: int | None = None,
+    seed: int | None = None,
 ) -> str:
     """Treina cenário de fase única (A/B from scratch, ou C2 = TL fase única). Retorna best."""
     config_path = f"configs/cenario_{cenario.lower()}.py"
@@ -173,6 +183,7 @@ def _run_from_scratch(
     print(f"[Cenário {cenario}] Fase única — {epochs} épocas")
     print(f"  Config:   {config_path}")
     print(f"  work_dir: {work_dir}")
+    print(f"  seed:     {seed if seed is not None else 'aleatória'}")
     print(f"{'='*60}")
 
     overrides = {
@@ -185,7 +196,7 @@ def _run_from_scratch(
         overrides["val_dataloader.batch_size"] = batch_size
     if val_interval is not None:
         overrides["train_cfg.val_interval"] = val_interval
-    runner = _build_runner(config_path, overrides)
+    runner = _build_runner(config_path, overrides, seed)
     runner.train()
 
     best_ckpt = _find_best_checkpoint(work_dir)
@@ -234,6 +245,7 @@ def _run_transfer_learning(
     delta_pck: float,
     batch_size: int | None = None,
     val_interval: int | None = None,
+    seed: int | None = None,
 ) -> str:
     """Treina cenário C/D com 3 fases de progressive unfreezing.
 
@@ -254,6 +266,8 @@ def _run_transfer_learning(
     coco_checkpoint = getattr(base_cfg, "COCO_CHECKPOINT", "checkpoints/rtmpose-x_coco.pth")
     data_dir = Path(getattr(base_cfg, "data_root", "data/3dsp"))
     split_config = Path(getattr(base_cfg, "split_file", "configs/split.json"))
+    phase_eval_dir = Path(work_dir) / "phase_eval"
+    print(f"\n[Cenário {cenario}] seed: {seed if seed is not None else 'aleatória'}")
 
     # ── Fase 1: backbone completamente congelado, treina só o head ──────────
     work_dir_f1 = str(Path(work_dir) / "fase1")
@@ -273,11 +287,13 @@ def _run_transfer_learning(
         "load_from": coco_checkpoint,
         "optim_wrapper": _build_tl_optim_override(1),
     }
-    runner1 = _build_runner(config_path, _bs(overrides_f1))
+    runner1 = _build_runner(config_path, _bs(overrides_f1), seed)
     runner1.train()
 
     ckpt_f1 = _find_best_checkpoint(work_dir_f1)
-    pck_f1 = _strict_pck_on_val(ckpt_f1, config_path, data_dir, split_config, _DEVICE)
+    pck_f1 = _strict_pck_on_val(
+        ckpt_f1, config_path, data_dir, split_config, _DEVICE, phase_eval_dir
+    )
     print(f"\n[Fase 1] Best checkpoint: {ckpt_f1}  |  PCK@0.2 (estrito) = {pck_f1:.4f}")
 
     # ── Fase 2: descongelar stages 2-3, LR diferenciado ─────────────────────
@@ -298,11 +314,13 @@ def _run_transfer_learning(
         "load_from": ckpt_f1,
         "optim_wrapper": _build_tl_optim_override(2),
     }
-    runner2 = _build_runner(config_path, _bs(overrides_f2))
+    runner2 = _build_runner(config_path, _bs(overrides_f2), seed)
     runner2.train()
 
     ckpt_f2 = _find_best_checkpoint(work_dir_f2)
-    pck_f2 = _strict_pck_on_val(ckpt_f2, config_path, data_dir, split_config, _DEVICE)
+    pck_f2 = _strict_pck_on_val(
+        ckpt_f2, config_path, data_dir, split_config, _DEVICE, phase_eval_dir
+    )
     print(f"\n[Fase 2] Best checkpoint: {ckpt_f2}  |  PCK@0.2 (estrito) = {pck_f2:.4f}")
 
     delta = pck_f2 - pck_f1
@@ -328,11 +346,13 @@ def _run_transfer_learning(
             "load_from": ckpt_f2,
             "optim_wrapper": _build_tl_optim_override(3),
         }
-        runner3 = _build_runner(config_path, _bs(overrides_f3))
+        runner3 = _build_runner(config_path, _bs(overrides_f3), seed)
         runner3.train()
 
         ckpt_f3 = _find_best_checkpoint(work_dir_f3)
-        pck_f3 = _strict_pck_on_val(ckpt_f3, config_path, data_dir, split_config, _DEVICE)
+        pck_f3 = _strict_pck_on_val(
+            ckpt_f3, config_path, data_dir, split_config, _DEVICE, phase_eval_dir
+        )
         print(f"\n[Fase 3] Best checkpoint: {ckpt_f3}  |  PCK@0.2 (estrito) = {pck_f3:.4f}")
         # fica com o melhor entre fase 2 e 3 (a fase 3 pode degradar)
         final_ckpt = ckpt_f3 if pck_f3 > pck_f2 else ckpt_f2
@@ -364,6 +384,7 @@ def main() -> None:
             epochs=args.epochs,
             batch_size=args.batch_size,
             val_interval=args.val_interval,
+            seed=args.seed,
         )
     else:  # C ou D
         _run_transfer_learning(
@@ -375,6 +396,7 @@ def main() -> None:
             delta_pck=args.delta_pck,
             batch_size=args.batch_size,
             val_interval=args.val_interval,
+            seed=args.seed,
         )
 
 
