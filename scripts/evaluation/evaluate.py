@@ -31,6 +31,7 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).parents[2] / "src"))
 
 from football_orient_pose.evaluation import (
+    H3WB_SIGMAS,
     compute_mpjpe_2d,
     compute_oks,
     compute_pck,
@@ -152,6 +153,8 @@ def run_evaluation(
     pdj_r = compute_pdj(pred, gt, threshold=0.5)
     pck_r = compute_pck(pred, gt, threshold=0.2)
     oks_r = compute_oks(pred, gt)
+    # OKS como no COCO (k_j = 2σ_j); o `oks` acima usa k_j = σ_j, a variante reportada no artigo.
+    oks_coco_r = compute_oks(pred, gt, sigmas=2.0 * H3WB_SIGMAS)
     mpjpe_r = compute_mpjpe_2d(pred, gt)
 
     # Extrai cenário do checkpoint path para o filename de saída
@@ -169,6 +172,8 @@ def run_evaluation(
         "oks_ap50": round(float(oks_r.ap50), 6),
         "oks_ap75": round(float(oks_r.ap75), 6),
         "oks_map": round(float(oks_r.ap), 6),
+        "oks_coco": round(float(oks_coco_r.global_oks), 6),
+        "oks_coco_map": round(float(oks_coco_r.ap), 6),
         "mpjpe_2d_px": round(float(mpjpe_r.global_mpjpe), 4),
         "pdj_per_group": {k: round(v, 6) for k, v in pdj_r.per_group.items()},
         "pck_per_group": {k: round(v, 6) for k, v in pck_r.per_group.items()},
@@ -197,6 +202,7 @@ def _print_table(r: dict) -> None:
     print(f"  AP50        {r['oks_ap50']*100:>8.2f}%")
     print(f"  AP75        {r['oks_ap75']*100:>8.2f}%")
     print(f"  mAP         {r['oks_map']*100:>8.2f}%")
+    print(f"  OKS (COCO)  {r['oks_coco']*100:>8.2f}%")
     print(f"  MPJPE-2D    {r['mpjpe_2d_px']:>8.2f} px")
     print(f"{'='*w}")
     print("\n  Por grupo anatômico (PCK@0.2):")

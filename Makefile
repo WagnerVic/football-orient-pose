@@ -18,7 +18,7 @@ INPUT   ?= data/examples/test_00001.mp4
 .PHONY: setup clean-data help demo test lint \
         finetuning-env finetuning-checkpoint finetuning-smoke \
         train-a train-b train-c train-d evaluate \
-        docker-build docker-save docker-train \
+        docker-build docker-save docker-train docker-seeds monitor \
         docker-eval-detector docker-eval-cascade docker-detectors-table \
         docker-pipeline-finetuned \
         pose-all-brazil docker-pose-all-brazil gifs
@@ -108,6 +108,29 @@ docker-train:
 		-v $(RESULTS_HOST):/workspace/results \
 		$(IMAGE):latest python scripts/training/train.py --cenario $(CENARIO)
 
+## Table III settings with several seeds (GPU container), results in $(RUNS_HOST)/<RUN_NAME>/
+## Run inside tmux. Parameters (env): SEEDS, SCENARIOS, EPOCHS_SCRATCH, F1, F2, F3, BATCH,
+## DELTA_PCK, VAL_INTERVAL, RUN_NAME — see scripts/training/run_seeds.sh.
+## e.g. make docker-seeds SEEDS="1 2 3"   |   follow it with: make monitor
+RUNS_HOST ?= $(HOME)/runs
+docker-seeds:
+	@mkdir -p $(RUNS_HOST)
+	@docker run --rm --gpus all --shm-size=16g \
+		-e SEEDS -e SCENARIOS -e EPOCHS_SCRATCH -e F1 -e F2 -e F3 -e BATCH \
+		-e DELTA_PCK -e VAL_INTERVAL -e RUN_NAME -e KEEP_EPOCH_CKPTS \
+		-e GIT_COMMIT=$(shell git rev-parse --short HEAD) \
+		-e HOST_UID=$$(id -u) -e HOST_GID=$$(id -g) \
+		-v $(DATA_HOST):/workspace/data:ro \
+		-v $(RUNS_HOST):/workspace/runs \
+		-v $(CURDIR)/src:/workspace/src:ro \
+		-v $(CURDIR)/scripts:/workspace/scripts:ro \
+		-v $(CURDIR)/configs:/workspace/configs:ro \
+		$(IMAGE):latest bash scripts/training/run_seeds.sh
+
+## Live dashboard of the latest run in $(RUNS_HOST) (host side, no dependencies)
+monitor:
+	@python3 scripts/training/monitor.py --root $(RUNS_HOST)
+
 ## Benchmark one detector against the hand-annotated boxes (GPU container)
 ## e.g. make docker-eval-detector DET=yolo26 WEIGHTS=yolo26x.pt   (DET=yolo26|faster-rcnn|retinanet)
 ## Writes results/tables/detector_<DET>.json plus a prediction cache.
@@ -192,6 +215,8 @@ help:
 	@echo "    make evaluate CENARIO=D                 evaluate a checkpoint on the validation split"
 	@echo "    make docker-build                       build the fine-tuning image"
 	@echo "    make docker-train CENARIO=D             train inside the GPU container"
+	@echo "    make docker-seeds SEEDS=\"1 2 3\"        Table III settings with several seeds"
+	@echo "    make monitor                            live dashboard of the latest run"
 	@echo ""
 	@echo "  Detector benchmark"
 	@echo "    make docker-eval-detector DET=yolo26    evaluate one detector (GPU container)"
