@@ -74,6 +74,10 @@ def _parse_args() -> argparse.Namespace:
         help="Sobrescreve val_interval (épocas entre validações; útil p/ treinos curtos)",
     )
     p.add_argument(
+        "--allow-cpu", action="store_true",
+        help="permite treinar sem GPU (só para testes; o MMEngine cairia na CPU em silêncio)",
+    )
+    p.add_argument(
         "--seed", type=int, default=None,
         help="Semente do MMEngine (randomness.seed) usada em todas as fases; "
              "sem ela, cada execução sorteia uma semente",
@@ -370,6 +374,8 @@ def _run_transfer_learning(
 
 def main() -> None:
     args = _parse_args()
+    if not torch.cuda.is_available() and not args.allow_cpu:
+        sys.exit("ERRO: nenhuma GPU CUDA disponível — o treino não roda na CPU sem --allow-cpu.")
     cenario = args.cenario.upper()
 
     work_dir = args.work_dir or f"results/checkpoints/cenario_{cenario}"

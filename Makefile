@@ -113,11 +113,22 @@ docker-train:
 ## DELTA_PCK, VAL_INTERVAL, RUN_NAME — see scripts/training/run_seeds.sh.
 ## e.g. make docker-seeds SEEDS="1 2 3"   |   follow it with: make monitor
 RUNS_HOST ?= $(HOME)/runs
+# Driver do host quebrado (bibliotecas atualizadas, módulo antigo carregado)? Aponte NVIDIA_LIBS
+# para as bibliotecas da versão do módulo carregado (extraídas do .run oficial da NVIDIA):
+# o container recebe a GPU direto pelos /dev/nvidia* e usa essas bibliotecas no lugar das do host.
+NVIDIA_LIBS ?=
+ifneq ($(NVIDIA_LIBS),)
+GPU_ARGS := --device=/dev/nvidia0 --device=/dev/nvidiactl --device=/dev/nvidia-uvm \
+	--device=/dev/nvidia-uvm-tools -v $(NVIDIA_LIBS):/usr/local/nvidia/lib64:ro \
+	-e LD_LIBRARY_PATH=/usr/local/nvidia/lib64
+else
+GPU_ARGS := --gpus all
+endif
 docker-seeds:
 	@mkdir -p $(RUNS_HOST)
-	@docker run --rm --gpus all --shm-size=16g \
+	@docker run --rm $(GPU_ARGS) --shm-size=16g \
 		-e SEEDS -e SCENARIOS -e EPOCHS_SCRATCH -e F1 -e F2 -e F3 -e BATCH \
-		-e DELTA_PCK -e VAL_INTERVAL -e RUN_NAME -e KEEP_EPOCH_CKPTS -e SCENARIO_SEEDS -e REFERENCE \
+		-e DELTA_PCK -e VAL_INTERVAL -e RUN_NAME -e KEEP_EPOCH_CKPTS -e SCENARIO_SEEDS -e REFERENCE -e RESUME \
 		-e GIT_COMMIT=$(shell git rev-parse --short HEAD) \
 		-e HOST_UID=$$(id -u) -e HOST_GID=$$(id -g) \
 		-v $(DATA_HOST):/workspace/data:ro \
@@ -129,7 +140,7 @@ docker-seeds:
 
 ## Live dashboard of the latest run in $(RUNS_HOST) (host side, no dependencies)
 monitor:
-	@python3 scripts/training/monitor.py --root $(RUNS_HOST)
+	@$(if $(NVIDIA_LIBS),NVIDIA_LIBS=$(NVIDIA_LIBS) )python3 scripts/training/monitor.py --root $(RUNS_HOST)
 
 ## Benchmark one detector against the hand-annotated boxes (GPU container)
 ## e.g. make docker-eval-detector DET=yolo26 WEIGHTS=yolo26x.pt   (DET=yolo26|faster-rcnn|retinanet)
