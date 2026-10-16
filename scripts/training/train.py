@@ -33,6 +33,8 @@ from pathlib import Path
 
 # Garante que o src/ do projeto está no path
 sys.path.insert(0, str(Path(__file__).parents[2] / "src"))
+# run_evaluation (avaliação estrita entre as fases do TL) vive em scripts/evaluation/
+sys.path.insert(0, str(Path(__file__).parents[1] / "evaluation"))
 
 import torch
 
