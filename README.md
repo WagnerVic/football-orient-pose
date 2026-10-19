@@ -41,14 +41,14 @@ This project builds a complete pipeline for the problem and, instead of choosing
 reputation, **lets experiments decide every stage**. Four person detectors are compared against
 human annotations, three pose estimators are benchmarked on soccer shots, and the winner is adapted
 to the domain in a controlled study that separates the effect of pretrained weights from the effect
-of data augmentation. The adapted estimator is **25.8 points more precise** than the off-the-shelf
+of data augmentation. The adapted estimator is **25.4 points more precise** than the off-the-shelf
 one — without new data and without a bigger model.
 
 <div align="center">
 
-| **84.4 mAP** | **41.8% → 67.5%** | **1.1 pp** | **1 command** |
+| **84.4 mAP** | **41.8% → 67.2%** | **1.2 pp** | **1 command** |
 |:---:|:---:|:---:|:---:|
-| best of four person detectors<br>(YOLO26x) | PCK@0.2 of RTMPose-X,<br>off-the-shelf → adapted | train–validation gap<br>of the adapted model | to run the pipeline<br>on your own video |
+| best of four person detectors<br>(YOLO26x) | PCK@0.2 of RTMPose-X,<br>off-the-shelf → adapted (mean of 10 runs) | train–validation gap<br>of the adapted model | to run the pipeline<br>on your own video |
 
 </div>
 
@@ -57,11 +57,11 @@ one — without new data and without a bigger model.
 - **The bottleneck is localization, not detection.** Off-the-shelf RTMPose-X finds the right body
   region for 93.6% of the joints (PDJ@0.5) but places only 41.8% of them precisely (PCK@0.2).
 - **Domain adaptation, not model capacity, closes the gap.** Fine-tuning from COCO weights with
-  data augmentation reaches 67.5% PCK@0.2 with almost no overfitting, and is the only setting that
+  data augmentation reaches 67.2% PCK@0.2 (± 0.1 over 10 runs) with almost no overfitting, and is the only setting that
   brings elbows, wrists, knees and ankles above the off-the-shelf level.
 - **Pretrained weights and augmentation are complementary.** Starting from COCO weights beats
-  training from scratch at every augmentation level (+15.1 pp without augmentation, +9.4 pp with
-  it), and augmentation helps both (+20.3 pp from scratch, +14.7 pp from COCO). Neither alone gets
+  training from scratch at every augmentation level (+15.4 pp without augmentation, +9.9 pp with
+  it), and augmentation helps both (+20.0 pp from scratch, +14.4 pp from COCO). Neither alone gets
   close to the combination.
 - **What augmentation really buys is geometry.** Horizontal flip plus rotation, scale and shift
   account for about 90% of the augmentation gain; synthetic occlusion and motion blur add about
@@ -114,30 +114,33 @@ what drags their precision below 60%.
 RTMPose-X trained on the 3DSP training split (160 clips, split by clip to avoid leakage), from COCO
 weights (transfer learning, with progressive unfreezing) or from random weights, with or without
 augmentation. Same protocol for every cell: batch 64, AdamW, 150 epochs, best checkpoint by PCK@0.2.
+Each setting was trained 10 times with different random seeds; the table reports mean ± standard
+deviation. All four pairwise effects are significant (p < 0.001, Welch and Mann-Whitney with Holm
+correction; [`significance_table3.py`](scripts/evaluation/significance_table3.py)).
 
 | Setting | Init | Augmentation | PCK@0.2 ↑ | PDJ@0.5 ↑ | OKS ↑ | MPJPE-2D (px) ↓ | Train–val gap |
 |---|---|---|---:|---:|---:|---:|---:|
 | Zero-shot | COCO | — | 41.8 | 93.6 | 81.8 | 4.81 | — |
-| A | random | none | 37.8 | 86.5 | 74.5 | 6.76 | — |
-| B | random | full | 58.1 | 93.6 | 85.3 | 4.09 | 37.1 pp |
-| C | COCO | none | 52.9 | 91.5 | 82.2 | 4.80 | 12.2 pp |
-| **D-FULL** | **COCO** | **full** | **67.5** | **96.6** | **89.8** | **3.08** | **1.1 pp** |
+| A | random | none | 37.4 ± 0.7 | 86.5 ± 0.5 | 74.2 ± 0.6 | 6.74 ± 0.18 | — |
+| B | random | full | 57.4 ± 0.8 | 93.4 ± 0.6 | 84.9 ± 0.5 | 4.18 ± 0.16 | 35.9 ± 2.3 pp |
+| C | COCO | none | 52.8 ± 0.5 | 91.6 ± 0.2 | 82.1 ± 0.3 | 4.81 ± 0.05 | 12.3 ± 0.3 pp |
+| **D-FULL** | **COCO** | **full** | **67.2 ± 0.1** | **96.5 ± 0.1** | **89.8 ± 0.1** | **3.10 ± 0.02** | **1.2 ± 0.1 pp** |
 
 "Full" augmentation is an additive ladder: horizontal flip → geometric (rotation ±30°, scale
 0.75–1.25, shift 0.1) → occlusion → motion blur.
 
 <details>
-<summary>PCK@0.2 per body part</summary>
+<summary>PCK@0.2 per body part (mean of 10 runs)</summary>
 
 | Part | Zero-shot | C (transfer only) | B (augmentation only) | **D-FULL** |
 |---|---:|---:|---:|---:|
-| Head | 50.4 | 73.9 | 87.6 | **89.5** |
-| Shoulder | 30.4 | 64.9 | 70.5 | **78.4** |
-| Elbow | 50.8 | 39.4 | 42.6 | **56.4** |
-| Wrist | 43.5 | 31.0 | 33.6 | **46.1** |
-| Hip | 22.8 | 54.5 | 60.2 | **69.3** |
-| Knee | 58.3 | 47.3 | 53.5 | **64.8** |
-| Ankle | 59.4 | 51.6 | 54.0 | **67.2** |
+| Head | 50.4 | 72.8 | 85.0 | **88.8** |
+| Shoulder | 30.4 | 65.1 | 69.9 | **78.5** |
+| Elbow | 50.8 | 39.6 | 41.2 | **55.9** |
+| Wrist | 43.5 | 30.7 | 32.8 | **46.1** |
+| Hip | 22.8 | 54.8 | 59.9 | **69.6** |
+| Knee | 58.3 | 47.3 | 53.1 | **63.8** |
+| Ankle | 59.4 | 51.3 | 54.0 | **66.8** |
 
 Only the combination of transfer learning and augmentation lifts the extremities above zero-shot.
 

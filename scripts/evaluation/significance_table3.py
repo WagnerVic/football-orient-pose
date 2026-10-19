@@ -72,7 +72,9 @@ def holm(pvals: list[float]) -> list[float]:
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     ap.add_argument("csv", help="execucoes.csv de resultados-tabela3/dados/")
     args = ap.parse_args()
 
@@ -82,11 +84,13 @@ def main() -> None:
         n = len(v["A"])
         print(f"\n== {metric} (n = {n} por cenário) ==")
         for k in CELLS:
-            print(f"  {k:7s} {v[k].mean():7.2f} ± {v[k].std(ddof=1):.2f}  [{v[k].min():.2f}–{v[k].max():.2f}]")
+            x = v[k]
+            print(f"  {k:7s} {x.mean():7.2f} ± {x.std(ddof=1):.2f}  [{x.min():.2f}–{x.max():.2f}]")
 
         print(f"  Levene p = {stats.levene(*v.values()).pvalue:.2g}")
         for name, (f_val, p, eta) in two_way_anova(v).items():
-            print(f"  ANOVA {name:7s} F(1,{4 * (n - 1)}) = {f_val:8.1f}  p = {p:.1e}  η²p = {eta:.3f}")
+            df_err = 4 * (n - 1)
+            print(f"  ANOVA {name:7s} F(1,{df_err}) = {f_val:8.1f}  p = {p:.1e}  η²p = {eta:.3f}")
 
         welch, mwu, lines = [], [], []
         for hi, lo, label in CONTRASTS:
@@ -96,7 +100,8 @@ def main() -> None:
             ci = stats.t.ppf(0.975, df) * np.sqrt(se2)
             welch.append(stats.ttest_ind(x, y, equal_var=False).pvalue)
             mwu.append(stats.mannwhitneyu(x, y).pvalue)
-            lines.append(f"  {hi}−{lo} ({label}): Δ = {x.mean() - y.mean():+.2f} ± {ci:.2f} (IC 95%)")
+            delta = x.mean() - y.mean()
+            lines.append(f"  {hi}−{lo} ({label}): Δ = {delta:+.2f} ± {ci:.2f} (IC 95%)")
         for line, pw, pm in zip(lines, holm(welch), holm(mwu)):
             print(f"{line}  Welch p_Holm = {pw:.1e}  Mann-Whitney p_Holm = {pm:.1e}")
 
