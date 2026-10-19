@@ -10,9 +10,9 @@
   ],
   "_sources": {
     "numbers": "Recomputed from results/tables/*.json (x100, 1 decimal, half-up; MPJPE in px, 2 decimals).",
-    "not_in_results_tables": "Settings A, B and C (matrix and per-part table) and every train-val gap (incl. D-FULL 1.1 pp) come from Tables III-IV of the submitted paper / README: results/tables has no JSON for these runs (finetuned_cenario_A/C_*.json are the preliminary Epic-1 runs, not A-RAW / C-RAW).",
-    "d_full": "D-FULL = results/tables/finetuned_fase2_val.json (phase 2 of progressive unfreezing).",
-    "abstract": "en: abstract of the submitted paper. pt: the team's own Portuguese version (resumo of the SBC draft), aligned with the submitted abstract. es, zh: translations of the submitted abstract."
+    "not_in_results_tables": "The 2x2 matrix (A, B, C, D-FULL), the per-part table and every train-val gap are the mean of 10 runs per setting (original seeds + seeds 1-9), from Tables III-IV of the camera-ready paper / README; scripts/evaluation/significance_table3.py tests the differences. results/tables has no JSON for these runs (finetuned_cenario_A/C_*.json are the preliminary Epic-1 runs, not A-RAW / C-RAW).",
+    "d_full": "D-FULL headline numbers = mean of 10 runs (see not_in_results_tables). results/tables/finetuned_fase2_val.json is the single June run (phase 2 of progressive unfreezing).",
+    "abstract": "en: abstract of the camera-ready paper. pt: the team's own Portuguese version (resumo of the SBC draft), aligned with the submitted abstract. es, zh: translations of the submitted abstract."
   },
 
   "status": "accepted",
@@ -67,10 +67,10 @@
   },
 
   "tldr": {
-    "en": "For soccer players in broadcast video, the bottleneck is localization, not detection: an off-the-shelf estimator finds the right body region for 93.6% of the joints but places only 41.8% of them precisely. Adapting it to the domain raises that to 67.5%, without new data and without a bigger model.",
-    "pt": "Para jogadores de futebol em vídeo de transmissão, o gargalo é a localização, não a detecção: um estimador de prateleira encontra a região certa do corpo para 93,6% das articulações, mas posiciona com precisão apenas 41,8% delas. Adaptá-lo ao domínio eleva esse valor para 67,5%, sem novos dados e sem um modelo maior.",
-    "es": "En jugadores de fútbol en vídeo de transmisión, el cuello de botella es la localización, no la detección: un estimador genérico sin adaptar encuentra la región correcta del cuerpo en el 93,6 % de las articulaciones, pero solo ubica con precisión el 41,8 %. Adaptarlo al dominio eleva esa cifra al 67,5 %, sin datos nuevos y sin un modelo más grande.",
-    "zh": "对于足球转播视频中的球员，瓶颈在于定位而非检测：现成的姿态估计器能为 93.6% 的关节找到正确的身体区域，但只有 41.8% 的关节定位精确。将其适配到该领域后，这一比例提升至 67.5%，既不需要新数据，也不需要更大的模型。"
+    "en": "For soccer players in broadcast video, the bottleneck is localization, not detection: an off-the-shelf estimator finds the right body region for 93.6% of the joints but places only 41.8% of them precisely. Adapting it to the domain raises that to 67.2% (mean of 10 runs), without new data and without a bigger model.",
+    "pt": "Para jogadores de futebol em vídeo de transmissão, o gargalo é a localização, não a detecção: um estimador de prateleira encontra a região certa do corpo para 93,6% das articulações, mas posiciona com precisão apenas 41,8% delas. Adaptá-lo ao domínio eleva esse valor para 67,2% (média de 10 execuções), sem novos dados e sem um modelo maior.",
+    "es": "En jugadores de fútbol en vídeo de transmisión, el cuello de botella es la localización, no la detección: un estimador genérico sin adaptar encuentra la región correcta del cuerpo en el 93,6 % de las articulaciones, pero solo ubica con precisión el 41,8 %. Adaptarlo al dominio eleva esa cifra al 67,2 % (media de 10 ejecuciones), sin datos nuevos y sin un modelo más grande.",
+    "zh": "对于足球转播视频中的球员，瓶颈在于定位而非检测：现成的姿态估计器能为 93.6% 的关节找到正确的身体区域，但只有 41.8% 的关节定位精确。将其适配到该领域后，这一比例提升至 67.2%（10 次运行的平均值），既不需要新数据，也不需要更大的模型。"
   },
 
   "highlights": [
@@ -84,16 +84,16 @@
       }
     },
     {
-      "value": { "en": "41.8% → 67.5%", "pt": "41,8% → 67,5%", "es": "41,8 % → 67,5 %", "zh": "41.8% → 67.5%" },
+      "value": { "en": "41.8% → 67.2%", "pt": "41,8% → 67,2%", "es": "41,8 % → 67,2 %", "zh": "41.8% → 67.2%" },
       "label": {
-        "en": "PCK@0.2 of RTMPose-X, off-the-shelf → adapted",
-        "pt": "PCK@0,2 do RTMPose-X, de prateleira → adaptado",
-        "es": "PCK@0,2 de RTMPose-X, sin adaptar → adaptado",
-        "zh": "RTMPose-X 的 PCK@0.2：现成模型 → 领域适配后"
+        "en": "PCK@0.2 of RTMPose-X, off-the-shelf → adapted (mean of 10 runs)",
+        "pt": "PCK@0,2 do RTMPose-X, de prateleira → adaptado (média de 10 execuções)",
+        "es": "PCK@0,2 de RTMPose-X, sin adaptar → adaptado (media de 10 ejecuciones)",
+        "zh": "RTMPose-X 的 PCK@0.2：现成模型 → 领域适配后（10 次运行的平均值）"
       }
     },
     {
-      "value": { "en": "1.1 pp", "pt": "1,1 pp", "es": "1,1 p. p.", "zh": "1.1 个百分点" },
+      "value": { "en": "1.2 pp", "pt": "1,2 pp", "es": "1,2 p. p.", "zh": "1.2 个百分点" },
       "label": {
         "en": "train–validation gap of the adapted model",
         "pt": "gap treino–validação do modelo adaptado",
@@ -113,10 +113,10 @@
   ],
 
   "abstract": {
-    "en": "Pose estimation of soccer players from broadcast video supports tactical and biomechanical analysis, but the domain is harsh: players occupy tiny image regions under motion blur, occlusion and atypical poses, degrading the localization precision of generic estimators. This work evaluates, stage by stage and quantitatively, a pipeline for the problem: it chooses the detector and the estimator by benchmark (the latter, a zero-shot of three models on 3DSP) and adapts the estimator to the domain by fine-tuning. The chosen detector (YOLO26x) reaches mAP 84.4% and recall 95.4%; fine-tuning the estimator (RTMPose-X) raises PCK@0.2 from 41.8% to 67.5%, providing the quantitative evaluation the domain lacked.",
-    "pt": "A estimação de pose de jogadores em vídeo de transmissão apoia a análise tática e biomecânica, mas o domínio é hostil: jogadores ocupam regiões minúsculas, sob borrão, oclusão e poses atípicas, degradando a precisão de localização dos estimadores genéricos. Este trabalho avalia, estágio a estágio e de forma quantitativa, um pipeline para o problema: escolhe o detector e o estimador por benchmark (este, um <em>zero-shot</em> de três modelos no 3DSP) e adapta o estimador ao domínio por <em>fine-tuning</em>. O detector escolhido (YOLO26x) atinge mAP 84,4% e <em>recall</em> 95,4%; o <em>fine-tuning</em> do estimador (RTMPose-X) eleva o PCK@0,2 de 41,8% para 67,5%, fornecendo a avaliação quantitativa que faltava ao domínio.",
-    "es": "La estimación de la pose de jugadores de fútbol a partir de vídeo de transmisión respalda el análisis táctico y biomecánico, pero el dominio es hostil: los jugadores ocupan regiones diminutas de la imagen, con desenfoque de movimiento, oclusiones y poses atípicas, lo que degrada la precisión de localización de los estimadores genéricos. Este trabajo evalúa, etapa por etapa y de forma cuantitativa, un pipeline para el problema: elige el detector y el estimador mediante benchmarks (en el caso del estimador, una evaluación <em>zero-shot</em> de tres modelos en 3DSP) y adapta el estimador al dominio mediante ajuste fino. El detector elegido (YOLO26x) alcanza un mAP del 84,4 % y un <em>recall</em> del 95,4 %; el ajuste fino del estimador (RTMPose-X) eleva el PCK@0,2 del 41,8 % al 67,5 %, lo que aporta la evaluación cuantitativa de la que carecía el dominio.",
-    "zh": "从转播视频中估计足球运动员的姿态可为战术和生物力学分析提供支持，但这一领域条件严苛：球员在图像中只占极小的区域，并伴有运动模糊、遮挡和非典型姿态，从而降低了通用估计器的定位精度。本文针对这一问题，逐阶段、定量地评估了一套处理流程：通过基准测试选择检测器和姿态估计器（后者为三个模型在 3DSP 上的零样本评估），并通过微调使估计器适应该领域。所选检测器（YOLO26x）的 mAP 达到 84.4%，召回率达到 95.4%；对估计器（RTMPose-X）进行微调后，PCK@0.2 从 41.8% 提升至 67.5%，为该领域提供了此前缺乏的定量评估。"
+    "en": "Pose estimation of soccer players from broadcast video supports tactical and biomechanical analysis, but the domain is harsh: players occupy tiny image regions under motion blur, occlusion and atypical poses, degrading the localization precision of generic estimators. This work evaluates, stage by stage and quantitatively, a pipeline for the problem: it chooses the detector and the estimator by benchmark (the latter, a zero-shot of three models on 3DSP) and adapts the estimator to the domain by fine-tuning. The chosen detector (YOLO26x) reaches mAP 84.4% and recall 95.4%; fine-tuning the estimator (RTMPose-X) raises PCK@0.2 from 41.8% to 67.2 ± 0.1% (mean of 10 runs), providing the quantitative evaluation the domain lacked.",
+    "pt": "A estimação de pose de jogadores em vídeo de transmissão apoia a análise tática e biomecânica, mas o domínio é hostil: jogadores ocupam regiões minúsculas, sob borrão, oclusão e poses atípicas, degradando a precisão de localização dos estimadores genéricos. Este trabalho avalia, estágio a estágio e de forma quantitativa, um pipeline para o problema: escolhe o detector e o estimador por benchmark (este, um <em>zero-shot</em> de três modelos no 3DSP) e adapta o estimador ao domínio por <em>fine-tuning</em>. O detector escolhido (YOLO26x) atinge mAP 84,4% e <em>recall</em> 95,4%; o <em>fine-tuning</em> do estimador (RTMPose-X) eleva o PCK@0,2 de 41,8% para 67,2 ± 0,1% (média de 10 execuções), fornecendo a avaliação quantitativa que faltava ao domínio.",
+    "es": "La estimación de la pose de jugadores de fútbol a partir de vídeo de transmisión respalda el análisis táctico y biomecánico, pero el dominio es hostil: los jugadores ocupan regiones diminutas de la imagen, con desenfoque de movimiento, oclusiones y poses atípicas, lo que degrada la precisión de localización de los estimadores genéricos. Este trabajo evalúa, etapa por etapa y de forma cuantitativa, un pipeline para el problema: elige el detector y el estimador mediante benchmarks (en el caso del estimador, una evaluación <em>zero-shot</em> de tres modelos en 3DSP) y adapta el estimador al dominio mediante ajuste fino. El detector elegido (YOLO26x) alcanza un mAP del 84,4 % y un <em>recall</em> del 95,4 %; el ajuste fino del estimador (RTMPose-X) eleva el PCK@0,2 del 41,8 % al 67,2 ± 0,1 % (media de 10 ejecuciones), lo que aporta la evaluación cuantitativa de la que carecía el dominio.",
+    "zh": "从转播视频中估计足球运动员的姿态可为战术和生物力学分析提供支持，但这一领域条件严苛：球员在图像中只占极小的区域，并伴有运动模糊、遮挡和非典型姿态，从而降低了通用估计器的定位精度。本文针对这一问题，逐阶段、定量地评估了一套处理流程：通过基准测试选择检测器和姿态估计器（后者为三个模型在 3DSP 上的零样本评估），并通过微调使估计器适应该领域。所选检测器（YOLO26x）的 mAP 达到 84.4%，召回率达到 95.4%；对估计器（RTMPose-X）进行微调后，PCK@0.2 从 41.8% 提升至 67.2 ± 0.1%（10 次运行的平均值），为该领域提供了此前缺乏的定量评估。"
   },
 
   "pipeline": {
@@ -234,28 +234,28 @@
     },
     "text": {
       "en": [
-        "RTMPose-X is fine-tuned on the 3DSP training split (160 clips, split by clip to avoid leakage) in a 2 × 2 study that starts from COCO weights or from random weights, with or without augmentation, under the same protocol: batch 64, AdamW, 150 epochs.",
-        "Pretrained weights and augmentation are complementary: each helps on its own, but only their combination, <b>D-FULL</b>, reaches <b>67.5%</b> PCK@0.2, 25.8 points above zero-shot, with a train–validation gap of 1.1 pp."
+        "RTMPose-X is fine-tuned on the 3DSP training split (160 clips, split by clip to avoid leakage) in a 2 × 2 study that starts from COCO weights or from random weights, with or without augmentation, under the same protocol: batch 64, AdamW, 150 epochs. Each setting was trained 10 times with different random seeds; the numbers below are the mean.",
+        "Pretrained weights and augmentation are complementary: each helps on its own, but only their combination, <b>D-FULL</b>, reaches <b>67.2%</b> PCK@0.2, 25.4 points above zero-shot, with a train–validation gap of 1.2 pp. Every difference in the matrix is statistically significant (p < 0.001)."
       ],
       "pt": [
-        "O RTMPose-X passa por fine-tuning na divisão de treino do 3DSP (160 clips, divididos por clip para evitar vazamento) numa matriz 2 × 2 que parte de pesos do COCO ou de pesos aleatórios, com ou sem augmentation, sob o mesmo protocolo: batch 64, AdamW, 150 épocas.",
-        "Pesos pré-treinados e augmentation são complementares: cada um ajuda sozinho, mas só a combinação dos dois, o <b>D-FULL</b>, chega a <b>67,5%</b> de PCK@0,2, 25,8 pontos acima do zero-shot, com gap treino–validação de 1,1 pp."
+        "O RTMPose-X passa por fine-tuning na divisão de treino do 3DSP (160 clips, divididos por clip para evitar vazamento) numa matriz 2 × 2 que parte de pesos do COCO ou de pesos aleatórios, com ou sem augmentation, sob o mesmo protocolo: batch 64, AdamW, 150 épocas. Cada cenário foi treinado 10 vezes com sementes aleatórias diferentes; os números abaixo são a média.",
+        "Pesos pré-treinados e augmentation são complementares: cada um ajuda sozinho, mas só a combinação dos dois, o <b>D-FULL</b>, chega a <b>67,2%</b> de PCK@0,2, 25,4 pontos acima do zero-shot, com gap treino–validação de 1,2 pp. Todas as diferenças da matriz são estatisticamente significativas (p < 0,001)."
       ],
       "es": [
-        "RTMPose-X se ajusta (<em>fine-tuning</em>) en la partición de entrenamiento de 3DSP (160 clips, divididos por clip para evitar fugas de datos) en un estudio 2 × 2 que parte de pesos de COCO o de pesos aleatorios, con o sin aumento de datos, bajo el mismo protocolo: batch 64, AdamW, 150 épocas.",
-        "Los pesos preentrenados y el aumento de datos son complementarios: cada uno ayuda por sí solo, pero solo su combinación, <b>D-FULL</b>, alcanza un <b>67,5 %</b> de PCK@0,2, 25,8 puntos por encima del zero-shot, con una brecha entre entrenamiento y validación de 1,1 p. p."
+        "RTMPose-X se ajusta (<em>fine-tuning</em>) en la partición de entrenamiento de 3DSP (160 clips, divididos por clip para evitar fugas de datos) en un estudio 2 × 2 que parte de pesos de COCO o de pesos aleatorios, con o sin aumento de datos, bajo el mismo protocolo: batch 64, AdamW, 150 épocas. Cada escenario se entrenó 10 veces con semillas aleatorias distintas; las cifras de abajo son la media.",
+        "Los pesos preentrenados y el aumento de datos son complementarios: cada uno ayuda por sí solo, pero solo su combinación, <b>D-FULL</b>, alcanza un <b>67,2 %</b> de PCK@0,2, 25,4 puntos por encima del zero-shot, con una brecha entre entrenamiento y validación de 1,2 p. p. Todas las diferencias de la matriz son estadísticamente significativas (p < 0,001)."
       ],
       "zh": [
-        "我们在 3DSP 训练集（160 个片段，按片段划分以避免数据泄漏）上对 RTMPose-X 进行微调，采用 2 × 2 实验设计：从 COCO 权重或随机权重出发，分别使用或不使用数据增强，训练设置保持一致：batch 64、AdamW、150 个 epoch。",
-        "预训练权重与数据增强相辅相成：二者单独使用都有帮助，但只有二者结合的 <b>D-FULL</b> 达到 <b>67.5%</b> 的 PCK@0.2，比零样本高 25.8 个百分点，且训练–验证差距仅为 1.1 个百分点。"
+        "我们在 3DSP 训练集（160 个片段，按片段划分以避免数据泄漏）上对 RTMPose-X 进行微调，采用 2 × 2 实验设计：从 COCO 权重或随机权重出发，分别使用或不使用数据增强，训练设置保持一致：batch 64、AdamW、150 个 epoch。每种设置均使用不同随机种子训练 10 次，下表数值为平均值。",
+        "预训练权重与数据增强相辅相成：二者单独使用都有帮助，但只有二者结合的 <b>D-FULL</b> 达到 <b>67.2%</b> 的 PCK@0.2，比零样本高 25.4 个百分点，且训练–验证差距仅为 1.2 个百分点。矩阵中的所有差异均具有统计显著性（p < 0.001）。"
       ]
     },
     "matrix": {
       "caption": {
-        "en": "PCK@0.2 (%) on the 3DSP validation split. Full augmentation is an additive ladder: horizontal flip → rotation ±30°, scale 0.75–1.25, shift 0.1 → occlusion → motion blur. Gap = train − validation PCK@0.2.",
-        "pt": "PCK@0,2 (%) na divisão de validação do 3DSP. A augmentation completa é uma escada incremental: flip horizontal → rotação ±30°, escala 0,75–1,25, deslocamento 0,1 → oclusão → borrão de movimento. Gap = PCK@0,2 de treino − validação.",
-        "es": "PCK@0,2 (%) en la partición de validación de 3DSP. El aumento completo es una escalera incremental: volteo horizontal → rotación ±30°, escala 0,75–1,25, desplazamiento 0,1 → oclusión → desenfoque de movimiento. Brecha = PCK@0,2 de entrenamiento − validación.",
-        "zh": "3DSP 验证集上的 PCK@0.2（%）。完整数据增强按递进方式叠加：水平翻转 → 旋转 ±30°、缩放 0.75–1.25、平移 0.1 → 遮挡 → 运动模糊。差距 = 训练集 PCK@0.2 − 验证集 PCK@0.2。"
+        "en": "PCK@0.2 (%) on the 3DSP validation split, mean of 10 runs. Full augmentation is an additive ladder: horizontal flip → rotation ±30°, scale 0.75–1.25, shift 0.1 → occlusion → motion blur. Gap = train − validation PCK@0.2.",
+        "pt": "PCK@0,2 (%) na divisão de validação do 3DSP, média de 10 execuções. A augmentation completa é uma escada incremental: flip horizontal → rotação ±30°, escala 0,75–1,25, deslocamento 0,1 → oclusão → borrão de movimento. Gap = PCK@0,2 de treino − validação.",
+        "es": "PCK@0,2 (%) en la partición de validación de 3DSP, media de 10 ejecuciones. El aumento completo es una escalera incremental: volteo horizontal → rotación ±30°, escala 0,75–1,25, desplazamiento 0,1 → oclusión → desenfoque de movimiento. Brecha = PCK@0,2 de entrenamiento − validación.",
+        "zh": "3DSP 验证集上的 PCK@0.2（%），10 次运行的平均值。完整数据增强按递进方式叠加：水平翻转 → 旋转 ±30°、缩放 0.75–1.25、平移 0.1 → 遮挡 → 运动模糊。差距 = 训练集 PCK@0.2 − 验证集 PCK@0.2。"
       },
       "rowHeader": { "en": "Initial weights", "pt": "Pesos iniciais", "es": "Pesos iniciales", "zh": "初始权重" },
       "colHeader": { "en": "Augmentation", "pt": "Augmentation", "es": "Aumento de datos", "zh": "数据增强" },
@@ -269,12 +269,12 @@
       ],
       "cells": [
         [
-          { "id": "A", "pck": 37.8, "pdj": 86.5, "oks": 74.5, "mpjpe": 6.76, "gap": null },
-          { "id": "B", "pck": 58.1, "pdj": 93.6, "oks": 85.3, "mpjpe": 4.09, "gap": 37.1 }
+          { "id": "A", "pck": 37.4, "pdj": 86.5, "oks": 74.2, "mpjpe": 6.74, "gap": null },
+          { "id": "B", "pck": 57.4, "pdj": 93.4, "oks": 84.9, "mpjpe": 4.18, "gap": 35.9 }
         ],
         [
-          { "id": "C", "pck": 52.9, "pdj": 91.5, "oks": 82.2, "mpjpe": 4.80, "gap": 12.2 },
-          { "id": "D-FULL", "pck": 67.5, "pdj": 96.6, "oks": 89.8, "mpjpe": 3.08, "gap": 1.1, "best": true }
+          { "id": "C", "pck": 52.8, "pdj": 91.6, "oks": 82.1, "mpjpe": 4.81, "gap": 12.3 },
+          { "id": "D-FULL", "pck": 67.2, "pdj": 96.5, "oks": 89.8, "mpjpe": 3.10, "gap": 1.2, "best": true }
         ]
       ],
       "reference": {
@@ -289,10 +289,10 @@
     },
     "details": {
       "summary": {
-        "en": "PCK@0.2 per body part",
-        "pt": "PCK@0,2 por parte do corpo",
-        "es": "PCK@0,2 por parte del cuerpo",
-        "zh": "各身体部位的 PCK@0.2"
+        "en": "PCK@0.2 per body part (mean of 10 runs)",
+        "pt": "PCK@0,2 por parte do corpo (média de 10 execuções)",
+        "es": "PCK@0,2 por parte del cuerpo (media de 10 ejecuciones)",
+        "zh": "各身体部位的 PCK@0.2（10 次运行的平均值）"
       },
       "caption": {
         "en": "Zero-shot is weakest at the hips and shoulders. Only the combination of transfer learning and augmentation lifts elbows, wrists, knees and ankles above zero-shot.",
@@ -324,13 +324,13 @@
         { "label": "D-FULL", "decimals": 1, "best": true }
       ],
       "rows": [
-        { "cells": [{ "en": "Head", "pt": "Cabeça", "es": "Cabeza", "zh": "头部" }, 50.4, 73.9, 87.6, 89.5] },
-        { "cells": [{ "en": "Shoulder", "pt": "Ombro", "es": "Hombro", "zh": "肩部" }, 30.4, 64.9, 70.5, 78.4] },
-        { "cells": [{ "en": "Elbow", "pt": "Cotovelo", "es": "Codo", "zh": "肘部" }, 50.8, 39.4, 42.6, 56.4] },
-        { "cells": [{ "en": "Wrist", "pt": "Punho", "es": "Muñeca", "zh": "腕部" }, 43.5, 31.0, 33.6, 46.1] },
-        { "cells": [{ "en": "Hip", "pt": "Quadril", "es": "Cadera", "zh": "髋部" }, 22.8, 54.5, 60.2, 69.3] },
-        { "cells": [{ "en": "Knee", "pt": "Joelho", "es": "Rodilla", "zh": "膝部" }, 58.3, 47.3, 53.5, 64.8] },
-        { "cells": [{ "en": "Ankle", "pt": "Tornozelo", "es": "Tobillo", "zh": "踝部" }, 59.4, 51.6, 54.0, 67.3] }
+        { "cells": [{ "en": "Head", "pt": "Cabeça", "es": "Cabeza", "zh": "头部" }, 50.4, 72.8, 85.0, 88.8] },
+        { "cells": [{ "en": "Shoulder", "pt": "Ombro", "es": "Hombro", "zh": "肩部" }, 30.4, 65.1, 69.9, 78.5] },
+        { "cells": [{ "en": "Elbow", "pt": "Cotovelo", "es": "Codo", "zh": "肘部" }, 50.8, 39.6, 41.2, 55.9] },
+        { "cells": [{ "en": "Wrist", "pt": "Punho", "es": "Muñeca", "zh": "腕部" }, 43.5, 30.7, 32.8, 46.1] },
+        { "cells": [{ "en": "Hip", "pt": "Quadril", "es": "Cadera", "zh": "髋部" }, 22.8, 54.8, 59.9, 69.6] },
+        { "cells": [{ "en": "Knee", "pt": "Joelho", "es": "Rodilla", "zh": "膝部" }, 58.3, 47.3, 53.1, 63.8] },
+        { "cells": [{ "en": "Ankle", "pt": "Tornozelo", "es": "Tobillo", "zh": "踝部" }, 59.4, 51.3, 54.0, 66.8] }
       ]
     }
   },
