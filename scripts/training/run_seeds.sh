@@ -16,6 +16,11 @@
 #   BATCH=64  DELTA_PCK=0.05      VAL_INTERVAL= (vazio = o do config)
 #   RUN_NAME=<data>_seeds         pasta da execução em runs/
 #   KEEP_EPOCH_CKPTS=0            1 = mantém epoch_*.pth (por padrão só os best_*.pth ficam)
+#   RESUME=0                      1 = retoma RUN_NAME existente: pula etapas já concluídas e acrescenta
+#                                 ao progress.tsv (etapa de treino incompleta é refeita do zero)
+#
+# Antes de cada etapa a GPU é conferida; sem GPU a execução inteira é interrompida (ABORTED=gpu no
+# params.env, linha "abort" no progress.tsv) em vez de seguir para as próximas sementes.
 #   REFERENCE=docs/experiments/reference_run1.json
 #                                 métricas de referência; o monitor mostra a comparação com elas
 
@@ -30,6 +35,7 @@ BATCH=${BATCH:-64}
 DELTA_PCK=${DELTA_PCK:-0.05}
 VAL_INTERVAL=${VAL_INTERVAL:-}
 KEEP_EPOCH_CKPTS=${KEEP_EPOCH_CKPTS:-0}
+RESUME=${RESUME:-0}
 RUN_NAME=${RUN_NAME:-$(date +%Y%m%d_%H%M%S)_seeds}
 RUN="runs/${RUN_NAME}"
 
@@ -41,10 +47,18 @@ else
   for seed in $SEEDS; do for scen in $SCENARIOS; do PLAN+=("${seed}:${scen}"); done; done
 fi
 
+if [[ "$RESUME" != 1 && -f "$RUN/progress.tsv" ]]; then
+  echo "ERRO: $RUN já existe — use RESUME=1 para retomar ou outro RUN_NAME (nada foi alterado)." >&2
+  exit 2
+fi
 mkdir -p "$RUN"
 # O container roda como root: devolve a posse dos arquivos ao usuário do host ao sair.
 trap '[[ -n "${HOST_UID:-}" ]] && chown -R "${HOST_UID}:${HOST_GID:-$HOST_UID}" "$RUN"' EXIT
 
+if [[ "$RESUME" == 1 && -f "$RUN/params.env" && -f "$RUN/progress.tsv" ]]; then
+  sed -i '/^FINISHED=/d; /^ABORTED=/d' "$RUN/params.env"
+  echo "RESUMED=$(date -Iseconds) commit ${GIT_COMMIT:-unknown}" >> "$RUN/params.env"
+else
 cat > "$RUN/params.env" <<EOF
 RUN_NAME=${RUN_NAME}
 SEEDS=${SEEDS}
@@ -62,6 +76,7 @@ REFERENCE=${REFERENCE:-}
 STARTED=$(date -Iseconds)
 EOF
 printf 'time\tseed\tscenario\tstep\tstatus\tseconds\tlog\n' > "$RUN/progress.tsv"
+fi
 
 config_of() {
   case "$1" in
@@ -74,9 +89,26 @@ progress() {  # seed scenario step status seconds log
   printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\n' "$(date -Iseconds)" "$@" >> "$RUN/progress.tsv"
 }
 
+gpu_ok() {
+  python -c "import sys, torch; sys.exit(0 if torch.cuda.is_available() else 1)" 2>/dev/null
+}
+
+# Etapa já concluída numa execução anterior (só vale com RESUME=1).
+already_done() {  # seed scenario step output
+  [[ "$RESUME" == 1 && -f "$4" ]] &&
+    awk -F'\t' -v s="$1" -v c="$2" -v n="$3" \
+      '$2==s && $3==c && $4==n && $5=="done" {f=1} END {exit !f}' "$RUN/progress.tsv"
+}
+
 # Executa um passo com o log em arquivo e registra início/fim no progress.tsv.
 step() {  # seed scenario step log -- comando...
   local seed=$1 scen=$2 name=$3 log=$4; shift 5
+  if ! gpu_ok; then
+    progress "$seed" "$scen" "$name" abort 0 "$log"
+    echo "ABORTED=gpu $(date -Iseconds)" >> "$RUN/params.env"
+    echo "[$(date +%H:%M:%S)] GPU INDISPONÍVEL antes de seed ${seed} · ${scen} · ${name} — execução interrompida"
+    exit 3
+  fi
   progress "$seed" "$scen" "$name" start 0 "$log"
   echo "[$(date +%H:%M:%S)] seed ${seed} · ${scen} · ${name}"
   local t0=$SECONDS
@@ -105,11 +137,18 @@ for item in "${PLAN[@]}"; do
     fi
     [[ -n "$VAL_INTERVAL" ]] && train_args+=(--val-interval "$VAL_INTERVAL")
 
-    step "$seed" "$scen" train "$dir/logs/train_${scen}.log" -- \
-      python scripts/training/train.py --cenario "$scen" "${train_args[@]}" \
-        --batch-size "$BATCH" --seed "$seed" --work-dir "$work" || continue
+    if already_done "$seed" "$scen" train "$work/best_PCK.pth"; then
+      echo "[$(date +%H:%M:%S)] seed ${seed} · ${scen} · train já concluído — pulando"
+    else
+      [[ "$RESUME" == 1 ]] && rm -rf "$work"  # treino incompleto da execução anterior: recomeça limpo
+      step "$seed" "$scen" train "$dir/logs/train_${scen}.log" -- \
+        python scripts/training/train.py --cenario "$scen" "${train_args[@]}" \
+          --batch-size "$BATCH" --seed "$seed" --work-dir "$work" || continue
+    fi
 
     for split in val train; do
+      out="$dir/tables/finetuned_cenario_${scen}_${split}.json"
+      already_done "$seed" "$scen" "eval_${split}" "$out" && continue
       step "$seed" "$scen" "eval_${split}" "$dir/logs/eval_${scen}_${split}.log" -- \
         python scripts/evaluation/evaluate.py --checkpoint "$work/best_PCK.pth" \
           --config "configs/cenario_${cfg}.py" --split "$split" --output-dir "$dir/tables"
