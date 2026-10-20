@@ -9,6 +9,7 @@ from pathlib import Path
 import numpy as np
 
 from football_orient_pose.evaluation import (
+    H3WB_SIGMAS,
     compute_mpjpe_2d,
     compute_oks,
     compute_pck,
@@ -72,6 +73,7 @@ def _print_table(result: dict) -> None:
     print(f"  AP50        {result['oks']['ap50']*100:>7.2f}%")
     print(f"  AP75        {result['oks']['ap75']*100:>7.2f}%")
     print(f"  mAP         {result['oks']['ap']*100:>7.2f}%")
+    print(f"  OKS (COCO)  {result['oks_coco']['global_oks']*100:>7.2f}%")
     print(f"  MPJPE-2D    {result['mpjpe_2d']['global_px']:>7.2f} px")
     print(f"  F1-macro    {result['f1_macro']*100:>7.2f}%")
     print(f"{'='*w}\n")
@@ -102,6 +104,7 @@ def evaluate(
     pdj = compute_pdj(pred, gt, threshold=0.5)
     pck = compute_pck(pred, gt, threshold=0.2)
     oks = compute_oks(pred, gt)
+    oks_coco = compute_oks(pred, gt, sigmas=2.0 * H3WB_SIGMAS)  # k_j = 2σ_j, a constante do COCO
     mpjpe = compute_mpjpe_2d(pred, gt)
     det = joint_detection_report(pred, gt, threshold=0.5)
 
@@ -117,6 +120,12 @@ def evaluate(
             "ap": round(float(oks.ap), 6),
             "ap50": round(float(oks.ap50), 6),
             "ap75": round(float(oks.ap75), 6),
+        },
+        "oks_coco": {
+            "global_oks": round(float(oks_coco.global_oks), 6),
+            "ap": round(float(oks_coco.ap), 6),
+            "ap50": round(float(oks_coco.ap50), 6),
+            "ap75": round(float(oks_coco.ap75), 6),
         },
         "mpjpe_2d": {
             "global_px": round(float(mpjpe.global_mpjpe), 4),

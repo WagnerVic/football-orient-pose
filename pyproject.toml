@@ -8,6 +8,7 @@ authors = [
     { name = "Victor Gabriel Ribeiro Jacome" },
     { name = "Raphael Alves de Lima Soares" },
     { name = "André Guilherme Alves do Carmo" },
+    { name = "Ricardo Augusto Pereira Franco" },
 ]
 readme = "README.md"
 license = { text = "MIT" }

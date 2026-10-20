@@ -41,8 +41,8 @@ This project builds a complete pipeline for the problem and, instead of choosing
 reputation, **lets experiments decide every stage**. Four person detectors are compared against
 human annotations, three pose estimators are benchmarked on soccer shots, and the winner is adapted
 to the domain in a controlled study that separates the effect of pretrained weights from the effect
-of data augmentation. The adapted estimator is **25.4 points more precise** than the off-the-shelf
-one — without new data and without a bigger model.
+of data augmentation. The adapted estimator gains **25.4 percentage points of PCK@0.2** over the
+off-the-shelf one — without new data and without a bigger model.
 
 <div align="center">
 
@@ -115,8 +115,12 @@ RTMPose-X trained on the 3DSP training split (160 clips, split by clip to avoid 
 weights (transfer learning, with progressive unfreezing) or from random weights, with or without
 augmentation. Same protocol for every cell: batch 64, AdamW, 150 epochs, best checkpoint by PCK@0.2.
 Each setting was trained 10 times with different random seeds; the table reports mean ± standard
-deviation. All four pairwise effects are significant (p < 0.001, Welch and Mann-Whitney with Holm
-correction; [`significance_table3.py`](scripts/evaluation/significance_table3.py)).
+deviation. All four pairwise effects are significant (p < 0.001, Welch t-test and exact Mann-Whitney
+with Holm correction), and the two factors are sub-additive (interaction −5.5 ± 0.8 pp, 95% CI with
+Welch-Satterthwaite degrees of freedom). Per-run results are in
+[`docs/experiments/table3_runs.csv`](docs/experiments/table3_runs.csv); the tests come from
+[`significance_table3.py`](scripts/evaluation/significance_table3.py). The tests cover the variation
+across training seeds on the same validation split, not across datasets.
 
 | Setting | Init | Augmentation | PCK@0.2 ↑ | PDJ@0.5 ↑ | OKS ↑ | MPJPE-2D (px) ↓ | Train–val gap |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -228,6 +232,7 @@ players[0].keypoints_frame  # (17, 2) keypoints in frame pixels
 | Detector benchmark | `make docker-eval-detector DET=yolo26 WEIGHTS=yolo26x.pt` (also `DET=faster-rcnn`, `DET=retinanet`, and `make docker-eval-cascade`), then `make docker-detectors-table` |
 | Zero-shot estimators | `bash scripts/setup/download_models.sh`, then `uv run python -m football_orient_pose.evaluation.evaluate --model rtmpose` (or `hrnet`, `openpose`; add `--device cpu` without a GPU) |
 | Fine-tuning A, B, C, D-FULL | `make finetuning-checkpoint`, then `make train-a` … `make train-d` (or `make docker-train CENARIO=D`) |
+| Table III, 10 runs per cell | in a `tmux` on the GPU host: `SCENARIO_SEEDS="A-RAW:584961187 B:1137157804 C-RAW:525882101 D:726553664" RUN_NAME=replica make docker-seeds` (the original seeds) and `SEEDS="1 2 3 4 5 6 7 8 9" RUN_NAME=seeds make docker-seeds`; follow with `make monitor`. Significance: `uv run python scripts/evaluation/significance_table3.py` |
 | Evaluate a fine-tuned model | `make evaluate CENARIO=D` (reads `results/checkpoints/cenario_D/best_PCK.pth`) |
 | Augmentation ladder | inside the Docker image: `bash scripts/training/run_raw.sh` and `bash scripts/training/run_bd.sh` (epoch settings in each script's header) |
 | Qualitative results | `make pose-all-brazil` (add `DEVICE=cpu` without a GPU), then `make gifs` |
