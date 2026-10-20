@@ -45,7 +45,7 @@
 
   "links": {
     "paper": "",
-    "code": "https://github.com/WagnerVic/football-orient-pose"
+    "code": "https://github.com/WagnerVic/soccer-broadcast-pose"
   },
 
   "hero": {
@@ -438,7 +438,7 @@
     ]
   },
 
-  "bibtex": "@software{menezes2026soccerpose,\n  title  = {A Quantitative Pipeline for Soccer Player Pose Estimation in Broadcast Video},\n  author = {Menezes, Wagner Victor Alves de and Franco, Ricardo Augusto Pereira and\n            Soares, Raphael Alves de Lima and Jacome, Victor Gabriel Ribeiro and\n            Carmo, Andr{\\'e} Guilherme Alves do},\n  year   = {2026},\n  url    = {https://github.com/WagnerVic/football-orient-pose}\n}",
+  "bibtex": "@software{menezes2026soccerpose,\n  title  = {A Quantitative Pipeline for Soccer Player Pose Estimation in Broadcast Video},\n  author = {Menezes, Wagner Victor Alves de and Franco, Ricardo Augusto Pereira and\n            Soares, Raphael Alves de Lima and Jacome, Victor Gabriel Ribeiro and\n            Carmo, Andr{\\'e} Guilherme Alves do},\n  year   = {2026},\n  url    = {https://github.com/WagnerVic/soccer-broadcast-pose}\n}",
   "bibtexNote": {
     "en": "Until the paper is published, please cite the software. This entry will be replaced by the publication reference.",
     "pt": "Até a publicação do artigo, cite o software. Esta entrada será substituída pela referência da publicação.",
@@ -454,10 +454,10 @@
       "zh": "本工作基于 <a href=\"https://github.com/calvinyeungck/3D-Shot-Posture-Dataset\">3DSP 数据集</a>（Yeung、Ide 和 Fujii，CVPRW 2024）、<a href=\"https://github.com/open-mmlab/mmpose\">RTMPose 与 MMPose</a>（OpenMMLab）、<a href=\"https://github.com/ultralytics/ultralytics\">Ultralytics YOLO</a> 和 <a href=\"https://github.com/Tau-J/rtmlib\">rtmlib</a>。"
     },
     "license": {
-      "en": "Code released under the <a href=\"https://github.com/WagnerVic/football-orient-pose/blob/main/LICENSE\">MIT License</a>.",
-      "pt": "Código distribuído sob a <a href=\"https://github.com/WagnerVic/football-orient-pose/blob/main/LICENSE\">licença MIT</a>.",
-      "es": "Código publicado bajo la <a href=\"https://github.com/WagnerVic/football-orient-pose/blob/main/LICENSE\">licencia MIT</a>.",
-      "zh": "代码以 <a href=\"https://github.com/WagnerVic/football-orient-pose/blob/main/LICENSE\">MIT 许可证</a>发布。"
+      "en": "Code released under the <a href=\"https://github.com/WagnerVic/soccer-broadcast-pose/blob/main/LICENSE\">MIT License</a>.",
+      "pt": "Código distribuído sob a <a href=\"https://github.com/WagnerVic/soccer-broadcast-pose/blob/main/LICENSE\">licença MIT</a>.",
+      "es": "Código publicado bajo la <a href=\"https://github.com/WagnerVic/soccer-broadcast-pose/blob/main/LICENSE\">licencia MIT</a>.",
+      "zh": "代码以 <a href=\"https://github.com/WagnerVic/soccer-broadcast-pose/blob/main/LICENSE\">MIT 许可证</a>发布。"
     },
     "footage": {
       "en": "Broadcast footage belongs to its respective rights holders and is shown only to demonstrate the method.",

@@ -2,7 +2,7 @@
 
 Static project page of the paper *A Quantitative Pipeline for Soccer Player Pose Estimation in
 Broadcast Video* (WVC 2026), served by GitHub Pages at
-**https://wagnervic.github.io/football-orient-pose/**.
+**https://wagnervic.github.io/soccer-broadcast-pose/**.
 
 Plain HTML + CSS + a small script, no build step:
 
